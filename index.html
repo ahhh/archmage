@@ -716,7 +716,7 @@ const GroundEffects = {
       ctx.globalAlpha = alpha;
       ctx.beginPath();
       ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
-      ctx.fillStyle = g.type === 'burn' ? '#ff6600' : '#aa00ff';
+      ctx.fillStyle = g.type === 'burn' ? '#ff6600' : g.type === 'poison' ? '#44cc00' : '#aa00ff';
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -802,7 +802,7 @@ const Player = {
       finalHitStun: 0,
       followupMeteors: 0,
       followupDamageMultiplier: 0,
-      groundEffect: null,
+      groundEffect: wConfig.groundEffect ? { ...wConfig.groundEffect } : null,
       areaDamageMultiplier: 0.5,
     };
     for (const uid of appliedUpgrades) {
@@ -1014,6 +1014,23 @@ const WeaponSystem = {
       return true;
     }
 
+    // Spiral: arms expand outward from caster
+    if (s.targeting === 'spiral') {
+      const count = s.projectileCount || 3;
+      for (let i = 0; i < count; i++) {
+        this.spawnSpiralProjectile(player, (Math.PI * 2 / count) * i, wi, s);
+      }
+      return true;
+    }
+
+    // Trail: drops a ground effect sphere at player position
+    if (s.targeting === 'trail') {
+      if (s.groundEffect) {
+        GroundEffects.add(player.x, player.y, s.areaRadius, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
+      }
+      return true;
+    }
+
     // Mouse-aim mode: fire toward cursor regardless of enemy presence
     if (!Input.autoAim) {
       const mw = Input.mouseWorld();
@@ -1104,9 +1121,46 @@ const WeaponSystem = {
       followupMeteors: s.followupMeteors || 0,
       followupDamageMultiplier: s.followupDamageMultiplier || 0,
       isMeteor: wi.weaponId === 'meteor_sigil',
+      isSpiral: false,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
+    });
+  },
+
+  spawnSpiralProjectile(player, startAngle, wi, s) {
+    const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+    Projectiles.push({
+      id: mkId(),
+      x: player.x, y: player.y,
+      vx: 0, vy: 0,
+      damage: s.damage,
+      armorPen: s.armorPenetration,
+      pierce: s.pierce, pierceLeft: s.pierce,
+      bounce: 0, bounceLeft: 0, bounceCount: 0,
+      range: s.range,
+      traveledSq: 0,
+      chainCount: 0, chainRange: 0,
+      areaRadius: s.areaRadius,
+      areaDamageMultiplier: s.areaDamageMultiplier,
+      pullRadius: 0, pullStrength: 0,
+      weaponId: wi.weaponId,
+      statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+      hitIds: new Set(),
+      dead: false,
+      icon: wConfig.icon,
+      splitProjectiles: 0, splitDamageMultiplier: 0,
+      damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+      groundEffect: s.groundEffect || null,
+      followupMeteors: 0, followupDamageMultiplier: 0,
+      isMeteor: false,
+      isSpiral: true,
+      spawnX: player.x, spawnY: player.y,
+      spiralAngle: startAngle,
+      spiralRadius: 10,
+      spiralRadialSpeed: s.projectileSpeed,
+      spiralAngularSpeed: wConfig.spiralAngularSpeed || 0.07,
+      targetEnemy: null, targetX: player.x, targetY: player.y,
     });
   }
 };
@@ -1141,29 +1195,38 @@ function updateProjectiles(dt, enemies) {
       p.targetY = p.targetEnemy.y;
     }
 
-    p.x += p.vx;
-    p.y += p.vy;
-    const dx2 = p.vx * p.vx + p.vy * p.vy;
-    p.traveledSq += dx2;
+    if (p.isSpiral) {
+      p.spiralAngle += p.spiralAngularSpeed;
+      p.spiralRadius += p.spiralRadialSpeed;
+      p.x = p.spawnX + Math.cos(p.spiralAngle) * p.spiralRadius;
+      p.y = p.spawnY + Math.sin(p.spiralAngle) * p.spiralRadius;
+      if (p.spiralRadius > p.range || p.x < 0 || p.x > CONFIG.WORLD_W || p.y < 0 || p.y > CONFIG.WORLD_H) {
+        p.dead = true; continue;
+      }
+    } else {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.traveledSq += Math.hypot(p.vx, p.vy);
 
-    // World bounds / bounce
-    let bounced = false;
-    if (p.x < 0 || p.x > CONFIG.WORLD_W) {
-      p.vx = -p.vx; p.x = clamp(p.x, 0, CONFIG.WORLD_W); bounced = true;
-    }
-    if (p.y < 0 || p.y > CONFIG.WORLD_H) {
-      p.vy = -p.vy; p.y = clamp(p.y, 0, CONFIG.WORLD_H); bounced = true;
-    }
-    if (bounced) {
-      p.bounceCount++;
-      p.damage = Math.round(p.damage * p.damagePerBounce);
-      if (p.bounceLeft > 0) { p.bounceLeft--; }
-      else { p.dead = true; continue; }
-    }
+      // World bounds / bounce
+      let bounced = false;
+      if (p.x < 0 || p.x > CONFIG.WORLD_W) {
+        p.vx = -p.vx; p.x = clamp(p.x, 0, CONFIG.WORLD_W); bounced = true;
+      }
+      if (p.y < 0 || p.y > CONFIG.WORLD_H) {
+        p.vy = -p.vy; p.y = clamp(p.y, 0, CONFIG.WORLD_H); bounced = true;
+      }
+      if (bounced) {
+        p.bounceCount++;
+        p.damage = Math.round(p.damage * p.damagePerBounce);
+        if (p.bounceLeft > 0) { p.bounceLeft--; }
+        else { p.dead = true; continue; }
+      }
 
-    // Range check
-    if (p.traveledSq > p.range * p.range && !p.isMeteor) {
-      p.dead = true; continue;
+      // Range check
+      if (p.traveledSq > p.range && !p.isMeteor) {
+        p.dead = true; continue;
+      }
     }
 
     // Collision with enemies
@@ -2071,10 +2134,12 @@ const Game = {
       Particles.update(dt);
 
       // Wave 20 ends on boss kill (handled in killEnemy → victory)
-      // Other waves end on timer
+      // Other waves end on timer or when all spawned enemies are dead
       if (this.wave < 20) {
         this.waveTimer -= dt;
-        if (this.waveTimer <= 0) {
+        const allSpawned = WaveSpawner.spawnedCount >= WaveSpawner.totalToSpawn;
+        const noneAlive = allSpawned && Enemies.every(e => e.dead);
+        if (this.waveTimer <= 0 || noneAlive) {
           this.endWave();
         }
       }
