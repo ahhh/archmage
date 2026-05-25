@@ -2,8 +2,6 @@
 
 A browser-based wave survival game. You are a mage. Monsters pour out of the dark. Spells fire themselves. You just have to stay alive long enough to become something terrible.
 
-Play it at **[archmage.danbor.ges](https://archmage.danbor.ges)**
-
 ---
 
 ## How to Play
