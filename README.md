@@ -2,6 +2,7 @@
 
 A browser-based wave survival game. You are a mage. Monsters pour out of the dark. Spells fire themselves. You just have to stay alive long enough to become something terrible.
 
+[Play it now](https://archmage.lockboxx.org)
 ---
 
 ## How to Play
