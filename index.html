@@ -1157,7 +1157,7 @@ const WeaponSystem = {
       isSpiral: true,
       spawnX: player.x, spawnY: player.y,
       spiralAngle: startAngle,
-      spiralRadius: 10,
+      spiralRadius: 30,
       spiralRadialSpeed: s.projectileSpeed,
       spiralAngularSpeed: wConfig.spiralAngularSpeed || 0.07,
       targetEnemy: null, targetX: player.x, targetY: player.y,
@@ -1384,7 +1384,7 @@ function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true;
   Player.kills++;
-  Player.addXp(Math.round(enemy.xp * (1 + Game.wave * 0.05)));
+  Player.addXp(Math.round(enemy.xp * (1 + Game.wave * 0.05) + enemy.maxHp * 0.04));
   Particles.emit(enemy.x, enemy.y, '#00ff41', 8, 3.5);
   if (enemy.configId === 'dragon_boss') Game.victory();
 }
@@ -1717,7 +1717,8 @@ const Renderer = {
     for (const e of Enemies) {
       if (e.dead) continue;
       const isBoss = e.abilities.includes('boss');
-      const iconSize = isBoss ? 48 : (e.radius > 18 ? 32 : 24);
+      const isMiniBoss = e.abilities.includes('miniboss');
+      const iconSize = isBoss ? 72 : isMiniBoss ? 48 : (e.radius > 18 ? 32 : 24);
       ctx.font = `${iconSize}px serif`;
 
       // Visibility glow behind the emoji
@@ -1747,7 +1748,7 @@ const Renderer = {
       const by = e.y - e.radius - 10;
       ctx.fillStyle = '#001a06';
       ctx.fillRect(bx, by, bw, bh);
-      ctx.fillStyle = isBoss ? '#ff4136' : '#00cc33';
+      ctx.fillStyle = isBoss ? '#ff4136' : isMiniBoss ? '#ff9500' : '#00cc33';
       ctx.fillRect(bx, by, bw * (e.hp / e.maxHp), bh);
 
       // Status indicators
@@ -1980,7 +1981,7 @@ const Game = {
   paused: false,
   lastTime: 0,
   pendingLevelUps: 0,
-  rerollsLeft: 3,
+  rerollsLeft: 0,
   selectedChar: null,
   waveDurationFor(w) { return CONFIG.WAVE_DURATION * Math.pow(1.1, w - 1); },
   animFrameId: null,
@@ -2082,7 +2083,7 @@ const Game = {
     this.waveTimer = this.waveDuration;
     this.paused = false;
     this.pendingLevelUps = 0;
-    this.rerollsLeft = 3;
+    this.rerollsLeft = CONFIG.REROLLS;
     this.firstWave = true;
     this.speedMultiplier = 1;
     Input.autoAim = true;

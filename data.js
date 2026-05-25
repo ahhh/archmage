@@ -12,6 +12,7 @@ const CONFIG = {
   WAVE_DURATION: 35,       // base seconds for wave 1 (grows 10% per wave)
   WAVE_BREAK: 4,           // seconds between waves
   CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
+  REROLLS: 99,              // rerolls available per run on the level-up screen
 
   // ── CHARACTERS ─────────────────────────────────────────────
   characters: [
@@ -300,13 +301,13 @@ const CONFIG = {
       description: 'Spirals 3 arms of arcane energy outward from the caster, passing through all enemies they touch.',
       cooldown: 2.2,
       damage: 18,
-      projectileSpeed: 3.8,
+      projectileSpeed: 2.5,
       armorPenetration: 1,
       pierce: 99,
       bounce: 0,
-      range: 440,
+      range: 420,
       targeting: 'spiral',
-      spiralAngularSpeed: 0.52,
+      spiralAngularSpeed: 0.22,
       chainCount: 0,
       chainRange: 0,
       areaRadius: 0,
@@ -355,7 +356,7 @@ const CONFIG = {
     { id: 'kobold',      name: 'Kobold',               icon: '🦎', health:  14, speed: 2.80, armor: 0, strength:  4, xp:   4, radius: 11, waveMin:  3, spawnWeight:  7, abilities: ['fast'] },
     { id: 'orc',         name: 'Orc Brute',            icon: '🪓', health:  38, speed: 1.60, armor: 2, strength:  9, xp:   8, radius: 16, waveMin:  5, spawnWeight:  5, abilities: ['armored'] },
     { id: 'ghoul',       name: 'Ghoul',                icon: '🧟', health:  32, speed: 2.20, armor: 1, strength:  7, xp:   8, radius: 15, waveMin:  7, spawnWeight:  5, abilities: ['poison'] },
-    { id: 'troll',       name: 'Troll',                icon: '🧌', health:  95, speed: 1.20, armor: 3, strength: 14, xp:  18, radius: 22, waveMin: 10, spawnWeight:  3, abilities: ['regeneration'] },
+    { id: 'troll',       name: 'Troll',                icon: '🧌', health:  95, speed: 1.20, armor: 3, strength: 14, xp:  18, radius: 22, waveMin: 10, spawnWeight:  3, abilities: ['regeneration', 'miniboss'] },
     { id: 'beholderkin', name: 'Beholderkin',          icon: '👁️', health:  70, speed: 1.40, armor: 2, strength: 10, xp:  20, radius: 20, waveMin: 14, spawnWeight:  2, abilities: ['ranged'] },
     { id: 'dragon_boss', name: 'Ancient Red Dragon',   icon: '🐉', health: 900, speed: 1.35, armor: 6, strength: 24, xp: 200, radius: 42, waveMin: 20, spawnWeight:  0, abilities: ['boss', 'fireBreath', 'charge'] }
   ],
