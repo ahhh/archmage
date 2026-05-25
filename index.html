@@ -380,12 +380,11 @@ body::after {
   display: none;
   position: fixed;
   bottom: 24px; left: 24px;
-  pointer-events: none;
   z-index: 80;
 }
-#touch-controls.tc-visible { pointer-events: auto; }
+#touch-controls.tc-visible { display: block; }
 @media (hover: none) and (pointer: coarse) {
-  #touch-controls { display: block; }
+  #touch-controls.tc-visible { display: block; }
 }
 #dpad {
   display: grid;
@@ -549,25 +548,6 @@ const Input = {
       this.mouseX = e.clientX;
       this.mouseY = e.clientY;
     });
-    this.initTouch();
-  },
-
-  initTouch() {
-    const btns = [
-      { id: 'dpad-up',    code: 'KeyW' },
-      { id: 'dpad-down',  code: 'KeyS' },
-      { id: 'dpad-left',  code: 'KeyA' },
-      { id: 'dpad-right', code: 'KeyD' },
-    ];
-    for (const { id, code } of btns) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      const press = (e) => { e.preventDefault(); this.keys[code] = true;  el.classList.add('pressed'); };
-      const release = (e) => { e.preventDefault(); this.keys[code] = false; el.classList.remove('pressed'); };
-      el.addEventListener('touchstart',  press,   { passive: false });
-      el.addEventListener('touchend',    release, { passive: false });
-      el.addEventListener('touchcancel', release, { passive: false });
-    }
   },
 
   isDown(code) { return !!this.keys[code]; },
@@ -1924,6 +1904,21 @@ const Game = {
         document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
+    });
+
+    const dpadMap = [
+      { id: 'dpad-up',    code: 'KeyW' },
+      { id: 'dpad-down',  code: 'KeyS' },
+      { id: 'dpad-left',  code: 'KeyA' },
+      { id: 'dpad-right', code: 'KeyD' },
+    ];
+    dpadMap.forEach(({ id, code }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('pointerdown', () => { Input.keys[code] = true;  el.classList.add('pressed'); });
+      el.addEventListener('pointerup',   () => { Input.keys[code] = false; el.classList.remove('pressed'); });
+      el.addEventListener('pointerleave',() => { Input.keys[code] = false; el.classList.remove('pressed'); });
+      el.addEventListener('pointercancel',()=> { Input.keys[code] = false; el.classList.remove('pressed'); });
     });
   },
 
