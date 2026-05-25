@@ -306,7 +306,7 @@ const CONFIG = {
       bounce: 0,
       range: 440,
       targeting: 'spiral',
-      spiralAngularSpeed: 0.12,
+      spiralAngularSpeed: 0.52,
       chainCount: 0,
       chainRange: 0,
       areaRadius: 0,
