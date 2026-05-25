@@ -307,7 +307,7 @@ const CONFIG = {
       bounce: 0,
       range: 420,
       targeting: 'spiral',
-      spiralAngularSpeed: 0.22,
+      spiralAngularSpeed: 0.040,   // 2π / ((range-startRadius)/radialSpeed) ≈ exactly 1 revolution
       chainCount: 0,
       chainRange: 0,
       areaRadius: 0,
@@ -343,6 +343,31 @@ const CONFIG = {
         { id: 'volatile_residue', name: 'Volatile Residue', icon: '💥', description: 'Spheres appear more often and cover a wider area.',          changes: { cooldownMultiplier: 0.6, areaRadiusMultiplier: 1.4 } },
         { id: 'toxic_residue',    name: 'Toxic Residue',    icon: '☠️', description: 'Spheres now poison enemies that linger in them.',            changes: { groundEffect: { type: 'poison', duration: 2.5, dps: 6 } } },
         { id: 'blazing_path',     name: 'Blazing Path',     icon: '🔥', description: 'Converts to searing fire — much higher damage output.',       changes: { groundEffect: { type: 'burn', duration: 2.5, dps: 10 }, areaRadiusMultiplier: 1.25 } }
+      ]
+    },
+    {
+      id: 'plague_pool',
+      name: 'Plague Pool',
+      icon: '🧪',
+      description: 'Hurls vials of corrosive liquid that shatter at random locations nearby, leaving large toxic pools.',
+      cooldown: 1.8,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 220,
+      targeting: 'pool',
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 65,
+      areaDamageMultiplier: 0,
+      statusEffect: null,
+      groundEffect: { type: 'toxic', duration: 3.5, dps: 2.5 },
+      upgrades: [
+        { id: 'wider_pools',      name: 'Wider Pools',      icon: '💧', description: 'Pools are 45% wider, covering much more ground.',                   changes: { areaRadiusMultiplier: 1.45 } },
+        { id: 'virulent_toxin',   name: 'Virulent Toxin',   icon: '☠️', description: 'Pools deal more damage per second and linger far longer.',          changes: { groundEffect: { type: 'toxic', duration: 5.0, dps: 6 } } },
+        { id: 'caustic_acid',     name: 'Caustic Acid',     icon: '🔥', description: 'Converts to burning acid — enormous damage, slightly wider area.',  changes: { groundEffect: { type: 'burn', duration: 4.5, dps: 11 }, areaRadiusMultiplier: 1.3 } }
       ]
     }
   ],
