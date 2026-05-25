@@ -1445,14 +1445,20 @@ const WaveSpawner = {
     const milestone = CONFIG.waveMilestones[waveNum - 1];
     this.spawnedCount = 0;
     this.totalToSpawn = milestone.monstersTotal;
-    this.spawnInterval = Math.max(0.4, 1.5 - waveNum * 0.04);
-    this.spawnTimer = 0.5;
+    // Fit all spawns into the first 35% of the wave
+    const spawnWindow = CONFIG.WAVE_DURATION * 0.35;
+    this.spawnInterval = Math.max(0.25, spawnWindow / milestone.monstersTotal);
+    this.spawnTimer = 0.3;
     this.bossPending = milestone.boss || null;
     this.miniBossPending = milestone.miniBoss || null;
   },
 
   update(dt, waveNum) {
     if (this.spawnedCount >= this.totalToSpawn) return;
+    // Boss/mini-boss can spawn any time; regular enemies only in first 35% of wave
+    const inSpawnWindow = (this.bossPending || this.miniBossPending) ||
+                          Game.waveTimer > CONFIG.WAVE_DURATION * 0.65;
+    if (!inSpawnWindow) return;
     this.spawnTimer -= dt;
     if (this.spawnTimer > 0) return;
     this.spawnTimer = this.spawnInterval;
@@ -1579,9 +1585,21 @@ const Renderer = {
       const iconSize = isBoss ? 48 : (e.radius > 18 ? 32 : 24);
       ctx.font = `${iconSize}px serif`;
 
+      // Visibility glow behind the emoji
+      const glowR = e.radius * 1.1;
+      const glowGrad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, glowR);
+      glowGrad.addColorStop(0, 'rgba(255,255,200,0.22)');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = glowGrad;
+      ctx.fill();
+
       if (e.flashTimer > 0) {
         ctx.globalAlpha = 0.6;
         ctx.filter = 'brightness(3) sepia(1) hue-rotate(280deg)';
+      } else {
+        ctx.filter = 'brightness(1.6)';
       }
       ctx.fillText(e.icon, e.x, e.y);
       ctx.globalAlpha = 1;
@@ -1622,13 +1640,15 @@ const Renderer = {
         ctx.lineWidth = 1;
         ctx.stroke();
       } else {
-        ctx.font = '18px serif';
-        ctx.fillText(p.icon, p.x, p.y);
-        // Glow trail
+        // Glow behind projectile
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,255,65,0.06)';
+        ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180,255,200,0.28)';
         ctx.fill();
+        ctx.font = '22px serif';
+        ctx.filter = 'brightness(2)';
+        ctx.fillText(p.icon, p.x, p.y);
+        ctx.filter = 'none';
       }
     }
 

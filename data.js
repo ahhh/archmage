@@ -9,9 +9,9 @@
 const CONFIG = {
   WORLD_W: 2400,
   WORLD_H: 2400,
-  WAVE_DURATION: 20,       // seconds per wave
+  WAVE_DURATION: 25,       // seconds per wave
   WAVE_BREAK: 4,           // seconds between waves
-  CONTACT_DAMAGE_INTERVAL: 0.8,  // seconds between contact damage ticks
+  CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
 
   // ── CHARACTERS ─────────────────────────────────────────────
   characters: [
@@ -317,26 +317,26 @@ const CONFIG = {
   // miniBoss: monster id to force-spawn once this wave
   // boss: monster id to spawn as the sole enemy (wave 20)
   waveMilestones: [
-    { wave:  1, monstersTotal: 12 },
-    { wave:  2, monstersTotal: 16 },
-    { wave:  3, monstersTotal: 20 },
-    { wave:  4, monstersTotal: 22 },
-    { wave:  5, monstersTotal: 26 },
-    { wave:  6, monstersTotal: 28 },
-    { wave:  7, monstersTotal: 30 },
-    { wave:  8, monstersTotal: 32 },
-    { wave:  9, monstersTotal: 35 },
-    { wave: 10, monstersTotal: 38, miniBoss: 'troll' },
-    { wave: 11, monstersTotal: 38 },
-    { wave: 12, monstersTotal: 40 },
-    { wave: 13, monstersTotal: 42 },
-    { wave: 14, monstersTotal: 44 },
-    { wave: 15, monstersTotal: 48 },
-    { wave: 16, monstersTotal: 50 },
-    { wave: 17, monstersTotal: 52 },
-    { wave: 18, monstersTotal: 55 },
-    { wave: 19, monstersTotal: 58 },
-    { wave: 20, monstersTotal: 1, boss: 'dragon_boss' }
+    { wave:  1, monstersTotal: 22 },
+    { wave:  2, monstersTotal: 36 },
+    { wave:  3, monstersTotal: 40 },
+    { wave:  4, monstersTotal: 52 },
+    { wave:  5, monstersTotal: 66 },
+    { wave:  6, monstersTotal: 78 },
+    { wave:  7, monstersTotal: 80 },
+    { wave:  8, monstersTotal: 92 },
+    { wave:  9, monstersTotal: 105 },
+    { wave: 10, monstersTotal: 118, miniBoss: 'troll' },
+    { wave: 11, monstersTotal: 128 },
+    { wave: 12, monstersTotal: 130 },
+    { wave: 13, monstersTotal: 142 },
+    { wave: 14, monstersTotal: 154 },
+    { wave: 15, monstersTotal: 168 },
+    { wave: 16, monstersTotal: 170 },
+    { wave: 17, monstersTotal: 182 },
+    { wave: 18, monstersTotal: 195 },
+    { wave: 19, monstersTotal: 208 },
+    { wave: 20, monstersTotal: 211, boss: 'dragon_boss' }
   ]
 };
 
