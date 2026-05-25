@@ -1198,8 +1198,8 @@ function updateProjectiles(dt, enemies) {
     if (p.isSpiral) {
       p.spiralAngle += p.spiralAngularSpeed;
       p.spiralRadius += p.spiralRadialSpeed;
-      p.x = p.spawnX + Math.cos(p.spiralAngle) * p.spiralRadius;
-      p.y = p.spawnY + Math.sin(p.spiralAngle) * p.spiralRadius;
+      p.x = Player.x + Math.cos(p.spiralAngle) * p.spiralRadius;
+      p.y = Player.y + Math.sin(p.spiralAngle) * p.spiralRadius;
       if (p.spiralRadius > p.range || p.x < 0 || p.x > CONFIG.WORLD_W || p.y < 0 || p.y > CONFIG.WORLD_H) {
         p.dead = true; continue;
       }
@@ -2134,11 +2134,15 @@ const Game = {
       Particles.update(dt);
 
       // Wave 20 ends on boss kill (handled in killEnemy → victory)
-      // Other waves end on timer or when all spawned enemies are dead
+      // Other waves end on timer or when all enemies are dead
       if (this.wave < 20) {
         this.waveTimer -= dt;
-        const allSpawned = WaveSpawner.spawnedCount >= WaveSpawner.totalToSpawn;
-        const noneAlive = allSpawned && Enemies.every(e => e.dead);
+        // Spawn is "done" when all have been queued OR the spawn window has closed
+        const spawnDone = WaveSpawner.spawnedCount >= WaveSpawner.totalToSpawn ||
+                          (this.waveTimer < this.waveDuration * 0.65 &&
+                           !WaveSpawner.bossPending && !WaveSpawner.miniBossPending);
+        const noneAlive = spawnDone && WaveSpawner.spawnedCount > 0 &&
+                          !Enemies.some(e => !e.dead);
         if (this.waveTimer <= 0 || noneAlive) {
           this.endWave();
         }
