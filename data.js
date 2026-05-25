@@ -295,6 +295,32 @@ const CONFIG = {
       ]
     },
     {
+      id: 'vortex_coil',
+      name: 'Vortex Coil',
+      icon: '🌀',
+      description: 'Spirals 3 arms of arcane energy outward from the caster, passing through all enemies they touch.',
+      cooldown: 2.2,
+      damage: 18,
+      projectileSpeed: 2.5,
+      armorPenetration: 1,
+      pierce: 99,
+      bounce: 0,
+      range: 420,
+      targeting: 'spiral',
+      spiralAngularSpeed: 0.114,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      projectileCount: 3,
+      statusEffect: null,
+      upgrades: [
+        { id: 'coil_density',   name: 'Dense Coil',     icon: '🌀', description: 'Fires 2 additional spiral arms.',                         changes: { projectileCount: 2 } },
+        { id: 'toxic_helix',    name: 'Toxic Helix',    icon: '☠️', description: 'Arms apply poison and expand faster.',                    changes: { statusEffect: { type: 'poison', amount: 4, duration: 2.5 }, projectileSpeedMultiplier: 1.3 } },
+        { id: 'inferno_spiral', name: 'Inferno Spiral', icon: '🌋', description: 'Arms deal far more damage and explode on contact.',       changes: { damageMultiplier: 1.9, areaRadius: 38, areaDamageMultiplier: 0.55 } }
+      ]
+    },
+    {
       id: 'arcane_cube',
       name: 'Arcane Cube',
       icon: '🔲',

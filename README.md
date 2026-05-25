@@ -105,6 +105,12 @@ A slow, devastating spear of void energy with extreme armor penetration. The ans
 - **Phase Strike** — phases through 3 enemies
 - **Void Implosion** — explodes on impact for area damage
 
+### 🌀 Vortex Coil
+Spirals 3 arms of arcane energy outward from the caster in a full revolution, passing through all enemies in their path.
+- **Dense Coil** — fires 2 additional spiral arms
+- **Toxic Helix** — arms apply poison and expand faster
+- **Inferno Spiral** — far more damage, arms explode on contact
+
 ### 🔲 Arcane Cube
 Conjures 4 walls of arcane energy that simultaneously sweep around the player, each tracing one side of the cube and damaging every enemy in their path.
 - **Larger Cube** — cube extends 50% further from the caster
