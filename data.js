@@ -9,7 +9,7 @@
 const CONFIG = {
   WORLD_W: 2400,
   WORLD_H: 2400,
-  WAVE_DURATION: 25,       // seconds per wave
+  WAVE_DURATION: 35,       // seconds per wave
   WAVE_BREAK: 4,           // seconds between waves
   CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
 
@@ -25,7 +25,6 @@ const CONFIG = {
       startingWeapon: 'firebolt',
       bonus: { fireDamageMultiplier: 1.15 },
       desc: 'Burst fire damage. Low armor, high output.',
-      statLine: 'HP 90 · SPD 3.2 · ARM 0'
     },
     {
       id: 'frost_seer',
@@ -37,7 +36,6 @@ const CONFIG = {
       startingWeapon: 'frost_shard',
       bonus: { slowDurationMultiplier: 1.25 },
       desc: 'Control and survival. Slows enemies longer.',
-      statLine: 'HP 100 · SPD 2.9 · ARM 1'
     },
     {
       id: 'storm_caller',
@@ -49,7 +47,6 @@ const CONFIG = {
       startingWeapon: 'spark_chain',
       bonus: { cooldownMultiplier: 0.9 },
       desc: 'Speed and chain lightning. Fastest caster.',
-      statLine: 'HP 80 · SPD 3.5 · ARM 0'
     }
   ],
 
