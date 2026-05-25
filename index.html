@@ -1013,13 +1013,10 @@ const WeaponSystem = {
       return true;
     }
 
-    // Spiral: arms expand outward from caster
-    if (s.targeting === 'spiral') {
-      const count = s.projectileCount || 3;
-      // Start arms at left (π), right (0), and down/back (π/2), evenly spread
-      const baseAngle = Math.PI / 2;
-      for (let i = 0; i < count; i++) {
-        this.spawnSpiralProjectile(player, baseAngle + (Math.PI * 2 / count) * i, wi, s);
+    // Box: 4 walls sweep simultaneously around the player
+    if (s.targeting === 'box') {
+      for (let i = 0; i < 4; i++) {
+        this.spawnBoxProjectile(player, i, s.range, wi, s);
       }
       return true;
     }
@@ -1171,6 +1168,46 @@ const WeaponSystem = {
       spiralAngularSpeed: wConfig.spiralAngularSpeed || 0.07,
       targetEnemy: null, targetX: player.x, targetY: player.y,
     });
+  },
+
+  spawnBoxProjectile(player, wall, boxSize, wi, s) {
+    const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+    const totalDist = boxSize * 2;
+    // Each wall starts at one corner and sweeps to the next, all simultaneously
+    // Wall 0: top,    left→right  (-bs,-bs) → (+bs,-bs)
+    // Wall 1: right,  top→bottom  (+bs,-bs) → (+bs,+bs)
+    // Wall 2: bottom, right→left  (+bs,+bs) → (-bs,+bs)
+    // Wall 3: left,   bottom→top  (-bs,+bs) → (-bs,-bs)
+    const bs = boxSize;
+    const corners = [[-bs,-bs],[bs,-bs],[bs,bs],[-bs,bs]];
+    const [cx, cy] = corners[wall];
+    Projectiles.push({
+      id: mkId(),
+      x: player.x + cx, y: player.y + cy,
+      vx: 0, vy: 0,
+      damage: s.damage, armorPen: s.armorPenetration,
+      pierce: s.pierce, pierceLeft: s.pierce,
+      bounce: 0, bounceLeft: 0, bounceCount: 0,
+      range: totalDist, traveledSq: 0,
+      chainCount: 0, chainRange: 0,
+      areaRadius: s.areaRadius, areaDamageMultiplier: s.areaDamageMultiplier,
+      pullRadius: 0, pullStrength: 0,
+      weaponId: wi.weaponId,
+      statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+      hitIds: new Set(), dead: false,
+      icon: wConfig.icon,
+      splitProjectiles: 0, splitDamageMultiplier: 0,
+      damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+      groundEffect: null,
+      followupMeteors: 0, followupDamageMultiplier: 0,
+      isMeteor: false, isSpiral: false,
+      isBox: true,
+      boxWall: wall,
+      boxSize: bs,
+      boxProgress: 0,
+      boxSpeed: s.projectileSpeed / totalDist,
+      targetEnemy: null, targetX: player.x, targetY: player.y,
+    });
   }
 };
 
@@ -1204,7 +1241,28 @@ function updateProjectiles(dt, enemies) {
       p.targetY = p.targetEnemy.y;
     }
 
-    if (p.isSpiral) {
+    if (p.isBox) {
+      p.boxProgress += p.boxSpeed;
+      if (p.boxProgress >= 1) {
+        // Volatile Corners: explode at the endpoint
+        if (p.areaRadius > 0) {
+          Particles.emit(p.x, p.y, '#88ccff', 14, 5);
+          for (const e of enemies) {
+            if (!e.dead && dist(p.x, p.y, e.x, e.y) < p.areaRadius + e.radius) {
+              applyDamage(e, Math.round(p.damage * p.areaDamageMultiplier), p.armorPen, null, 0);
+            }
+          }
+        }
+        p.dead = true; continue;
+      }
+      // Map progress (0→1) to position along each wall
+      const t = p.boxProgress * 2 - 1; // -1 to +1
+      const bs = p.boxSize;
+      if      (p.boxWall === 0) { p.x = Player.x + t * bs; p.y = Player.y - bs; }
+      else if (p.boxWall === 1) { p.x = Player.x + bs;     p.y = Player.y + t * bs; }
+      else if (p.boxWall === 2) { p.x = Player.x - t * bs; p.y = Player.y + bs; }
+      else                      { p.x = Player.x - bs;     p.y = Player.y - t * bs; }
+    } else if (p.isSpiral) {
       p.spiralAngle += p.spiralAngularSpeed;
       p.spiralRadius += p.spiralRadialSpeed;
       p.x = Player.x + Math.cos(p.spiralAngle) * p.spiralRadius;
@@ -1784,46 +1842,35 @@ const Renderer = {
         ctx.strokeStyle = 'rgba(255,65,54,0.3)';
         ctx.lineWidth = 1;
         ctx.stroke();
-      } else if (p.isSpiral) {
-        // Draw the full spiral arm as a glowing arc from start to tip
-        const angPerR = p.spiralAngularSpeed / p.spiralRadialSpeed;
-        const startR = p.spiralStartRadius || 8;
-        const startAngle = p.spiralAngle - (p.spiralRadius - startR) * angPerR;
-        const steps = 48;
+      } else if (p.isBox) {
+        // Draw traced wall segment (start corner → current position)
+        const bs = p.boxSize;
+        let sx, sy; // start corner of this wall
+        if      (p.boxWall === 0) { sx = Player.x - bs; sy = Player.y - bs; }
+        else if (p.boxWall === 1) { sx = Player.x + bs; sy = Player.y - bs; }
+        else if (p.boxWall === 2) { sx = Player.x + bs; sy = Player.y + bs; }
+        else                      { sx = Player.x - bs; sy = Player.y + bs; }
         ctx.save();
-        // Outer glow pass
-        ctx.beginPath();
-        for (let si = 0; si <= steps; si++) {
-          const r = startR + (p.spiralRadius - startR) * (si / steps);
-          const a = startAngle + (r - startR) * angPerR;
-          const sx = Player.x + Math.cos(a) * r;
-          const sy = Player.y + Math.sin(a) * r;
-          if (si === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        }
-        ctx.strokeStyle = 'rgba(200,100,255,0.35)';
-        ctx.lineWidth = 12;
         ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-        // Inner bright pass
+        // Outer glow
         ctx.beginPath();
-        for (let si = 0; si <= steps; si++) {
-          const r = startR + (p.spiralRadius - startR) * (si / steps);
-          const a = startAngle + (r - startR) * angPerR;
-          const sx = Player.x + Math.cos(a) * r;
-          const sy = Player.y + Math.sin(a) * r;
-          if (si === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        }
-        ctx.strokeStyle = 'rgba(230,160,255,0.95)';
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = 'rgba(100,200,255,0.25)';
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        // Inner bright line
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = 'rgba(160,230,255,0.92)';
         ctx.lineWidth = 4;
         ctx.stroke();
         ctx.restore();
-        // Bright tip
+        // Bright leading orb
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,200,255,0.95)';
+        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(220,245,255,0.95)';
         ctx.fill();
       } else {
         // Glow behind projectile
