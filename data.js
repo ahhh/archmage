@@ -7,9 +7,9 @@
 // ── WORLD CONFIG ─────────────────────────────────────────────
 
 const CONFIG = {
-  WORLD_W: 2400,
-  WORLD_H: 2400,
-  WAVE_DURATION: 35,       // seconds per wave
+  WORLD_W: 2040,
+  WORLD_H: 2040,
+  WAVE_DURATION: 35,       // base seconds for wave 1 (grows 10% per wave)
   WAVE_BREAK: 4,           // seconds between waves
   CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
 

@@ -1483,7 +1483,7 @@ const WaveSpawner = {
     this.spawnedCount = 0;
     this.totalToSpawn = milestone.monstersTotal;
     // Fit all spawns into the first 35% of the wave
-    const spawnWindow = CONFIG.WAVE_DURATION * 0.35;
+    const spawnWindow = Game.waveDurationFor(waveNum) * 0.35;
     this.spawnInterval = Math.max(0.25, spawnWindow / milestone.monstersTotal);
     this.spawnTimer = 0.3;
     this.bossPending = milestone.boss || null;
@@ -1494,7 +1494,7 @@ const WaveSpawner = {
     if (this.spawnedCount >= this.totalToSpawn) return;
     // Boss/mini-boss can spawn any time; regular enemies only in first 35% of wave
     const inSpawnWindow = (this.bossPending || this.miniBossPending) ||
-                          Game.waveTimer > CONFIG.WAVE_DURATION * 0.65;
+                          Game.waveTimer > Game.waveDuration * 0.65;
     if (!inSpawnWindow) return;
     this.spawnTimer -= dt;
     if (this.spawnTimer > 0) return;
@@ -1802,7 +1802,7 @@ const Renderer = {
 
     // Wave timer countdown bar (below HUD bar)
     if (Game.wave < 20 && Game.wavePhase === 'playing') {
-      const wavePct = Math.max(0, Game.waveTimer / CONFIG.WAVE_DURATION);
+      const wavePct = Math.max(0, Game.waveTimer / Game.waveDuration);
       ctx.fillStyle = 'rgba(0,116,42,0.15)';
       ctx.fillRect(0, 64, W * wavePct, 2);
     }
@@ -1877,11 +1877,13 @@ const Game = {
   wavePhase: 'break',      // playing | break
   wave: 1,
   waveTimer: 0,
+  waveDuration: 0,         // duration of current wave (grows 10% each wave)
   breakTimer: 0,
   paused: false,
   lastTime: 0,
   pendingLevelUps: 0,
   selectedChar: null,
+  waveDurationFor(w) { return CONFIG.WAVE_DURATION * Math.pow(1.1, w - 1); },
   animFrameId: null,
   firstWave: true,
   speedMultiplier: 1,
@@ -1959,7 +1961,8 @@ const Game = {
     this.phase = 'playing';
     this.wave = 1;
     this.wavePhase = 'playing';
-    this.waveTimer = CONFIG.WAVE_DURATION;
+    this.waveDuration = this.waveDurationFor(1);
+    this.waveTimer = this.waveDuration;
     this.paused = false;
     this.pendingLevelUps = 0;
     this.firstWave = true;
@@ -2050,7 +2053,8 @@ const Game = {
     Enemies = [];
     Projectiles = Projectiles.filter(p => p.isEnemyProjectile || !p.isEnemyProjectile);
     Projectiles = [];
-    this.waveTimer = CONFIG.WAVE_DURATION;
+    this.waveDuration = this.waveDurationFor(this.wave);
+    this.waveTimer = this.waveDuration;
     this.wavePhase = 'playing';
     WaveSpawner.startWave(this.wave);
     this.showWaveBanner(this.wave);
