@@ -379,50 +379,37 @@ body::after {
 #touch-controls {
   display: none;
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 180px;
+  bottom: 24px; left: 24px;
   pointer-events: none;
   z-index: 80;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 28px 28px;
 }
 #touch-controls.tc-visible { pointer-events: auto; }
 @media (hover: none) and (pointer: coarse) {
-  #touch-controls { display: flex; }
+  #touch-controls { display: block; }
 }
-.joy-zone {
-  width: 120px;
-  height: 120px;
-  touch-action: none;
+#dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  gap: 4px;
+}
+.dpad-btn {
+  width: 56px; height: 56px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,65,0.4);
+  background: rgba(0,255,65,0.08);
+  color: rgba(0,255,65,0.85);
+  font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
   user-select: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s, border-color 0.08s;
 }
-.joy-ring {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 1px solid rgba(0,255,65,0.35);
-  background: rgba(0,255,65,0.06);
-  position: relative;
-}
-.joy-thumb {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: rgba(0,255,65,0.3);
-  border: 1px solid rgba(0,255,65,0.65);
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.joy-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 9px;
-  color: rgba(0,255,65,0.35);
-  text-align: center;
-  margin-top: 5px;
-  letter-spacing: 0.15em;
+.dpad-btn.pressed {
+  background: rgba(0,255,65,0.28);
+  border-color: rgba(0,255,65,0.85);
 }
 </style>
 </head>
@@ -549,9 +536,6 @@ const Input = {
   mouseX: 0,   // screen coords
   mouseY: 0,
   autoAim: true,
-  moveStick: { dx: 0, dy: 0 },
-  aimStick:  { dx: 0, dy: 0, active: false },
-
   init() {
     window.addEventListener('keydown', e => {
       this.keys[e.code] = true;
@@ -569,79 +553,21 @@ const Input = {
   },
 
   initTouch() {
-    const joyMove   = document.getElementById('joy-move');
-    const joyAim    = document.getElementById('joy-aim');
-    const thumbMove = document.getElementById('thumb-move');
-    const thumbAim  = document.getElementById('thumb-aim');
-    if (!joyMove) return;
-
-    const RADIUS = 38;  // max thumb travel in px
-    const active = {};  // touchId → 'move' | 'aim'
-    const origin = {};  // touchId → {x, y}
-
-    const setThumb = (thumb, dx, dy) => {
-      thumb.style.transform = `translate(calc(-50% + ${dx * RADIUS}px), calc(-50% + ${dy * RADIUS}px))`;
-    };
-
-    const onStart = (e) => {
-      e.preventDefault();
-      for (const t of e.changedTouches) {
-        const zone = joyMove.contains(e.target) || e.target === joyMove ? 'move'
-                   : joyAim.contains(e.target)  || e.target === joyAim  ? 'aim'
-                   : null;
-        if (!zone) continue;
-        active[t.identifier] = zone;
-        origin[t.identifier] = { x: t.clientX, y: t.clientY };
-        if (zone === 'aim') { this.aimStick.active = true; this.autoAim = false; }
-      }
-    };
-
-    const onMove = (e) => {
-      e.preventDefault();
-      for (const t of e.changedTouches) {
-        const zone = active[t.identifier];
-        if (!zone) continue;
-        const o = origin[t.identifier];
-        let dx = (t.clientX - o.x) / RADIUS;
-        let dy = (t.clientY - o.y) / RADIUS;
-        const len = Math.sqrt(dx * dx + dy * dy);
-        if (len > 1) { dx /= len; dy /= len; }
-        if (zone === 'move') {
-          this.moveStick.dx = dx;
-          this.moveStick.dy = dy;
-          setThumb(thumbMove, dx, dy);
-        } else {
-          this.aimStick.dx = dx;
-          this.aimStick.dy = dy;
-          // Translate joystick direction into a screen-space aim point far from player center
-          this.mouseX = canvas.width  / 2 + dx * 1200;
-          this.mouseY = canvas.height / 2 + dy * 1200;
-          setThumb(thumbAim, dx, dy);
-        }
-      }
-    };
-
-    const onEnd = (e) => {
-      for (const t of e.changedTouches) {
-        const zone = active[t.identifier];
-        if (zone === 'move') {
-          this.moveStick.dx = 0; this.moveStick.dy = 0;
-          setThumb(thumbMove, 0, 0);
-        } else if (zone === 'aim') {
-          this.aimStick.active = false; this.aimStick.dx = 0; this.aimStick.dy = 0;
-          this.autoAim = true;
-          setThumb(thumbAim, 0, 0);
-        }
-        delete active[t.identifier];
-        delete origin[t.identifier];
-      }
-    };
-
-    joyMove.addEventListener('touchstart', onStart, { passive: false });
-    joyAim.addEventListener('touchstart',  onStart, { passive: false });
-    window.addEventListener('touchmove',   onMove,  { passive: false });
-    window.addEventListener('touchend',    onEnd);
-    window.addEventListener('touchcancel', onEnd);
+    const btns = [
+      { id: 'dpad-up',    code: 'KeyW' },
+      { id: 'dpad-down',  code: 'KeyS' },
+      { id: 'dpad-left',  code: 'KeyA' },
+      { id: 'dpad-right', code: 'KeyD' },
+    ];
+    for (const { id, code } of btns) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const press = (e) => { e.preventDefault(); this.keys[code] = true;  el.classList.add('pressed'); };
+      const release = (e) => { e.preventDefault(); this.keys[code] = false; el.classList.remove('pressed'); };
+      el.addEventListener('touchstart',  press,   { passive: false });
+      el.addEventListener('touchend',    release, { passive: false });
+      el.addEventListener('touchcancel', release, { passive: false });
+    }
   },
 
   isDown(code) { return !!this.keys[code]; },
@@ -949,18 +875,17 @@ const Player = {
     const goDown  = Input.isDown('KeyS') || Input.isDown('ArrowDown');
     const goLeft  = Input.isDown('KeyA') || Input.isDown('ArrowLeft');
     const goRight = Input.isDown('KeyD') || Input.isDown('ArrowRight');
-    let dx = (goRight ? 1 : 0) - (goLeft ? 1 : 0) + Input.moveStick.dx;
-    let dy = (goDown  ? 1 : 0) - (goUp   ? 1 : 0) + Input.moveStick.dy;
-    const dLen = Math.sqrt(dx * dx + dy * dy);
-    if (dLen > 1) { dx /= dLen; dy /= dLen; }
+    let dx = (goRight ? 1 : 0) - (goLeft ? 1 : 0);
+    let dy = (goDown  ? 1 : 0) - (goUp   ? 1 : 0);
+    if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
     this.x = clamp(this.x + dx * this.speed, this.radius, CONFIG.WORLD_W - this.radius);
     this.y = clamp(this.y + dy * this.speed, this.radius, CONFIG.WORLD_H - this.radius);
 
     // Facing direction (vertical takes priority in diagonals)
-    if (dy < -0.1)      this.facing = 'up';
-    else if (dy > 0.1)  this.facing = 'down';
-    else if (dx < -0.1) this.facing = 'left';
-    else if (dx > 0.1)  this.facing = 'right';
+    if (goUp   && !goDown)  this.facing = 'up';
+    else if (goDown  && !goUp)   this.facing = 'down';
+    else if (goLeft  && !goRight) this.facing = 'left';
+    else if (goRight && !goLeft)  this.facing = 'right';
 
     // Flash
     if (this.flashTimer > 0) this.flashTimer -= dt;
@@ -2257,13 +2182,16 @@ Game.init();
 </script>
 
 <div id="touch-controls">
-  <div class="joy-zone" id="joy-move">
-    <div class="joy-ring"><div class="joy-thumb" id="thumb-move"></div></div>
-    <div class="joy-label">MOVE</div>
-  </div>
-  <div class="joy-zone" id="joy-aim">
-    <div class="joy-ring"><div class="joy-thumb" id="thumb-aim"></div></div>
-    <div class="joy-label">AIM</div>
+  <div id="dpad">
+    <div></div>
+    <button class="dpad-btn" id="dpad-up">▲</button>
+    <div></div>
+    <button class="dpad-btn" id="dpad-left">◀</button>
+    <div></div>
+    <button class="dpad-btn" id="dpad-right">▶</button>
+    <div></div>
+    <button class="dpad-btn" id="dpad-down">▼</button>
+    <div></div>
   </div>
 </div>
 </body>
