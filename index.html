@@ -221,6 +221,20 @@ body::after {
   to   { text-shadow: 0 0 30px rgba(0,255,65,0.9), 0 0 60px rgba(0,255,65,0.3); }
 }
 .levelup-sub { font-size: 11px; color: var(--g3); letter-spacing: 0.2em; margin-top: 4px; }
+.reroll-row { text-align: center; margin-top: 4px; }
+.btn-reroll {
+  background: transparent;
+  border: 1px solid var(--g3);
+  color: var(--g3);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  padding: 7px 22px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-reroll:hover:not(:disabled) { color: var(--g1); border-color: var(--g1); }
+.btn-reroll:disabled { opacity: 0.28; cursor: default; }
 .upgrade-cards {
   display: flex;
   gap: 14px;
@@ -453,6 +467,9 @@ body::after {
     <div class="levelup-sub" id="levelup-sub">CHOOSE AN ENHANCEMENT</div>
   </div>
   <div class="upgrade-cards" id="upgrade-cards"></div>
+  <div class="reroll-row">
+    <button class="btn-reroll" id="btn-reroll">↺ REROLL <span id="reroll-count">(3)</span></button>
+  </div>
 </div>
 
 <!-- ── WAVE BANNER ──────────────────────── -->
@@ -1882,6 +1899,7 @@ const Game = {
   paused: false,
   lastTime: 0,
   pendingLevelUps: 0,
+  rerollsLeft: 3,
   selectedChar: null,
   waveDurationFor(w) { return CONFIG.WAVE_DURATION * Math.pow(1.1, w - 1); },
   animFrameId: null,
@@ -1917,10 +1935,28 @@ const Game = {
     dpadMap.forEach(({ id, code }) => {
       const el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('pointerdown', () => { Input.keys[code] = true;  el.classList.add('pressed'); });
-      el.addEventListener('pointerup',   () => { Input.keys[code] = false; el.classList.remove('pressed'); });
-      el.addEventListener('pointerleave',() => { Input.keys[code] = false; el.classList.remove('pressed'); });
-      el.addEventListener('pointercancel',()=> { Input.keys[code] = false; el.classList.remove('pressed'); });
+      el.addEventListener('click', () => {
+        const wasActive = !!Input.keys[code];
+        // clear all directions
+        dpadMap.forEach(({ id: oid, code: oc }) => {
+          Input.keys[oc] = false;
+          const oel = document.getElementById(oid);
+          if (oel) oel.classList.remove('pressed');
+        });
+        // toggle this one on unless it was already active
+        if (!wasActive) {
+          Input.keys[code] = true;
+          el.classList.add('pressed');
+        }
+      });
+    });
+  },
+
+  clearDpadToggles() {
+    ['KeyW','KeyS','KeyA','KeyD'].forEach(code => { Input.keys[code] = false; });
+    ['dpad-up','dpad-down','dpad-left','dpad-right'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('pressed');
     });
   },
 
@@ -1965,6 +2001,7 @@ const Game = {
     this.waveTimer = this.waveDuration;
     this.paused = false;
     this.pendingLevelUps = 0;
+    this.rerollsLeft = 3;
     this.firstWave = true;
     this.speedMultiplier = 1;
     Input.autoAim = true;
@@ -2085,30 +2122,50 @@ const Game = {
 
   showLevelUp() {
     this.paused = true;
+    this.clearDpadToggles();
     const screen = document.getElementById('screen-levelup');
     document.getElementById('levelup-sub').textContent = `LEVEL ${Player.level} — CHOOSE AN ENHANCEMENT`;
-    const container = document.getElementById('upgrade-cards');
-    container.innerHTML = '';
 
-    const choices = LevelSystem.generateChoices();
-    for (const choice of choices) {
-      const card = document.createElement('div');
-      card.className = 'upgrade-card';
-      card.innerHTML = `
-        <span class="upgrade-icon">${choice.icon}</span>
-        <div class="upgrade-type">${choice.sub}</div>
-        <div class="upgrade-name">${choice.label}</div>
-        <div class="upgrade-desc">${choice.desc}</div>
-      `;
-      card.addEventListener('click', () => {
-        LevelSystem.applyChoice(choice);
-        screen.classList.add('hidden');
-        this.pendingLevelUps--;
-        if (this.pendingLevelUps > 0) { this.showLevelUp(); }
-        else { this.paused = false; }
-      });
-      container.appendChild(card);
-    }
+    const renderCards = () => {
+      const container = document.getElementById('upgrade-cards');
+      container.innerHTML = '';
+      const choices = LevelSystem.generateChoices();
+      for (const choice of choices) {
+        const card = document.createElement('div');
+        card.className = 'upgrade-card';
+        card.innerHTML = `
+          <span class="upgrade-icon">${choice.icon}</span>
+          <div class="upgrade-type">${choice.sub}</div>
+          <div class="upgrade-name">${choice.label}</div>
+          <div class="upgrade-desc">${choice.desc}</div>
+        `;
+        card.addEventListener('click', () => {
+          LevelSystem.applyChoice(choice);
+          screen.classList.add('hidden');
+          this.pendingLevelUps--;
+          if (this.pendingLevelUps > 0) { this.showLevelUp(); }
+          else { this.paused = false; }
+        });
+        container.appendChild(card);
+      }
+    };
+
+    renderCards();
+
+    const rerollBtn = document.getElementById('btn-reroll');
+    const rerollCount = document.getElementById('reroll-count');
+    const updateRerollBtn = () => {
+      rerollCount.textContent = `(${this.rerollsLeft})`;
+      rerollBtn.disabled = this.rerollsLeft <= 0;
+    };
+    updateRerollBtn();
+    rerollBtn.onclick = () => {
+      if (this.rerollsLeft <= 0) return;
+      this.rerollsLeft--;
+      renderCards();
+      updateRerollBtn();
+    };
+
     screen.classList.remove('hidden');
   },
 
@@ -2122,6 +2179,7 @@ const Game = {
   gameOver() {
     if (this.phase === 'gameover' || this.phase === 'victory') return;
     this.phase = 'gameover';
+    this.clearDpadToggles();
     canvas.classList.remove('active');
     document.getElementById('speed-bar').classList.remove('visible');
     document.getElementById('touch-controls').classList.remove('tc-visible');
@@ -2135,6 +2193,7 @@ const Game = {
   victory() {
     if (this.phase === 'victory') return;
     this.phase = 'victory';
+    this.clearDpadToggles();
     setTimeout(() => {
       canvas.classList.remove('active');
       document.getElementById('speed-bar').classList.remove('visible');
@@ -2146,6 +2205,7 @@ const Game = {
   },
 
   restart() {
+    this.clearDpadToggles();
     document.getElementById('screen-gameover').classList.add('hidden');
     document.getElementById('screen-victory').classList.add('hidden');
     document.getElementById('screen-levelup').classList.add('hidden');
