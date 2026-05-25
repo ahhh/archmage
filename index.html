@@ -197,6 +197,7 @@ body::after {
   position: fixed;
   inset: 0;
   display: none;
+  pointer-events: none;
 }
 #game-canvas.active { display: block; }
 
@@ -395,6 +396,7 @@ body::after {
   position: fixed;
   bottom: 24px; left: 24px;
   z-index: 80;
+  pointer-events: auto;
 }
 #touch-controls.tc-visible { display: block; }
 @media (hover: none) and (pointer: coarse) {
@@ -416,13 +418,14 @@ body::after {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   user-select: none;
-  touch-action: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.08s, border-color 0.08s;
+  transition: background 0.08s, border-color 0.08s, color 0.08s, text-shadow 0.08s;
 }
-.dpad-btn.pressed {
-  background: rgba(0,255,65,0.28);
-  border-color: rgba(0,255,65,0.85);
+.dpad-btn.active {
+  background: rgba(0,255,65,0.22);
+  border-color: var(--g1);
+  color: var(--g1);
+  text-shadow: 0 0 8px rgba(0,255,65,0.8);
 }
 </style>
 </head>
@@ -1941,12 +1944,12 @@ const Game = {
         dpadMap.forEach(({ id: oid, code: oc }) => {
           Input.keys[oc] = false;
           const oel = document.getElementById(oid);
-          if (oel) oel.classList.remove('pressed');
+          if (oel) oel.classList.remove('active');
         });
         // toggle this one on unless it was already active
         if (!wasActive) {
           Input.keys[code] = true;
-          el.classList.add('pressed');
+          el.classList.add('active');
         }
       });
     });
@@ -1956,7 +1959,7 @@ const Game = {
     ['KeyW','KeyS','KeyA','KeyD'].forEach(code => { Input.keys[code] = false; });
     ['dpad-up','dpad-down','dpad-left','dpad-right'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.classList.remove('pressed');
+      if (el) el.classList.remove('active');
     });
   },
 
