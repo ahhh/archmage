@@ -861,6 +861,32 @@ const CONFIG = {
         { id: 'extra_pressure',  name: 'Extra Pressure',  icon: '💪', description: 'More projectiles, wider spray.',                                         changes: { projectileCount: 2, spreadAngle: 0.15 } },
         { id: 'toxic_deluge',    name: 'Toxic Deluge',    icon: '☠️',  description: 'Poison deals 60% more damage per tick.',                                changes: { damageMultiplier: 1.6 } }
       ]
+    },
+    {
+      id: 'afro_samurai_blade',
+      name: "Afro Samurai's Final Blade",
+      icon: '🗡️',
+      description: 'Three devastating blade strikes arc toward the nearest enemy in rapid succession. Cuts through every enemy in its path. No mercy.',
+      cooldown: 3.2,
+      damage: 95,
+      projectileSpeed: 13,
+      projectileCount: 3,
+      spreadAngle: 0.22,
+      armorPenetration: 5,
+      pierce: 99,
+      bounce: 0,
+      range: 520,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'highestThreat',
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'phantom_strike', name: 'Phantom Strike', icon: '👻', description: 'Two additional phantom slashes follow each strike, dealing 70% damage.',        changes: { projectileCount: 2, splitProjectiles: 1, splitDamageMultiplier: 0.7 } },
+        { id: 'blood_price',    name: 'Blood Price',    icon: '🩸', description: 'Each slash lifesteals — heals 25% of all cutting damage dealt.',               changes: { lifesteal: 0.25 } },
+        { id: 'final_form',     name: 'Final Form',     icon: '⚡', description: 'Slashes deal nearly double damage and shred through any armor.',               changes: { damageMultiplier: 1.9, armorPenetration: 8 } }
+      ]
     }
   ],
 
@@ -903,6 +929,332 @@ const CONFIG = {
     { wave: 18, monstersTotal: 195 },
     { wave: 19, monstersTotal: 208 },
     { wave: 20, monstersTotal: 211, boss: 'dragon_boss' }
+  ],
+
+  // ── WEAPON COMBOS ─────────────────────────────────────────────
+  // Each combo requires owning both listed weapons.
+  // Once both are owned, the combo appears as a SYNERGY choice on level-up.
+  // Every weapon appears in exactly 2 combos.
+  combos: [
+    // ─── CYCLE 1: FIRE ──────────────────────────────────────────
+    {
+      id: 'blazing_phoenix', name: 'Blazing Phoenix', icon: '🦅',
+      requires: ['firebolt', 'phoenix_wings'],
+      description: 'Firebolt splits into 3 bolts on impact. Phoenix Wings bolts deal 80% more damage and pierce one extra enemy.',
+      weaponBoosts: [
+        { weaponId: 'firebolt',      splitProjectiles: 2, splitDamageMultiplier: 0.75, damageMultiplier: 1.5 },
+        { weaponId: 'phoenix_wings', damageMultiplier: 1.8, pierce: 1 }
+      ]
+    },
+    {
+      id: 'eruption_wings', name: 'Eruption Wings', icon: '🌋',
+      requires: ['phoenix_wings', 'magma_orb'],
+      description: 'Phoenix Wings bolts scorch the ground on impact. Magma Orb explosion grows 80% wider and fires 35% faster.',
+      weaponBoosts: [
+        { weaponId: 'phoenix_wings', damageMultiplier: 1.5, groundEffect: { type: 'burn', duration: 2.0, dps: 12 } },
+        { weaponId: 'magma_orb',     areaRadiusMultiplier: 1.8, cooldownMultiplier: 0.65 }
+      ]
+    },
+    {
+      id: 'volcanic_siege', name: 'Volcanic Siege', icon: '☄️',
+      requires: ['magma_orb', 'meteor_sigil'],
+      description: 'Each Meteor spawns 2 follow-up impacts. Magma Orb fires twice as fast and deals double damage.',
+      weaponBoosts: [
+        { weaponId: 'magma_orb',    damageMultiplier: 2.0, cooldownMultiplier: 0.5 },
+        { weaponId: 'meteor_sigil', followupMeteors: 2, followupDamageMultiplier: 0.65, damageMultiplier: 1.5 }
+      ]
+    },
+    {
+      id: 'extinction_event', name: 'Extinction Event', icon: '🌠',
+      requires: ['meteor_sigil', 'starfall'],
+      description: 'Starfall rains 3 extra stars and deals 2.5× damage. Meteor hits 80% harder and cooldown shrinks 40%.',
+      weaponBoosts: [
+        { weaponId: 'meteor_sigil', damageMultiplier: 1.8, cooldownMultiplier: 0.6 },
+        { weaponId: 'starfall',     damageMultiplier: 2.5, projectileCount: 3 }
+      ]
+    },
+    {
+      id: 'comet_wake', name: 'Comet Wake', icon: '💫',
+      requires: ['starfall', 'arcane_trail'],
+      description: 'Starfall impacts leave burning ground. Arcane Trail spheres deal triple damage.',
+      weaponBoosts: [
+        { weaponId: 'starfall',     damageMultiplier: 1.8, groundEffect: { type: 'burn', duration: 3.0, dps: 14 } },
+        { weaponId: 'arcane_trail', damageMultiplier: 3.0 }
+      ]
+    },
+    {
+      id: 'infernal_march', name: 'Infernal March', icon: '🔥',
+      requires: ['arcane_trail', 'firebolt'],
+      description: 'Arcane Trail now poisons every enemy it scars. Firebolt deals double damage and pierces 2 additional enemies.',
+      weaponBoosts: [
+        { weaponId: 'arcane_trail', damageMultiplier: 2.0, statusEffect: { type: 'poison', amount: 10, duration: 3.0 } },
+        { weaponId: 'firebolt',     damageMultiplier: 2.0, pierce: 2 }
+      ]
+    },
+
+    // ─── CYCLE 2: ICE / VOID ───────────────────────────────────
+    {
+      id: 'null_winter', name: 'Null Winter', icon: '❄️',
+      requires: ['frost_shard', 'void_lance'],
+      description: 'Void Lance now slows everything it tears through. Frost Shard gains massive armor penetration and fires 40% faster.',
+      weaponBoosts: [
+        { weaponId: 'frost_shard', damageMultiplier: 1.8, armorPenetration: 5, cooldownMultiplier: 0.6 },
+        { weaponId: 'void_lance',  statusEffect: { type: 'slow', amount: 0.55, duration: 3.5 }, damageMultiplier: 1.6 }
+      ]
+    },
+    {
+      id: 'void_fissure', name: 'Void Fissure', icon: '🕳️',
+      requires: ['void_lance', 'fault_lines'],
+      description: 'Fault Lines now pull enemies to their center before detonating. Void Lance pull range doubles and damage increases 80%.',
+      weaponBoosts: [
+        { weaponId: 'void_lance',  pullRadius: 160, pullStrength: 4.0, damageMultiplier: 1.8 },
+        { weaponId: 'fault_lines', damageMultiplier: 2.0, areaRadiusMultiplier: 1.5, riftCount: 1 }
+      ]
+    },
+    {
+      id: 'seismic_blast', name: 'Seismic Blast', icon: '💥',
+      requires: ['fault_lines', 'force_pulse'],
+      description: 'Force Pulse now deals 40 damage and detonates all nearby rifts when it fires. Fault Lines gain instant chain detonation.',
+      weaponBoosts: [
+        { weaponId: 'fault_lines', damageMultiplier: 1.8, riftChain: true },
+        { weaponId: 'force_pulse', damageOverride: 40, areaRadius: 55, areaDamageMultiplier: 1.0, statusEffect: { type: 'stun', duration: 0.8 } }
+      ]
+    },
+    {
+      id: 'temporal_shockwave', name: 'Temporal Shockwave', icon: '🕰️',
+      requires: ['force_pulse', 'chrono_needle'],
+      description: 'Force Pulse marks every enemy it hits with a Chrono Needle. Chrono detonations deal double damage and chain to nearby enemies.',
+      weaponBoosts: [
+        { weaponId: 'force_pulse',   damageOverride: 25, areaRadius: 45, areaDamageMultiplier: 1.0, statusEffect: { type: 'stun', duration: 1.0 } },
+        { weaponId: 'chrono_needle', damageMultiplier: 2.0, chronoMultiplierBonus: 0.5, chronoChain: true }
+      ]
+    },
+    {
+      id: 'phase_paradox', name: 'Phase Paradox', icon: '🌀',
+      requires: ['chrono_needle', 'phantom_gyre'],
+      description: 'Phantom Gyre orbits 50% faster and deals double damage. Chrono Needles chain to nearby enemies on detonation.',
+      weaponBoosts: [
+        { weaponId: 'chrono_needle', damageMultiplier: 1.8, chronoChain: true },
+        { weaponId: 'phantom_gyre',  damageMultiplier: 2.0, orbitSpeedMultiplier: 1.5 }
+      ]
+    },
+    {
+      id: 'glacial_orbit', name: 'Glacial Orbit', icon: '🧊',
+      requires: ['phantom_gyre', 'frost_shard'],
+      description: 'Phantom Gyre orbs slow every enemy they pass through. Frost Shard splits into 4 shards on impact.',
+      weaponBoosts: [
+        { weaponId: 'phantom_gyre', damageMultiplier: 1.7, statusEffect: { type: 'slow', amount: 0.45, duration: 2.5 } },
+        { weaponId: 'frost_shard',  damageMultiplier: 1.8, splitProjectiles: 3, splitDamageMultiplier: 0.65 }
+      ]
+    },
+
+    // ─── CYCLE 3: LIGHTNING / ARCANE ───────────────────────────
+    {
+      id: 'electrostatic_field', name: 'Electrostatic Field', icon: '⚡',
+      requires: ['spark_chain', 'rune_burst'],
+      description: 'Spark Chain gains 6 more chains and fires 30% faster. Rune Burst deals double damage with 4 extra runes per burst.',
+      weaponBoosts: [
+        { weaponId: 'spark_chain', chainCount: 6, damageMultiplier: 1.8, cooldownMultiplier: 0.7 },
+        { weaponId: 'rune_burst',  damageMultiplier: 2.0, radialCount: 4 }
+      ]
+    },
+    {
+      id: 'orbiting_runes', name: 'Orbiting Runes', icon: '🔮',
+      requires: ['rune_burst', 'arcane_orb'],
+      description: 'Arcane Orb detonates a rune burst on every bounce and gains 2 extra bounces. Rune Burst pierces enemies and fires 2 extra runes.',
+      weaponBoosts: [
+        { weaponId: 'rune_burst',  damageMultiplier: 1.8, pierce: 2, radialCount: 2 },
+        { weaponId: 'arcane_orb',  damageMultiplier: 2.5, bounce: 2, runeBlastCount: 6, runeBlastDamage: 14 }
+      ]
+    },
+    {
+      id: 'prismatic_lattice', name: 'Prismatic Lattice', icon: '🔷',
+      requires: ['arcane_orb', 'arcane_cube'],
+      description: 'Arcane Cube walls slow and detonate with area energy at their corners. Arcane Orb pulls enemies on each bounce.',
+      weaponBoosts: [
+        { weaponId: 'arcane_orb',  damageMultiplier: 2.0, pullRadius: 80, pullStrength: 2.0, bounce: 1 },
+        { weaponId: 'arcane_cube', damageMultiplier: 1.8, areaRadius: 65, areaDamageMultiplier: 0.85, statusEffect: { type: 'slow', amount: 0.4, duration: 1.5 } }
+      ]
+    },
+    {
+      id: 'resonant_edge', name: 'Resonant Edge', icon: '⚔️',
+      requires: ['arcane_cube', 'phase_blade'],
+      description: 'Phase Blade orbit radius doubles and damage triples. Arcane Cube walls stun every enemy they sweep through.',
+      weaponBoosts: [
+        { weaponId: 'arcane_cube', statusEffect: { type: 'stun', duration: 0.7 }, damageMultiplier: 1.5 },
+        { weaponId: 'phase_blade', damageMultiplier: 3.0, rangeMultiplier: 2.0 }
+      ]
+    },
+    {
+      id: 'thunderblade', name: 'Thunderblade', icon: '🌩️',
+      requires: ['phase_blade', 'thunder_clap'],
+      description: 'Thunder Clap blasts 60% wider and deals double damage with 40% shorter cooldown. Phase Blade stuns every enemy it slices.',
+      weaponBoosts: [
+        { weaponId: 'phase_blade',  damageMultiplier: 2.5, statusEffect: { type: 'stun', duration: 0.5 } },
+        { weaponId: 'thunder_clap', damageMultiplier: 2.0, areaRadiusMultiplier: 1.6, cooldownMultiplier: 0.6 }
+      ]
+    },
+    {
+      id: 'rolling_thunder', name: 'Rolling Thunder', icon: '🌩️',
+      requires: ['thunder_clap', 'spark_chain'],
+      description: 'Spark Chain gains 8 extra chains and fires twice as fast. Thunder Clap cooldown halved and stun duration doubled.',
+      weaponBoosts: [
+        { weaponId: 'thunder_clap', cooldownMultiplier: 0.5, damageMultiplier: 1.8, statusEffect: { type: 'stun', duration: 2.4 } },
+        { weaponId: 'spark_chain',  chainCount: 8, damageMultiplier: 1.6, cooldownMultiplier: 0.5 }
+      ]
+    },
+
+    // ─── CYCLE 4: SHADOW / DEATH ────────────────────────────────
+    {
+      id: 'plague_spine', name: 'Plague Spine', icon: '🦴',
+      requires: ['shadow_bolt', 'bone_spear'],
+      description: 'Bone Spear poisons every enemy it pierces. Shadow Bolt travels at double speed and deals triple damage.',
+      weaponBoosts: [
+        { weaponId: 'shadow_bolt', damageMultiplier: 3.0, projectileSpeedMultiplier: 2.0 },
+        { weaponId: 'bone_spear',  statusEffect: { type: 'poison', amount: 8, duration: 3.0 }, damageMultiplier: 1.8 }
+      ]
+    },
+    {
+      id: 'bone_puppet', name: 'Bone Puppet', icon: '🪆',
+      requires: ['bone_spear', 'phantom_double'],
+      description: 'Phantom Double gains 150 HP, lasts 5 extra seconds, and explodes on death. Bone Spear pierces 5 additional enemies.',
+      weaponBoosts: [
+        { weaponId: 'bone_spear',     damageMultiplier: 2.0, pierce: 5 },
+        { weaponId: 'phantom_double', decoyHpBonus: 150, decoyDurationBonus: 5, decoyExplosion: true }
+      ]
+    },
+    {
+      id: 'haunted_library', name: 'Haunted Library', icon: '📚',
+      requires: ['phantom_double', 'hungry_grimoire'],
+      description: 'Grimoire charges on every kill and blasts in double the radius at 2.5× damage. Decoy gets extra HP and a longer lease on life.',
+      weaponBoosts: [
+        { weaponId: 'phantom_double',  decoyHpBonus: 80, decoyDurationBonus: 3 },
+        { weaponId: 'hungry_grimoire', damageMultiplier: 2.5, grimoireFeedOnKill: true, areaRadiusMultiplier: 2.0 }
+      ]
+    },
+    {
+      id: 'toxic_library', name: 'Toxic Library', icon: '☠️',
+      requires: ['hungry_grimoire', 'plague_pool'],
+      description: 'Grimoire blast poisons every enemy hit. Plague Pools become massive, highly lethal toxic swamps.',
+      weaponBoosts: [
+        { weaponId: 'hungry_grimoire', damageMultiplier: 1.8, statusEffect: { type: 'poison', amount: 12, duration: 4.0 } },
+        { weaponId: 'plague_pool',     groundEffect: { type: 'toxic', duration: 12.0, dps: 22 }, areaRadius: 95 }
+      ]
+    },
+    {
+      id: 'toxic_spiral', name: 'Toxic Spiral', icon: '💫',
+      requires: ['plague_pool', 'soul_whirl'],
+      description: 'Soul Whirl bolts poison every enemy they arc through. Plague Pools linger far longer and deal triple damage.',
+      weaponBoosts: [
+        { weaponId: 'plague_pool', groundEffect: { type: 'toxic', duration: 10.0, dps: 20 }, areaRadius: 82 },
+        { weaponId: 'soul_whirl',  damageMultiplier: 2.0, statusEffect: { type: 'poison', amount: 10, duration: 3.0 }, pierce: 2 }
+      ]
+    },
+    {
+      id: 'venom_vortex', name: 'Venom Vortex', icon: '💜',
+      requires: ['soul_whirl', 'shadow_bolt'],
+      description: 'Shadow Bolt deals triple damage and arcs like Soul Whirl. Soul Whirl bolts spiral more tightly, shredding everything in their path.',
+      weaponBoosts: [
+        { weaponId: 'soul_whirl',  damageMultiplier: 2.5, curveRateMultiplier: 1.6, pierce: 2 },
+        { weaponId: 'shadow_bolt', damageMultiplier: 3.0, projectileSpeedMultiplier: 1.6 }
+      ]
+    },
+
+    // ─── CYCLE 5: UTILITY / ARCANE ──────────────────────────────
+    {
+      id: 'missile_storm', name: 'Missile Storm', icon: '✨',
+      requires: ['magic_missiles', 'mirror_glyph'],
+      description: 'Mirror echoes full missile barrages at near full power. Magic Missiles gains 5 extra missiles and fires 50% faster.',
+      weaponBoosts: [
+        { weaponId: 'magic_missiles', projectileCount: 5, damageMultiplier: 1.5, projectileSpeedMultiplier: 1.3 },
+        { weaponId: 'mirror_glyph',   mirrorPower: 0.92, mirrorCount: 1 }
+      ]
+    },
+    {
+      id: 'hall_of_mirrors', name: 'Hall of Mirrors', icon: '🪞',
+      requires: ['mirror_glyph', 'dazzling_lights'],
+      description: 'Two extra mirrors orbit you, echoing spells. Dazzling Lights deals 2.5× damage and pierces every enemy it hits.',
+      weaponBoosts: [
+        { weaponId: 'mirror_glyph',    mirrorCount: 2, mirrorPower: 0.85 },
+        { weaponId: 'dazzling_lights', damageMultiplier: 2.5, pierce: 2 }
+      ]
+    },
+    {
+      id: 'prismatic_strings', name: 'Prismatic Strings', icon: '🎵',
+      requires: ['dazzling_lights', 'leyline_harp'],
+      description: 'Dazzling Lights bolts stun every enemy they hit. Leyline Harp beams stun and pulse extra damage every second.',
+      weaponBoosts: [
+        { weaponId: 'dazzling_lights', damageMultiplier: 1.8, statusEffect: { type: 'stun', duration: 0.6 } },
+        { weaponId: 'leyline_harp',    damageMultiplier: 2.0, statusEffect: { type: 'stun', duration: 1.0 }, harpPulse: true }
+      ]
+    },
+    {
+      id: 'harmonic_barrage', name: 'Harmonic Barrage', icon: '🎶',
+      requires: ['leyline_harp', 'magic_missiles'],
+      description: 'Leyline Harp adds a third beam and pulses bonus damage every second. Magic Missiles deals double damage and flies 50% faster.',
+      weaponBoosts: [
+        { weaponId: 'leyline_harp',    damageMultiplier: 2.0, harpPulse: true, harpThird: true },
+        { weaponId: 'magic_missiles',  damageMultiplier: 2.0, projectileSpeedMultiplier: 1.5 }
+      ]
+    },
+
+    // ─── CYCLE 6: NAMED / UNIQUE ────────────────────────────────
+    {
+      id: 'bombastic_bearing', name: 'Bombastic Bearing', icon: '🧭',
+      requires: ['jakes_lament', 'babbage_blast'],
+      description: "Jake's Lament beam extends 50% further and lifesteals 15% of all damage. Babbage Blast detonates twice as many runes at double damage.",
+      weaponBoosts: [
+        { weaponId: 'jakes_lament',  damageMultiplier: 2.0, rangeMultiplier: 1.5, lifesteal: 0.15 },
+        { weaponId: 'babbage_blast', runeBlastCount: 6, damageMultiplier: 2.0, cooldownMultiplier: 0.6 }
+      ]
+    },
+    {
+      id: 'cringe_barrage', name: 'Cringe Barrage', icon: '🤡',
+      requires: ['babbage_blast', 'viceroy_missile'],
+      description: "Viceroy Missiles explode into a full rune burst on impact. Babbage Blast fires 4 extra runes and cooldown halved.",
+      weaponBoosts: [
+        { weaponId: 'babbage_blast',    damageMultiplier: 1.8, runeBlastCount: 4, cooldownMultiplier: 0.5 },
+        { weaponId: 'viceroy_missile',  runeBlastCount: 8, runeBlastDamage: 14, damageMultiplier: 1.6 }
+      ]
+    },
+    {
+      id: 'hazmat_missile', name: 'Hazmat Missile', icon: '🖤',
+      requires: ['viceroy_missile', 'stax_black_sauce'],
+      description: "Viceroy Missiles poison every enemy they hit and bounce 3 more times. Stax's Black Sauce fires 80% further and twice as fast.",
+      weaponBoosts: [
+        { weaponId: 'viceroy_missile',  statusEffect: { type: 'poison', amount: 10, duration: 3.0 }, damageMultiplier: 1.5, bounce: 3 },
+        { weaponId: 'stax_black_sauce', damageMultiplier: 2.0, rangeMultiplier: 1.8, cooldownMultiplier: 0.5 }
+      ]
+    },
+    {
+      id: 'trail_blazer', name: 'Trail Blazer', icon: '💨',
+      requires: ['stax_black_sauce', 'jakes_lament'],
+      description: "Stax's Black Sauce fires 5× faster and deals 50% more damage while charging toward enemies. Jake's beam extends further and lifesteals.",
+      weaponBoosts: [
+        { weaponId: 'stax_black_sauce', cooldownMultiplier: 0.2, damageMultiplier: 1.5 },
+        { weaponId: 'jakes_lament',     damageMultiplier: 2.0, lifesteal: 0.2, rangeMultiplier: 1.4 }
+      ]
+    },
+
+    // ─── AFRO SAMURAI COMBOS ────────────────────────────────────
+    {
+      id: 'void_cleave', name: 'Void Cleave', icon: '🌑',
+      requires: ['afro_samurai_blade', 'void_lance'],
+      description: "The Blade's slashes rend the void — each strike deals area damage and pulls nearby enemies into the cut. Void Lance pierces 4 extra enemies and deals 80% more damage.",
+      weaponBoosts: [
+        { weaponId: 'afro_samurai_blade', damageMultiplier: 1.8, areaRadius: 45, areaDamageMultiplier: 0.7, pullRadius: 60, pullStrength: 2.0 },
+        { weaponId: 'void_lance',         pierce: 4, damageMultiplier: 1.8, armorPenetration: 4 }
+      ]
+    },
+    {
+      id: 'dual_blade_mastery', name: 'Dual Blade Mastery', icon: '⚔️',
+      requires: ['afro_samurai_blade', 'phase_blade'],
+      description: "Two blade weapons, one devastating rhythm. Phase Blade orbit radius triples and deals 3× damage. The Final Blade fires 40% faster with a wider cut.",
+      weaponBoosts: [
+        { weaponId: 'afro_samurai_blade', cooldownMultiplier: 0.6, spreadAngle: 0.12, damageMultiplier: 1.6 },
+        { weaponId: 'phase_blade',        damageMultiplier: 3.0, rangeMultiplier: 3.0 }
+      ]
+    }
   ]
 };
 

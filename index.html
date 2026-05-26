@@ -272,6 +272,54 @@ body::after {
 .upgrade-type { font-size: 10px; color: var(--g3); margin-bottom: 6px; letter-spacing: 0.1em; text-transform: uppercase; }
 .upgrade-desc { font-size: 10px; color: var(--text); line-height: 1.5; }
 
+/* ── SYNERGY (COMBO) CARDS ──────────────── */
+.upgrade-card.synergy {
+  border-color: #ccaa00;
+  background: rgba(18, 13, 0, 0.95);
+}
+.upgrade-card.synergy::before {
+  background: linear-gradient(180deg, rgba(255,200,0,0.12) 0%, transparent 100%);
+}
+.upgrade-card.synergy:hover {
+  border-color: #ffdd44;
+  box-shadow: 0 0 28px rgba(255,200,0,0.35);
+  transform: translateY(-3px);
+}
+.upgrade-card.synergy .upgrade-type { color: #ffcc44; }
+.upgrade-card.synergy .upgrade-name { color: #ffee88; font-size: 14px; }
+
+/* ── EMPOWERED UPGRADE CARDS (weapon boosted by active combo) ── */
+.upgrade-card.empowered {
+  border-color: #8844cc;
+  background: rgba(10, 0, 18, 0.95);
+}
+.upgrade-card.empowered::before {
+  background: linear-gradient(180deg, rgba(140,70,255,0.1) 0%, transparent 100%);
+}
+.upgrade-card.empowered:hover {
+  border-color: #bb66ff;
+  box-shadow: 0 0 26px rgba(140,70,255,0.35);
+}
+.upgrade-card.empowered .upgrade-type { color: #bb66ff; }
+
+/* ── INLINE HINTS ON CARDS ────────────── */
+.combo-potential {
+  display: block;
+  margin-top: 7px;
+  font-size: 9px;
+  color: #33ddbb;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.empowered-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 9px;
+  color: #aa66ff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 /* ── WAVE BANNER ─────────────────────────── */
 #wave-banner {
   position: fixed;
@@ -778,6 +826,7 @@ const Player = {
     this.moveDy = 0;
     this.jakesDir = null;
     this.killHeal = 0;
+    this.unlockedCombos = new Set();
     this.facing = 'down';
     const startWeapon = CONFIG.weapons.find(w => w.id === charConfig.startingWeapon);
     this.weapons = [this.makeWeaponInstance(startWeapon)];
@@ -907,6 +956,55 @@ const Player = {
       if (c.mirrorExplosion) s.mirrorExplosion = true;
       if (c.riftCount != null) s.riftCount += c.riftCount;
       if (c.riftChain) s.riftChain = true;
+      if (c.damageOverride != null) s.damage = c.damageOverride;
+      if (c.runeBlastDamage != null) s.runeBlastDamage = c.runeBlastDamage;
+    }
+    // Apply active combo boosts (same change format as upgrades)
+    if (this.unlockedCombos) {
+      for (const comboId of this.unlockedCombos) {
+        const combo = CONFIG.combos?.find(c => c.id === comboId);
+        if (!combo) continue;
+        const boost = combo.weaponBoosts?.find(b => b.weaponId === wConfig.id);
+        if (!boost) continue;
+        const c = boost;
+        if (c.damageMultiplier)           s.damage = Math.round(s.damage * c.damageMultiplier);
+        if (c.damageOverride != null)     s.damage = c.damageOverride;
+        if (c.projectileSpeedMultiplier)  s.projectileSpeed *= c.projectileSpeedMultiplier;
+        if (c.cooldownMultiplier)         s.cooldown *= c.cooldownMultiplier;
+        if (c.areaRadiusMultiplier)       s.areaRadius *= c.areaRadiusMultiplier;
+        if (c.pierce != null)             s.pierce += c.pierce;
+        if (c.bounce != null)             s.bounce += c.bounce;
+        if (c.armorPenetration != null)   s.armorPenetration += c.armorPenetration;
+        if (c.chainCount != null)         s.chainCount += c.chainCount;
+        if (c.statusEffect)               s.statusEffect = { ...c.statusEffect };
+        if (c.areaRadius != null)         s.areaRadius = c.areaRadius;
+        if (c.areaDamageMultiplier != null) s.areaDamageMultiplier = c.areaDamageMultiplier;
+        if (c.splitProjectiles != null)   s.splitProjectiles = c.splitProjectiles;
+        if (c.splitDamageMultiplier != null) s.splitDamageMultiplier = c.splitDamageMultiplier;
+        if (c.projectileCount != null)    s.projectileCount += c.projectileCount;
+        if (c.radialCount != null)        s.radialCount += c.radialCount;
+        if (c.groundEffect != null)       s.groundEffect = { ...c.groundEffect };
+        if (c.rangeMultiplier != null)    s.range *= c.rangeMultiplier;
+        if (c.pullRadius != null)         s.pullRadius = c.pullRadius;
+        if (c.pullStrength != null)       s.pullStrength = c.pullStrength;
+        if (c.orbitSpeedMultiplier != null) s.orbitSpeed = (s.orbitSpeed || wConfig.orbitSpeed || 0.065) * c.orbitSpeedMultiplier;
+        if (c.curveRateMultiplier != null)  s.curveRate *= c.curveRateMultiplier;
+        if (c.decoyHpBonus != null)       s.decoyHp += c.decoyHpBonus;
+        if (c.decoyDurationBonus != null) s.decoyDuration += c.decoyDurationBonus;
+        if (c.decoyExplosion)             s.decoyExplosion = true;
+        if (c.runeBlastCount != null)     s.runeBlastCount += c.runeBlastCount;
+        if (c.runeBlastDamage != null)    s.runeBlastDamage = c.runeBlastDamage;
+        if (c.lifesteal != null)          s.lifesteal = (s.lifesteal || 0) + c.lifesteal;
+        if (c.chronoMultiplierBonus != null) s.chronoMultiplierBonus += c.chronoMultiplierBonus;
+        if (c.chronoChain)                s.chronoChain = true;
+        if (c.harpThird)                  s.harpThird = true;
+        if (c.harpPulse)                  s.harpPulse = true;
+        if (c.grimoireFeedOnKill)         s.grimoireFeedOnKill = true;
+        if (c.mirrorCount != null)        s.mirrorCount += c.mirrorCount;
+        if (c.mirrorPower != null)        s.mirrorPower = c.mirrorPower;
+        if (c.riftCount != null)          s.riftCount += c.riftCount;
+        if (c.riftChain)                  s.riftChain = true;
+      }
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1928,6 +2026,7 @@ const WeaponSystem = {
       isMagmaOrb: wi.weaponId === 'magma_orb',
       isViceroyMissile: wi.weaponId === 'viceroy_missile',
       isBlackSauce: wi.weaponId === 'stax_black_sauce',
+      isSlash: wi.weaponId === 'afro_samurai_blade',
       pierceHitCount: 0,
       wobblePhase: Math.random() * Math.PI * 2,
       acceleration: s.projectileAcceleration || 1,
@@ -1942,6 +2041,7 @@ const WeaponSystem = {
       chronoBaseDamage: s.chronoBaseDamage || 12,
       chronoMultiplierBonus: s.chronoMultiplierBonus || 0,
       chronoChain: s.chronoChain || false,
+      lifesteal: s.lifesteal || 0,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
@@ -2235,6 +2335,11 @@ function updateProjectiles(dt, enemies) {
         let dmg = p.damage;
         const chainIdx = (p.chainCount - (p.chainCount)) ; // resolved per-chain
         applyDamage(e, dmg, p.armorPen, p.statusEffect, p.finalHitStun && p.chainCount === 0 ? p.finalHitStun : 0);
+        if (p.lifesteal > 0 && dmg > 0) {
+          const effArmor = Math.max(0, (e.armor || 0) - (p.armorPen || 0));
+          const finalDmg = Math.max(1, dmg - effArmor);
+          Player.health = Math.min(Player.maxHealth, Player.health + Math.round(finalDmg * p.lifesteal));
+        }
 
         // Area damage
         if (p.areaRadius > 0) {
@@ -2699,7 +2804,19 @@ const LevelSystem = {
     // New weapons
     for (const w of CONFIG.weapons) {
       if (!Player.hasWeapon(w.id)) {
-        choices.push({ type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell' });
+        const comboPotentials = [];
+        for (const combo of (CONFIG.combos || [])) {
+          if (Player.unlockedCombos.has(combo.id)) continue;
+          const [wA, wB] = combo.requires;
+          if (wA === w.id || wB === w.id) {
+            const partnerId = wA === w.id ? wB : wA;
+            if (Player.weapons.some(pw => pw.weaponId === partnerId)) {
+              const partnerName = CONFIG.weapons.find(pw => pw.id === partnerId)?.name || partnerId;
+              comboPotentials.push({ comboName: combo.name, comboIcon: combo.icon, partnerName });
+            }
+          }
+        }
+        choices.push({ type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell', comboPotentials });
       }
     }
 
@@ -2707,9 +2824,16 @@ const LevelSystem = {
     for (const wi of Player.weapons) {
       const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
       if (!wConfig) continue;
+      const empoweredBy = [];
+      for (const comboId of Player.unlockedCombos) {
+        const combo = CONFIG.combos?.find(c => c.id === comboId);
+        if (combo?.weaponBoosts?.some(b => b.weaponId === wi.weaponId)) {
+          empoweredBy.push({ comboName: combo.name, comboIcon: combo.icon });
+        }
+      }
       for (const upg of wConfig.upgrades) {
         if (!wi.appliedUpgrades.includes(upg.id)) {
-          choices.push({ type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}` });
+          choices.push({ type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}`, empoweredBy });
         }
       }
     }
@@ -2721,9 +2845,26 @@ const LevelSystem = {
       }
     }
 
-    // Shuffle and take 3
+    // Synergy combos — always shown first if available (player owns both weapons, combo not yet taken)
+    const synergies = [];
+    for (const combo of (CONFIG.combos || [])) {
+      if (Player.unlockedCombos.has(combo.id)) continue;
+      const [wA, wB] = combo.requires;
+      if (Player.weapons.some(w => w.weaponId === wA) && Player.weapons.some(w => w.weaponId === wB)) {
+        const [nameA] = [CONFIG.weapons.find(w => w.id === wA)?.name || wA];
+        const [nameB] = [CONFIG.weapons.find(w => w.id === wB)?.name || wB];
+        synergies.push({ type: 'combo', comboId: combo.id, label: combo.name, icon: combo.icon, desc: combo.description, sub: `✦ SYNERGY: ${nameA} + ${nameB}` });
+      }
+    }
+
+    // Shuffle and take 3, but prioritize synergies
     const shuffled = shuffle(choices);
-    let picks = shuffled.slice(0, 3);
+    const picks = [];
+    for (const s of synergies.slice(0, 3)) picks.push(s);
+    for (const c of shuffled) {
+      if (picks.length >= 3) break;
+      picks.push(c);
+    }
 
     // Guarantee at least 1 (infinite passives as fallback if needed)
     if (picks.length === 0) {
@@ -2740,6 +2881,13 @@ const LevelSystem = {
     } else if (choice.type === 'passive') {
       const p = PASSIVES.find(p => p.id === choice.passiveId);
       if (p) { p.apply(Player); Player.passivesApplied.push(p.id); }
+    } else if (choice.type === 'combo') {
+      Player.unlockedCombos.add(choice.comboId);
+      // Recompute stats for all weapons so boosts take effect immediately
+      for (const wi of Player.weapons) {
+        const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+        if (wConfig) wi.computedStats = Player.computeWeaponStats(wConfig, wi.appliedUpgrades);
+      }
     }
   }
 };
@@ -2944,6 +3092,38 @@ const Renderer = {
         ctx.strokeStyle = `rgba(200,240,255,${0.9 * fade})`;
         ctx.lineWidth = 3;
         ctx.stroke();
+        ctx.restore();
+      } else if (p.isSlash) {
+        const angle = Math.atan2(p.vy, p.vx);
+        const slashLen = 52;
+        const age = p.traveledSq / (p.range || 520);
+        const fade = 1 - age * 0.6;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        // Outer glow sweep
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = '#fffbe0';
+        ctx.strokeStyle = `rgba(255,230,120,${0.5 * fade})`;
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-slashLen * 0.55, -3);
+        ctx.lineTo(slashLen * 0.55, 3);
+        ctx.stroke();
+        // Bright core
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(255,255,240,${0.95 * fade})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-slashLen * 0.55, -3);
+        ctx.lineTo(slashLen * 0.55, 3);
+        ctx.stroke();
+        // Leading edge flash
+        ctx.fillStyle = `rgba(255,255,200,${0.8 * fade})`;
+        ctx.beginPath();
+        ctx.arc(slashLen * 0.55, 3, 4, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       } else if (p.isMagmaOrb) {
         // Large pulsing magma fireball
@@ -3693,12 +3873,24 @@ const Game = {
       const choices = LevelSystem.generateChoices();
       for (const choice of choices) {
         const card = document.createElement('div');
-        card.className = 'upgrade-card';
+        let cardClass = 'upgrade-card';
+        if (choice.type === 'combo') cardClass += ' synergy';
+        else if (choice.empoweredBy?.length) cardClass += ' empowered';
+        card.className = cardClass;
+
+        const comboHints = (choice.comboPotentials || [])
+          .map(cp => `<span class="combo-potential">✦ COMBOS: ${cp.comboIcon} ${cp.comboName}</span>`)
+          .join('');
+        const empoweredLabels = (choice.empoweredBy || [])
+          .map(e => `<span class="empowered-label">⚡ ${e.comboIcon} ${e.comboName}</span>`)
+          .join('');
+
         card.innerHTML = `
           <span class="upgrade-icon">${choice.icon}</span>
           <div class="upgrade-type">${choice.sub}</div>
           <div class="upgrade-name">${choice.label}</div>
           <div class="upgrade-desc">${choice.desc}</div>
+          ${comboHints}${empoweredLabels}
         `;
         card.addEventListener('click', () => {
           LevelSystem.applyChoice(choice);

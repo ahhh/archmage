@@ -237,6 +237,12 @@ Hurls vials of corrosive liquid that shatter at random nearby locations, leaving
 - **Virulent Toxin** — pools deal more damage and linger far longer
 - **Caustic Acid** — converts to burning acid with enormous tick damage
 
+### 🗡️ Afro Samurai's Final Blade
+Fires three devastating cutting slashes at the nearest enemy. Each slash tears through anything in its path with extreme armor penetration, and the cuts fan out slightly to cover a wide arc. Built for massive single-target and multi-pierce annihilation.
+- **Phantom Strike** — each slash splits into 2 additional cuts on contact at 70% power
+- **Blood Price** — lifesteal 25% of all damage dealt back as health
+- **Final Form** — damage nearly doubled and armor penetration greatly increased
+
 ---
 
 ## Passive Upgrades
@@ -253,6 +259,76 @@ These appear alongside spell upgrades on the level-up screen.
 | 🔭 Far Sight | +25% range on all spells |
 | 🐾 Shaolin Monkey Paw | 25% chance to block any hit. Grants a full damage-absorbing shield every 20s |
 | 💊 Honda's Heals | Restore 2 HP on every enemy kill |
+
+---
+
+## Weapon Synergies
+
+When you own both weapons in a pair, a **✦ SYNERGY** upgrade appears in the level-up screen — always shown first, guaranteed to appear. These are the most powerful upgrades in the game and are worth building toward.
+
+Each weapon participates in exactly two synergies.
+
+### 🔥 Fire Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| 🦅 **Blazing Phoenix** | Firebolt + Phoenix Wings | Firebolt splits into 3 bolts on impact. Phoenix Wings deals 80% more damage and pierces one extra enemy. |
+| 🌋 **Eruption Wings** | Phoenix Wings + Magma Orb | Phoenix Wings bolts scorch the ground. Magma Orb explosion grows 80% wider and fires 35% faster. |
+| ☄️ **Volcanic Siege** | Magma Orb + Meteor Sigil | Each Meteor spawns 2 follow-up impacts. Magma Orb fires twice as fast and deals double damage. |
+| 🌠 **Extinction Event** | Meteor Sigil + Starfall | Starfall rains 3 extra stars at 2.5× damage. Meteor hits 80% harder and 40% faster. |
+| 💫 **Comet Wake** | Starfall + Arcane Trail | Starfall impacts leave burning ground. Arcane Trail spheres deal triple damage. |
+| 🔥 **Infernal March** | Arcane Trail + Firebolt | Arcane Trail now poisons enemies. Firebolt deals double damage and pierces 2 extra enemies. |
+
+### ❄️ Ice / Void Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| ❄️ **Null Winter** | Frost Shard + Void Lance | Void Lance slows everything it tears through. Frost Shard gains massive armor pen and fires 40% faster. |
+| 🕳️ **Void Fissure** | Void Lance + Fault Lines | Fault Lines pull enemies to their center before detonating. Void Lance pull range doubles, damage +80%. |
+| 💥 **Seismic Blast** | Fault Lines + Force Pulse | Force Pulse deals 40 damage and detonates all nearby rifts. Fault Lines gain chain detonation. |
+| 🕰️ **Temporal Shockwave** | Force Pulse + Chrono Needle | Force Pulse marks every hit enemy with a Chrono Needle. Chrono detonations deal double damage and chain. |
+| 🌀 **Phase Paradox** | Chrono Needle + Phantom Gyre | Phantom Gyre orbits 50% faster at double damage. Chrono Needles chain to nearby enemies on detonation. |
+| 🧊 **Glacial Orbit** | Phantom Gyre + Frost Shard | Phantom Gyre orbs slow every enemy they pass through. Frost Shard splits into 4 shards on impact. |
+
+### ⚡ Lightning / Arcane Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| ⚡ **Electrostatic Field** | Spark Chain + Rune Burst | Spark Chain gains 6 more chains and fires 30% faster. Rune Burst deals double damage with 4 extra runes. |
+| 🔮 **Orbiting Runes** | Rune Burst + Arcane Orb | Arcane Orb fires a rune burst on every bounce and gains 2 extra bounces. Rune Burst pierces and fires 2 extra runes. |
+| 🔷 **Prismatic Lattice** | Arcane Orb + Arcane Cube | Arcane Cube walls slow enemies and detonate at corners. Arcane Orb pulls enemies on each bounce. |
+| ⚔️ **Resonant Edge** | Arcane Cube + Phase Blade | Phase Blade orbit radius doubles and damage triples. Arcane Cube walls stun every enemy they sweep through. |
+| 🌩️ **Thunderblade** | Phase Blade + Thunder Clap | Thunder Clap blasts 60% wider at double damage. Phase Blade stuns every enemy it slices. |
+| 🌩️ **Rolling Thunder** | Thunder Clap + Spark Chain | Spark Chain gains 8 extra chains and fires twice as fast. Thunder Clap cooldown halved and stun duration doubled. |
+
+### 💀 Shadow / Death Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| 🦴 **Plague Spine** | Shadow Bolt + Bone Spear | Bone Spear poisons every enemy it pierces. Shadow Bolt travels at double speed and deals triple damage. |
+| 🪆 **Bone Puppet** | Bone Spear + Phantom Double | Phantom Double gains 150 HP, lasts 5 extra seconds, and explodes on death. Bone Spear pierces 5 additional enemies. |
+| 📚 **Haunted Library** | Phantom Double + Hungry Grimoire | Grimoire charges on every kill and blasts at 2.5× damage in double the radius. |
+| ☠️ **Toxic Library** | Hungry Grimoire + Plague Pool | Grimoire blast poisons every enemy hit. Plague Pools become massive lethal toxic swamps. |
+| 💫 **Toxic Spiral** | Plague Pool + Soul Whirl | Soul Whirl bolts poison every enemy they arc through. Plague Pools linger far longer at triple damage. |
+| 💜 **Venom Vortex** | Soul Whirl + Shadow Bolt | Shadow Bolt deals triple damage and arcs like Soul Whirl. Soul Whirl bolts spiral more tightly and pierce. |
+
+### ✨ Utility / Arcane Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| ✨ **Missile Storm** | Magic Missiles + Mirror Glyph | Mirror echoes full barrages at near-full power. Magic Missiles gains 5 extra missiles and fires 50% faster. |
+| 🪞 **Hall of Mirrors** | Mirror Glyph + Dazzling Lights | Two extra mirrors orbit you. Dazzling Lights deals 2.5× damage and pierces every enemy. |
+| 🎵 **Prismatic Strings** | Dazzling Lights + Leyline Harp | Dazzling Lights stuns every enemy hit. Leyline Harp beams stun and pulse extra damage every second. |
+| 🎶 **Harmonic Barrage** | Leyline Harp + Magic Missiles | Leyline Harp adds a third beam and pulses every second. Magic Missiles deals double damage at 50% more speed. |
+
+### 🧭 Named / Unique Cycle
+| Synergy | Weapons | Effect |
+|---|---|---|
+| 🧭 **Bombastic Bearing** | Jake's Lament + Babbage Blast | Jake's beam extends 50% further with 15% lifesteal. Babbage Blast detonates twice as many runes at double damage. |
+| 🤡 **Cringe Barrage** | Babbage Blast + Viceroy's Cringe Missile | Viceroy Missiles explode into full rune bursts on impact. Babbage Blast fires 4 extra runes with halved cooldown. |
+| 🖤 **Hazmat Missile** | Viceroy's Cringe Missile + Stax's Black Sauce | Viceroy Missiles poison every enemy they hit and bounce 3 more times. Black Sauce fires 80% further at twice the speed. |
+| 💨 **Trail Blazer** | Stax's Black Sauce + Jake's Lament | Black Sauce fires 5× faster. Jake's beam extends further and lifesteals 20% of all damage dealt. |
+
+### 🗡️ Blade Synergies
+| Synergy | Weapons | Effect |
+|---|---|---|
+| 🌑 **Void Cleave** | Afro Samurai's Final Blade + Void Lance | Each slash deals area damage and pulls nearby enemies into the cut. Void Lance pierces 4 extra enemies and deals 80% more damage. |
+| ⚔️ **Dual Blade Mastery** | Afro Samurai's Final Blade + Phase Blade | Phase Blade orbit radius triples at 3× damage. The Final Blade fires 40% faster with a tighter cut arc. |
 
 ---
 
