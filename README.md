@@ -171,6 +171,30 @@ A floating mirror orbits you and echoes your last spell at 55% power — firing 
 - **Perfect Echo** — reflected spells deal 85% power instead of 55%
 - **Shattered Mirror** — mirror explodes when it expires, dealing 50 damage nearby
 
+### 🌋 Magma Orb
+Conjures a massive, slow-moving sphere of magma that homes in on the nearest enemy. Slow enough that alert enemies might dodge — if they try. Hits like a falling mountain.
+- **Pyroclasm** — explosion radius grows 60% wider
+- **Scorched Earth** — leaves a burning ground patch on detonation
+- **Twin Magma** — fires two orbs simultaneously
+
+### 💠 Fault Lines
+Tears open glowing arcane rifts in the ground at random nearby locations. Any enemy that walks through one detonates it for massive area damage.
+- **Deeper Cracks** — places 2 additional rifts per cast
+- **Shockwave Burst** — detonation stuns every enemy in the blast for 1 second
+- **Cascade** — detonating one rift instantly detonates all nearby rifts in a chain
+
+### 🤡 Viceroy's Cringe Missile
+Launches a chaotic, wildly wobbling missile with an embarrassing sound effect. Its unpredictable path makes it surprisingly hard to dodge — for everyone.
+- **Maximum Cringe** — fires 3 chaotic missiles simultaneously
+- **Extra Bouncy** — bounces 3 additional times and gains armor penetration
+- **Critical Cringe** — damage nearly doubled. The sound is louder.
+
+### 🖤 Stax's Black Sauce
+Spews a torrent of thick black arcane goo in the direction you're moving. Enemies caught in the spray are poisoned and beg for mercy.
+- **Viscous Blend** — sauce becomes thick sludge that slows enemies 45% instead of poisoning
+- **Extra Pressure** — more projectiles, wider spray
+- **Toxic Deluge** — poison deals 60% more damage per tick
+
 ### 🌀 Phantom Gyre
 Three phantom orbs orbit the caster, cycling between solid and ethereal states every 1.6 seconds. Only the solid orbs deal damage — position yourself so enemies walk through them at the right moment.
 - **Spectral Surge** — solid orbs hit 60% harder
