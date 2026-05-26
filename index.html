@@ -3014,24 +3014,41 @@ const Renderer = {
 
 const Music = {
   audio: null,
+  lossAudio: null,
   muted: false,
 
   init() {
     this.audio = new Audio('Archmage_Loop.mp3');
     this.audio.loop = true;
     this.audio.volume = 0.55;
+    this.lossAudio = new Audio('Archmage_Loss.mp3');
+    this.lossAudio.loop = true;
+    this.lossAudio.volume = 0.55;
   },
 
   play() {
     if (!this.audio) this.init();
+    this._stop(this.lossAudio);
     this.audio.currentTime = 0;
     if (!this.muted) this.audio.play().catch(() => {});
   },
 
+  playLoss() {
+    if (!this.lossAudio) this.init();
+    this._stop(this.audio);
+    this.lossAudio.currentTime = 0;
+    if (!this.muted) this.lossAudio.play().catch(() => {});
+  },
+
   stop() {
-    if (!this.audio) return;
-    this.audio.pause();
-    this.audio.currentTime = 0;
+    this._stop(this.audio);
+    this._stop(this.lossAudio);
+  },
+
+  _stop(track) {
+    if (!track) return;
+    track.pause();
+    track.currentTime = 0;
   },
 
   toggleMute() {
@@ -3039,8 +3056,11 @@ const Music = {
     if (!this.audio) return;
     if (this.muted) {
       this.audio.pause();
+      if (this.lossAudio) this.lossAudio.pause();
     } else {
-      this.audio.play().catch(() => {});
+      // Resume whichever track is active
+      if (this.audio.currentTime > 0) this.audio.play().catch(() => {});
+      if (this.lossAudio && this.lossAudio.currentTime > 0) this.lossAudio.play().catch(() => {});
     }
   },
 };
@@ -3359,7 +3379,7 @@ const Game = {
   gameOver() {
     if (this.phase === 'gameover' || this.phase === 'victory') return;
     this.phase = 'gameover';
-    Music.stop();
+    Music.playLoss();
     this.clearDpadToggles();
     canvas.classList.remove('active');
     document.getElementById('speed-bar').classList.remove('visible');
