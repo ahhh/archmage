@@ -576,6 +576,9 @@ const Input = {
       if (e.code === 'KeyV' && Game.phase === 'playing') {
         this.autoAim = !this.autoAim;
       }
+      if (e.code === 'KeyM') {
+        Music.toggleMute();
+      }
     });
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
     window.addEventListener('mousemove', e => {
@@ -3007,6 +3010,41 @@ const Renderer = {
   }
 };
 
+// ── MUSIC ─────────────────────────────────────────────────────
+
+const Music = {
+  audio: null,
+  muted: false,
+
+  init() {
+    this.audio = new Audio('Archmage_Loop.mp3');
+    this.audio.loop = true;
+    this.audio.volume = 0.55;
+  },
+
+  play() {
+    if (!this.audio) this.init();
+    this.audio.currentTime = 0;
+    if (!this.muted) this.audio.play().catch(() => {});
+  },
+
+  stop() {
+    if (!this.audio) return;
+    this.audio.pause();
+    this.audio.currentTime = 0;
+  },
+
+  toggleMute() {
+    this.muted = !this.muted;
+    if (!this.audio) return;
+    if (this.muted) {
+      this.audio.pause();
+    } else {
+      this.audio.play().catch(() => {});
+    }
+  },
+};
+
 // ── GAME CONTROLLER ───────────────────────────────────────────
 
 const Game = {
@@ -3114,6 +3152,7 @@ const Game = {
     document.getElementById('screen-charselect').classList.add('hidden');
     canvas.classList.add('active');
     document.getElementById('touch-controls').classList.add('tc-visible');
+    Music.play();
     this.phase = 'playing';
     this.wave = 1;
     this.wavePhase = 'playing';
@@ -3320,6 +3359,7 @@ const Game = {
   gameOver() {
     if (this.phase === 'gameover' || this.phase === 'victory') return;
     this.phase = 'gameover';
+    Music.stop();
     this.clearDpadToggles();
     canvas.classList.remove('active');
     document.getElementById('speed-bar').classList.remove('visible');
@@ -3334,6 +3374,7 @@ const Game = {
   victory() {
     if (this.phase === 'victory') return;
     this.phase = 'victory';
+    Music.stop();
     this.clearDpadToggles();
     setTimeout(() => {
       canvas.classList.remove('active');
