@@ -267,6 +267,11 @@ body::after {
 .ban-counter { font-size: 11px; color: #884444; letter-spacing: 0.08em; margin-left: 14px; }
 .upgrade-card {
   width: 190px;
+  height: 270px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   border: 1px solid var(--border);
   padding: 18px 16px;
   cursor: pointer;
@@ -302,7 +307,7 @@ body::after {
 .cycle-demon     { color: #ff4466; }
 .cycle-blade     { color: #cccccc; }
 .cycle-life      { color: #66ff99; }
-.upgrade-desc { font-size: 10px; color: var(--text); line-height: 1.5; }
+.upgrade-desc { font-size: 10px; color: var(--text); line-height: 1.5; flex: 1; overflow: hidden; }
 
 /* ── SYNERGY (COMBO) CARDS ──────────────── */
 .upgrade-card.synergy {
@@ -467,7 +472,7 @@ body::after {
 @media (max-width: 500px) {
   .title-terminal { padding: 28px 20px 28px; }
   .char-card { width: 130px; }
-  .upgrade-card { width: 150px; }
+  .upgrade-card { width: 150px; height: 280px; }
 }
 
 /* ── TOUCH CONTROLS ─────────────────────────────────────────── */
@@ -1897,6 +1902,7 @@ const WeaponSystem = {
     if (s.targeting === 'trail') {
       if (s.groundEffect) {
         GroundEffects.add(player.x, player.y, s.areaRadius, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
+        if (s.empowered) Particles.emit(player.x, player.y, '#ffaa00', 8, 3);
       }
       return true;
     }
@@ -1918,6 +1924,7 @@ const WeaponSystem = {
         groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
         isMeteor: false, isSpiral: false, isBox: false,
         isPulse: true, pulseRadius: 0, pulseSpeed: s.projectileSpeed, knockback: s.knockback,
+        empowered: s.empowered || false,
         targetEnemy: null, targetX: player.x, targetY: player.y,
       });
       return true;
@@ -1989,6 +1996,7 @@ const WeaponSystem = {
           chargesUp: s.chargesUp || false,
           chargeRate: s.chargeRate || 0,
           chargeAccumTimer: 0,
+          empowered: s.empowered || false,
           targetEnemy: null, targetX: player.x, targetY: player.y,
         });
       }
@@ -2020,6 +2028,7 @@ const WeaponSystem = {
           damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
           groundEffect: s.groundEffect || null, followupMeteors: 0, followupDamageMultiplier: 0,
           isMeteor: true, acceleration: 1, isOrbit: false, isBox: false,
+          empowered: s.empowered || false,
           targetEnemy: null, targetX: tx, targetY: ty,
         });
       }
@@ -2054,15 +2063,15 @@ const WeaponSystem = {
       for (const e of alive) {
         if (dist(player.x, player.y, e.x, e.y) < s.range) {
           applyDamage(e, s.damage, s.armorPenetration, s.statusEffect, 0);
-          Particles.emit(e.x, e.y, '#aaddff', 6, 3);
+          Particles.emit(e.x, e.y, s.empowered ? '#ffdd44' : '#aaddff', 6, 3);
         }
       }
       // Visual ring burst
       for (let i = 0; i < 20; i++) {
         const a = (i / 20) * Math.PI * 2;
-        Particles.emit(player.x + Math.cos(a) * s.range * 0.85, player.y + Math.sin(a) * s.range * 0.85, '#88ccff', 3, 2.5);
+        Particles.emit(player.x + Math.cos(a) * s.range * 0.85, player.y + Math.sin(a) * s.range * 0.85, s.empowered ? '#ffcc00' : '#88ccff', 3, 2.5);
       }
-      Particles.emit(player.x, player.y, '#ffffff', 20, 6);
+      Particles.emit(player.x, player.y, s.empowered ? '#ffee88' : '#ffffff', 20, 6);
       return true;
     }
 
@@ -2130,6 +2139,7 @@ const WeaponSystem = {
           isMeteor: false, acceleration: 1, isOrbit: false, isBox: false,
           isWhirl: true, curveRate: s.curveRate * curveSign,
           returnsToPlayer: s.returnsToPlayer || false, returning: false,
+          empowered: s.empowered || false,
           targetEnemy: null, targetX: player.x, targetY: player.y,
         };
         Projectiles.push(p);
@@ -2157,9 +2167,10 @@ const WeaponSystem = {
         statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
         third: s.harpThird, pulse: s.harpPulse, pulseTimer: 1.0,
         hitIds: new Set(),
+        empowered: s.empowered || false,
       });
-      Particles.emit(x1, y1, '#ffdd44', 10, 3);
-      Particles.emit(x2, y2, '#ffdd44', 10, 3);
+      Particles.emit(x1, y1, s.empowered ? '#ff88ff' : '#ffdd44', s.empowered ? 16 : 10, 3);
+      Particles.emit(x2, y2, s.empowered ? '#ff88ff' : '#ffdd44', s.empowered ? 16 : 10, 3);
       return true;
     }
 
@@ -2193,7 +2204,7 @@ const WeaponSystem = {
         const px = Math.max(0, Math.min(CONFIG.WORLD_W, player.x + Math.cos(angle) * r));
         const py = Math.max(0, Math.min(CONFIG.WORLD_H, player.y + Math.sin(angle) * r));
         GroundEffects.add(px, py, s.areaRadius, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
-        Particles.emit(px, py, s.groundEffect.type === 'burn' ? '#ff6600' : '#00dd44', 12, 4);
+        Particles.emit(px, py, s.empowered ? '#ffaa00' : (s.groundEffect.type === 'burn' ? '#ff6600' : '#00dd44'), s.empowered ? 20 : 12, 4);
       }
       return true;
     }
@@ -2256,9 +2267,10 @@ const WeaponSystem = {
           statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
           chain: s.riftChain,
           healOnExpire: s.healOnExpire || 0,
+          empowered: s.empowered || false,
           dead: false,
         });
-        Particles.emit(rx, ry, '#aaddff', 8, 3);
+        Particles.emit(rx, ry, s.empowered ? '#ffaa00' : '#aaddff', s.empowered ? 14 : 8, 3);
       }
       return true;
     }
@@ -2273,7 +2285,7 @@ const WeaponSystem = {
       const targets = pool.slice(0, count);
       for (const t of targets) {
         GroundEffects.add(t.x, t.y, s.areaRadius, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
-        Particles.emit(t.x, t.y, '#ff2244', 15, 5);
+        Particles.emit(t.x, t.y, s.empowered ? '#ffaa00' : '#ff2244', s.empowered ? 22 : 15, 5);
       }
       return true;
     }
@@ -2465,6 +2477,7 @@ const WeaponSystem = {
       boxProgress: 0,
       boxSpeed: s.projectileSpeed / totalDist,
       boxReverse: s.boxReverse || false,
+      empowered: s.empowered || false,
       targetEnemy: null, targetX: player.x, targetY: player.y,
     });
   }
@@ -3427,19 +3440,23 @@ const Renderer = {
       if (r.dead) continue;
       const fade = Math.min(1, r.timer / r.maxTimer);
       const pulse = Math.sin(Date.now() * 0.007 + r.x * 0.05) * 0.35 + 0.65;
+      const emp = r.empowered || false;
       // Outer glow
       ctx.beginPath();
       r.points.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
-      ctx.strokeStyle = `rgba(100,200,255,${0.3 * fade * pulse})`;
-      ctx.lineWidth = 16; ctx.stroke();
+      ctx.strokeStyle = emp ? `rgba(255,170,0,${0.45 * fade * pulse})` : `rgba(100,200,255,${0.3 * fade * pulse})`;
+      ctx.lineWidth = emp ? 22 : 16; ctx.stroke();
       // Inner crack
       ctx.beginPath();
       r.points.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
-      ctx.strokeStyle = `rgba(200,240,255,${0.92 * fade})`;
-      ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = emp ? `rgba(255,230,100,${0.95 * fade})` : `rgba(200,240,255,${0.92 * fade})`;
+      ctx.lineWidth = emp ? 4 : 2.5;
+      if (emp) { ctx.shadowBlur = 18; ctx.shadowColor = '#ffcc00'; }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
       // Trigger zone dot
-      ctx.beginPath(); ctx.arc(r.x, r.y, 6 * fade, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(160,230,255,${0.75 * pulse * fade})`;
+      ctx.beginPath(); ctx.arc(r.x, r.y, (emp ? 9 : 6) * fade, 0, Math.PI * 2);
+      ctx.fillStyle = emp ? `rgba(255,200,50,${0.9 * pulse * fade})` : `rgba(160,230,255,${0.75 * pulse * fade})`;
       ctx.fill();
     }
     ctx.restore();
@@ -3598,6 +3615,7 @@ const Renderer = {
       } else if (p.isBox) {
         // Draw traced wall segment (start corner → current position)
         const bs = p.boxSize;
+        const emp = p.empowered || false;
         let sx, sy; // start corner of this wall (flips with boxReverse)
         if (p.boxReverse) {
           if      (p.boxWall === 0) { sx = Player.x + bs; sy = Player.y - bs; }
@@ -3616,22 +3634,26 @@ const Renderer = {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = 'rgba(100,200,255,0.25)';
-        ctx.lineWidth = 14;
+        ctx.strokeStyle = emp ? 'rgba(255,160,0,0.35)' : 'rgba(100,200,255,0.25)';
+        ctx.lineWidth = emp ? 22 : 14;
+        if (emp) { ctx.shadowBlur = 16; ctx.shadowColor = '#ffaa00'; }
         ctx.stroke();
+        ctx.shadowBlur = 0;
         // Inner bright line
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = 'rgba(160,230,255,0.92)';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = emp ? 'rgba(255,230,100,0.96)' : 'rgba(160,230,255,0.92)';
+        ctx.lineWidth = emp ? 6 : 4;
         ctx.stroke();
         ctx.restore();
         // Bright leading orb
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220,245,255,0.95)';
+        ctx.arc(p.x, p.y, emp ? 10 : 7, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? 'rgba(255,220,80,0.98)' : 'rgba(220,245,255,0.95)';
+        if (emp) { ctx.shadowBlur = 18; ctx.shadowColor = '#ffcc00'; }
         ctx.fill();
+        ctx.shadowBlur = 0;
       } else if (p.isOrbit) {
         if (p.isPhasing && p.phased) {
           // Ethereal: faint ghost ring
@@ -3673,18 +3695,21 @@ const Renderer = {
         }
       } else if (p.isPulse) {
         const fade = 1 - (p.pulseRadius / p.range);
+        const emp = p.empowered || false;
         ctx.save();
         // Outer soft ring
         ctx.beginPath();
         ctx.arc(Player.x, Player.y, p.pulseRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(120,210,255,${0.35 * fade})`;
-        ctx.lineWidth = 18;
+        ctx.strokeStyle = emp ? `rgba(255,180,50,${0.45 * fade})` : `rgba(120,210,255,${0.35 * fade})`;
+        ctx.lineWidth = emp ? 26 : 18;
+        if (emp) { ctx.shadowBlur = 20; ctx.shadowColor = '#ffaa00'; }
         ctx.stroke();
+        ctx.shadowBlur = 0;
         // Inner crisp ring
         ctx.beginPath();
         ctx.arc(Player.x, Player.y, p.pulseRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(200,240,255,${0.9 * fade})`;
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = emp ? `rgba(255,240,150,${0.95 * fade})` : `rgba(200,240,255,${0.9 * fade})`;
+        ctx.lineWidth = emp ? 5 : 3;
         ctx.stroke();
         ctx.restore();
       } else if (p.isSlash) {
@@ -3962,20 +3987,24 @@ const Renderer = {
       const fade = Math.min(1, h.timer / 0.3) * Math.min(1, (h.maxTimer - h.timer) / 0.3);
       const pairs = [[h.x1, h.y1, h.x2, h.y2]];
       if (h.third) { pairs.push([h.x2, h.y2, h.x3, h.y3]); pairs.push([h.x3, h.y3, h.x1, h.y1]); }
+      const emp = h.empowered || false;
       ctx.save();
       ctx.globalAlpha = (0.5 + fade * 0.5) * 0.85;
       ctx.lineCap = 'round';
       for (const [ax, ay, bx, by] of pairs) {
-        ctx.shadowBlur = 14; ctx.shadowColor = '#ffdd44';
-        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = 4;
+        ctx.shadowBlur = emp ? 24 : 14;
+        ctx.shadowColor = emp ? '#ff66ff' : '#ffdd44';
+        ctx.strokeStyle = emp ? '#ff88ff' : '#ffdd44';
+        ctx.lineWidth = emp ? 6 : 4;
         ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255,255,200,0.7)'; ctx.lineWidth = 1.5;
+        ctx.strokeStyle = emp ? 'rgba(255,200,255,0.75)' : 'rgba(255,255,200,0.7)';
+        ctx.lineWidth = emp ? 2.5 : 1.5;
         ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
         // Anchor dots
-        ctx.fillStyle = '#ffee88';
-        ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = emp ? '#ffaaff' : '#ffee88';
+        ctx.beginPath(); ctx.arc(ax, ay, emp ? 7 : 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx, by, emp ? 7 : 5, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
     }
@@ -4638,12 +4667,14 @@ const Game = {
         const cycleBadge = choice.cycle
           ? `<div class="upgrade-cycle cycle-${choice.cycle}">${CONFIG.cycles[choice.cycle].icon} ${CONFIG.cycles[choice.cycle].name}</div>`
           : '';
+        const rawDesc = choice.desc || '';
+        const desc = rawDesc.length > 120 ? rawDesc.slice(0, 119).trimEnd() + '…' : rawDesc;
         card.innerHTML = `
           <span class="upgrade-icon">${choice.icon}</span>
           <div class="upgrade-type">${choice.sub}</div>
           ${cycleBadge}
           <div class="upgrade-name">${choice.label}</div>
-          <div class="upgrade-desc">${choice.desc}</div>
+          <div class="upgrade-desc">${desc}</div>
           ${comboHints}${empoweredLabels}
         `;
 
