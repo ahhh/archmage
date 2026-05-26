@@ -117,6 +117,18 @@ Conjures 4 walls of arcane energy that simultaneously sweep around the player, e
 - **Shock Walls** — each wall slows every enemy it touches
 - **Volatile Corners** — walls explode at their endpoints, dealing area damage at each corner
 
+### 💥 Thunder Clap
+Releases a thunderous concussive burst that instantly stuns and damages every enemy within range. Great for buying breathing room in a swarm.
+- **Wider Clap** — blast radius extends 60% further
+- **Concussive Force** — stun lasts twice as long
+- **Thunder Strike** — massive damage increase and shorter cooldown
+
+### 👤 Phantom Double
+Conjures a phantom decoy that looks just like you. Enemies abandon you and converge on it instead — ranged, melee, and even boss attacks all retarget the clone. It survives until it's destroyed or 10 seconds pass.
+- **Tougher Double** — decoy has 80 more HP and lasts 5 seconds longer
+- **Twin Decoys** — conjures two phantoms simultaneously
+- **Volatile Double** — phantom explodes on death, dealing 60 damage to everything nearby
+
 ### ✦ Dazzling Lights
 Fires four brilliant bolts simultaneously along the diagonals — northeast, northwest, southeast, southwest. Ignores aim mode entirely.
 - **Prismatic Split** — each bolt splits into two perpendicular bolts on impact

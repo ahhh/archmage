@@ -476,6 +476,55 @@ const CONFIG = {
       ]
     },
     {
+      id: 'thunder_clap',
+      name: 'Thunder Clap',
+      icon: '💥',
+      description: 'Releases a thunderous concussive burst that instantly stuns and damages every enemy in range.',
+      cooldown: 6.0,
+      damage: 22,
+      projectileSpeed: 0,
+      armorPenetration: 2,
+      pierce: 99,
+      bounce: 0,
+      range: 155,
+      targeting: 'nova',
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: { type: 'stun', duration: 1.2 },
+      upgrades: [
+        { id: 'wider_clap',        name: 'Wider Clap',        icon: '🔊', description: 'Blast radius extends 60% further.',                      changes: { rangeMultiplier: 1.6 } },
+        { id: 'concussive_force',  name: 'Concussive Force',  icon: '😵', description: 'Stun lasts twice as long.',                              changes: { statusEffect: { type: 'stun', duration: 2.4 } } },
+        { id: 'thunder_strike',    name: 'Thunder Strike',    icon: '⚡', description: 'Massive damage increase and shorter cooldown.',           changes: { damageMultiplier: 2.2, cooldownMultiplier: 0.7 } }
+      ]
+    },
+    {
+      id: 'phantom_double',
+      name: 'Phantom Double',
+      icon: '👤',
+      description: 'Conjures a phantom that looks just like you. Enemies abandon you and swarm it instead. Lasts until destroyed or time runs out.',
+      cooldown: 14.0,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 0,
+      targeting: 'decoy',
+      decoyHp: 70,
+      decoyDuration: 10.0,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      projectileCount: 1,
+      upgrades: [
+        { id: 'tougher_double',   name: 'Tougher Double',   icon: '🛡️', description: 'Decoy has 80 more HP and lasts 5 seconds longer.',        changes: { decoyHpBonus: 80, decoyDurationBonus: 5.0 } },
+        { id: 'twin_decoys',      name: 'Twin Decoys',      icon: '👥', description: 'Conjures two phantoms simultaneously.',                  changes: { projectileCount: 1 } },
+        { id: 'volatile_double',  name: 'Volatile Double',  icon: '💥', description: 'Phantom explodes on death, dealing 60 damage nearby.',   changes: { decoyExplosion: true } }
+      ]
+    },
+    {
       id: 'dazzling_lights',
       name: 'Dazzling Lights',
       icon: '✦',

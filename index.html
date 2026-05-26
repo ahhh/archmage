@@ -819,6 +819,9 @@ const Player = {
       phaseDuration: wConfig.phaseDuration || 1.6,
       curveRate: wConfig.curveRate || 0,
       angleOffset: wConfig.angleOffset || 0,
+      decoyHp: wConfig.decoyHp || 70,
+      decoyDuration: wConfig.decoyDuration || 10,
+      decoyExplosion: wConfig.decoyExplosion || false,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -853,6 +856,9 @@ const Player = {
       if (c.projectileAccelerationMultiplier != null) s.projectileAcceleration = 1 + (s.projectileAcceleration - 1) * c.projectileAccelerationMultiplier;
       if (c.orbitSpeedMultiplier != null) s.orbitSpeed = (s.orbitSpeed || wConfig.orbitSpeed || 0.065) * c.orbitSpeedMultiplier;
       if (c.curveRateMultiplier != null) s.curveRate *= c.curveRateMultiplier;
+      if (c.decoyHpBonus != null) s.decoyHp += c.decoyHpBonus;
+      if (c.decoyDurationBonus != null) s.decoyDuration += c.decoyDurationBonus;
+      if (c.decoyExplosion) s.decoyExplosion = true;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1223,6 +1229,44 @@ const WeaponSystem = {
       return true;
     }
 
+    // Nova: instant AOE stun + damage burst at player position
+    if (s.targeting === 'nova') {
+      for (const e of alive) {
+        if (dist(player.x, player.y, e.x, e.y) < s.range) {
+          applyDamage(e, s.damage, s.armorPenetration, s.statusEffect, 0);
+          Particles.emit(e.x, e.y, '#aaddff', 6, 3);
+        }
+      }
+      // Visual ring burst
+      for (let i = 0; i < 20; i++) {
+        const a = (i / 20) * Math.PI * 2;
+        Particles.emit(player.x + Math.cos(a) * s.range * 0.85, player.y + Math.sin(a) * s.range * 0.85, '#88ccff', 3, 2.5);
+      }
+      Particles.emit(player.x, player.y, '#ffffff', 20, 6);
+      return true;
+    }
+
+    // Decoy: drop a phantom double at player position that enemies target
+    if (s.targeting === 'decoy') {
+      const count = s.projectileCount || 1;
+      for (let i = 0; i < count; i++) {
+        const offset = i === 0 ? { x: 0, y: 0 } : { x: rnd(-40, 40), y: rnd(-40, 40) };
+        Decoys.push({
+          x: player.x + offset.x, y: player.y + offset.y,
+          hp: s.decoyHp, maxHp: s.decoyHp,
+          timer: s.decoyDuration,
+          radius: 14,
+          flashTimer: 0,
+          contactTimers: {},
+          explosive: s.decoyExplosion,
+          dead: false,
+          icon: player.charConfig.icon,
+        });
+      }
+      Particles.emit(player.x, player.y, '#88ccff', 20, 5);
+      return true;
+    }
+
     // Whirl: bolts that curve in arcs (half left, half right)
     if (s.targeting === 'whirl') {
       let aimAngle;
@@ -1424,6 +1468,53 @@ const WeaponSystem = {
 // ── PROJECTILES ───────────────────────────────────────────────
 
 let Projectiles = [];
+
+// ── DECOYS ────────────────────────────────────────────────────
+
+let Decoys = [];
+
+function updateDecoys(dt, enemies) {
+  for (const d of Decoys) {
+    if (d.dead) continue;
+    d.timer -= dt;
+    if (d.flashTimer > 0) d.flashTimer -= dt;
+    if (d.timer <= 0) { _killDecoy(d); continue; }
+    for (const e of enemies) {
+      if (e.dead) continue;
+      if (dist(d.x, d.y, e.x, e.y) < d.radius + e.radius) {
+        d.contactTimers[e.id] = (d.contactTimers[e.id] || 0) + dt;
+        if (d.contactTimers[e.id] >= CONFIG.CONTACT_DAMAGE_INTERVAL) {
+          d.contactTimers[e.id] = 0;
+          d.hp -= e.strength;
+          d.flashTimer = 0.15;
+          Particles.emit(d.x, d.y, '#ff4136', 4, 2);
+          if (d.hp <= 0) { _killDecoy(d); break; }
+        }
+      } else {
+        d.contactTimers[e.id] = 0;
+      }
+    }
+  }
+  Decoys = Decoys.filter(d => !d.dead);
+}
+
+function _killDecoy(d) {
+  d.dead = true;
+  if (d.explosive) {
+    for (const e of Enemies) {
+      if (!e.dead && dist(d.x, d.y, e.x, e.y) < 120) {
+        applyDamage(e, 60, 2, null, 0);
+      }
+    }
+    Particles.emit(d.x, d.y, '#ff8800', 30, 7);
+  } else {
+    Particles.emit(d.x, d.y, '#88ccff', 16, 4);
+  }
+}
+
+function getDecoyTarget() {
+  return Decoys.find(d => !d.dead) || null;
+}
 
 function updateProjectiles(dt, enemies) {
   const toAdd = [];
@@ -1823,7 +1914,10 @@ function updateEnemies(dt) {
         e.chargeRemaining -= dt;
         if (e.chargeRemaining <= 0) { e.chargeActive = false; e.chargeTimer = rnd(3, 6); }
       } else if (e.chargeTimer <= 0) {
-        const dx = Player.x - e.x, dy = Player.y - e.y;
+        const chargeDecoy = getDecoyTarget();
+        const chargeTx = chargeDecoy ? chargeDecoy.x : Player.x;
+        const chargeTy = chargeDecoy ? chargeDecoy.y : Player.y;
+        const dx = chargeTx - e.x, dy = chargeTy - e.y;
         const len = Math.hypot(dx, dy) || 1;
         const spd = e.speed * 5;
         e.chargeVx = (dx / len) * spd;
@@ -1838,7 +1932,10 @@ function updateEnemies(dt) {
       e.rangedTimer -= dt;
       if (e.rangedTimer <= 0) {
         e.rangedTimer = rnd(2.5, 4.5);
-        const dx = Player.x - e.x, dy = Player.y - e.y;
+        const rangedDecoy = getDecoyTarget();
+        const rangedTx = rangedDecoy ? rangedDecoy.x : Player.x;
+        const rangedTy = rangedDecoy ? rangedDecoy.y : Player.y;
+        const dx = rangedTx - e.x, dy = rangedTy - e.y;
         const len = Math.hypot(dx, dy) || 1;
         const spd = 5;
         Projectiles.push({
@@ -1863,7 +1960,10 @@ function updateEnemies(dt) {
       e.fireBreathTimer -= dt;
       if (e.fireBreathTimer <= 0) {
         e.fireBreathTimer = rnd(3, 5);
-        const dx = Player.x - e.x, dy = Player.y - e.y;
+        const fbDecoy = getDecoyTarget();
+        const fbTx = fbDecoy ? fbDecoy.x : Player.x;
+        const fbTy = fbDecoy ? fbDecoy.y : Player.y;
+        const dx = fbTx - e.x, dy = fbTy - e.y;
         const len = Math.hypot(dx, dy) || 1;
         for (let fb = 0; fb < 5; fb++) {
           const angleOffset = rnd(-0.35, 0.35);
@@ -1886,19 +1986,36 @@ function updateEnemies(dt) {
       }
     }
 
-    // Move toward player (if not charging)
+    // Move toward decoy (if one exists) or player
     if (!e.chargeActive) {
-      const dx = Player.x - e.x, dy = Player.y - e.y;
+      const decoyTarget = getDecoyTarget();
+      const tx = decoyTarget ? decoyTarget.x : Player.x;
+      const ty = decoyTarget ? decoyTarget.y : Player.y;
+      const dx = tx - e.x, dy = ty - e.y;
       const len = Math.hypot(dx, dy) || 1;
       e.x += (dx / len) * e.speed * slowMult;
       e.y += (dy / len) * e.speed * slowMult;
     }
   }
 
-  // Handle enemy projectiles hitting player
+  // Handle enemy projectiles hitting decoys first, then player
   for (let i = Projectiles.length - 1; i >= 0; i--) {
     const p = Projectiles[i];
     if (!p.isEnemyProjectile || p.dead) continue;
+    // Check decoys
+    let hitDecoy = false;
+    for (const d of Decoys) {
+      if (!d.dead && dist(p.x, p.y, d.x, d.y) < d.radius + 8) {
+        p.dead = true;
+        d.hp -= p.damage;
+        d.flashTimer = 0.15;
+        Particles.emit(d.x, d.y, '#ff4136', 4, 2);
+        if (d.hp <= 0) _killDecoy(d);
+        hitDecoy = true;
+        break;
+      }
+    }
+    if (hitDecoy) continue;
     if (dist(p.x, p.y, Player.x, Player.y) < Player.radius + 8) {
       p.dead = true;
       if (Player.iFrameTimer <= 0) {
@@ -2271,6 +2388,39 @@ const Renderer = {
       }
     }
 
+    // Decoys
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const d of Decoys) {
+      if (d.dead) continue;
+      ctx.save();
+      // Pulsing blue-white halo to distinguish from real player
+      const dp = Math.sin(Date.now() * 0.004) * 0.5 + 0.5;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.radius + 10 + dp * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(100,200,255,${0.5 + dp * 0.3})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Flash red when hit
+      if (d.flashTimer > 0) {
+        ctx.filter = 'brightness(3) saturate(0) sepia(1) hue-rotate(200deg)';
+      } else {
+        ctx.globalAlpha = 0.75;
+      }
+      ctx.font = '32px serif';
+      ctx.fillText(d.icon, d.x, d.y);
+      ctx.filter = 'none';
+      ctx.globalAlpha = 1;
+      // HP bar
+      const barW = 36, barH = 4;
+      const hpFrac = Math.max(0, d.hp / d.maxHp);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(d.x - barW / 2, d.y - d.radius - 10, barW, barH);
+      ctx.fillStyle = hpFrac > 0.5 ? '#00ff41' : hpFrac > 0.25 ? '#ffaa00' : '#ff3300';
+      ctx.fillRect(d.x - barW / 2, d.y - d.radius - 10, barW * hpFrac, barH);
+      ctx.restore();
+    }
+
     // Player
     Player.draw(ctx);
 
@@ -2531,6 +2681,7 @@ const Game = {
 
     Enemies = [];
     Projectiles = [];
+    Decoys = [];
     Particles.list = [];
     GroundEffects.list = [];
 
@@ -2567,6 +2718,7 @@ const Game = {
       WaveSpawner.update(dt, this.wave);
       Player.update(dt, Enemies);
       updateEnemies(dt);
+      updateDecoys(dt, Enemies);
       updateProjectiles(dt, Enemies);
       GroundEffects.update(dt, Enemies);
       Particles.update(dt);
@@ -2613,8 +2765,8 @@ const Game = {
     if (this.wave >= 20) return;
     this.wave++;
     Enemies = [];
-    Projectiles = Projectiles.filter(p => p.isEnemyProjectile || !p.isEnemyProjectile);
     Projectiles = [];
+    Decoys = [];
     this.waveDuration = this.waveDurationFor(this.wave);
     this.waveTimer = this.waveDuration;
     this.wavePhase = 'playing';
