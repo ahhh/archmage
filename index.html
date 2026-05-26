@@ -2042,6 +2042,7 @@ const WeaponSystem = {
       chronoMultiplierBonus: s.chronoMultiplierBonus || 0,
       chronoChain: s.chronoChain || false,
       lifesteal: s.lifesteal || 0,
+      returning: false,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
@@ -2315,7 +2316,37 @@ function updateProjectiles(dt, enemies) {
 
       // Range check
       if (p.traveledSq > p.range && !p.isMeteor) {
-        p.dead = true; continue;
+        if (p.isSlash && !p.returning) {
+          // Turn around: redirect toward the caster and re-enable hit detection
+          p.returning = true;
+          p.traveledSq = 0;
+          p.hitIds.clear();
+          const dx = Player.x - p.x, dy = Player.y - p.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const spd = Math.hypot(p.vx, p.vy);
+          p.vx = (dx / len) * spd;
+          p.vy = (dy / len) * spd;
+        } else {
+          p.dead = true; continue;
+        }
+      }
+
+      // Returning slash: steer toward caster and die on arrival
+      if (p.isSlash && p.returning) {
+        const dx = Player.x - p.x, dy = Player.y - p.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 20) { p.dead = true; continue; }
+        // Gently steer toward player (max 0.08 rad/frame turn)
+        const desiredAngle = Math.atan2(dy, dx);
+        const currentAngle = Math.atan2(p.vy, p.vx);
+        let diff = desiredAngle - currentAngle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        const turn = Math.max(-0.08, Math.min(0.08, diff));
+        const newAngle = currentAngle + turn;
+        const spd = Math.hypot(p.vx, p.vy);
+        p.vx = Math.cos(newAngle) * spd;
+        p.vy = Math.sin(newAngle) * spd;
       }
     }
 
@@ -3095,34 +3126,38 @@ const Renderer = {
         ctx.restore();
       } else if (p.isSlash) {
         const angle = Math.atan2(p.vy, p.vx);
-        const slashLen = 52;
-        const age = p.traveledSq / (p.range || 520);
-        const fade = 1 - age * 0.6;
+        const slashLen = 56;
+        const returning = p.returning;
+        // Outbound: gold/white. Returning: crimson.
+        const glowColor  = returning ? '#ff2200' : '#fffbe0';
+        const outerColor = returning ? `rgba(255,60,20,0.55)` : `rgba(255,230,120,0.5)`;
+        const coreColor  = returning ? `rgba(255,120,80,0.95)` : `rgba(255,255,240,0.95)`;
+        const dotColor   = returning ? `rgba(255,80,40,0.9)` : `rgba(255,255,200,0.8)`;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(angle);
         // Outer glow sweep
-        ctx.shadowBlur = 24;
-        ctx.shadowColor = '#fffbe0';
-        ctx.strokeStyle = `rgba(255,230,120,${0.5 * fade})`;
+        ctx.shadowBlur = 26;
+        ctx.shadowColor = glowColor;
+        ctx.strokeStyle = outerColor;
         ctx.lineWidth = 14;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(-slashLen * 0.55, -3);
-        ctx.lineTo(slashLen * 0.55, 3);
+        ctx.moveTo(-slashLen * 0.5, -3);
+        ctx.lineTo(slashLen * 0.5, 3);
         ctx.stroke();
         // Bright core
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = `rgba(255,255,240,${0.95 * fade})`;
+        ctx.strokeStyle = coreColor;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(-slashLen * 0.55, -3);
-        ctx.lineTo(slashLen * 0.55, 3);
+        ctx.moveTo(-slashLen * 0.5, -3);
+        ctx.lineTo(slashLen * 0.5, 3);
         ctx.stroke();
         // Leading edge flash
-        ctx.fillStyle = `rgba(255,255,200,${0.8 * fade})`;
+        ctx.fillStyle = dotColor;
         ctx.beginPath();
-        ctx.arc(slashLen * 0.55, 3, 4, 0, Math.PI * 2);
+        ctx.arc(slashLen * 0.5, 3, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       } else if (p.isMagmaOrb) {
