@@ -499,7 +499,7 @@ body::after {
 <div id="screen-victory" class="screen hidden">
   <div class="endgame-terminal">
     <div class="endgame-title victory">VICTORY</div>
-    <div class="endgame-sub">THE DRAGON FALLS. YOU ARE ARCHMAGE.</div>
+    <div class="endgame-sub">THE DRAGON FALLS. YOU ARE THE ARCHMAGE.</div>
     <div class="endgame-stats" id="victory-stats"></div>
     <button class="btn-primary" id="btn-restart-vic" style="opacity:1;animation:none">[ PLAY AGAIN ]</button>
   </div>
@@ -771,6 +771,10 @@ const Player = {
     this.shieldActive = false;
     this.shieldTimer = 0;
     this.shieldCooldown = 0;
+    this.moveDx = 0;
+    this.moveDy = 0;
+    this.jakesDir = null;
+    this.killHeal = 0;
     this.facing = 'down';
     const startWeapon = CONFIG.weapons.find(w => w.id === charConfig.startingWeapon);
     this.weapons = [this.makeWeaponInstance(startWeapon)];
@@ -822,6 +826,24 @@ const Player = {
       decoyHp: wConfig.decoyHp || 70,
       decoyDuration: wConfig.decoyDuration || 10,
       decoyExplosion: wConfig.decoyExplosion || false,
+      runeBlastCount: wConfig.runeBlastCount || 0,
+      runeBlastDamage: wConfig.runeBlastDamage || 0,
+      runeBlastRange: wConfig.runeBlastRange || 300,
+      runeBlastSpeed: wConfig.runeBlastSpeed || 5.5,
+      runeBlastPierce: wConfig.runeBlastPierce || 0,
+      lifesteal: wConfig.lifesteal || 0,
+      cowardsCurse: wConfig.cowardsCurse || false,
+      isChrono: wConfig.isChrono || false,
+      chronoDelay: wConfig.chronoDelay || 2.0,
+      chronoBaseDamage: wConfig.chronoBaseDamage || 12,
+      chronoMultiplierBonus: 0,
+      chronoChain: false,
+      harpDuration: wConfig.harpDuration || 3.5,
+      harpThird: false,
+      harpPulse: false,
+      grimoireCharges: wConfig.grimoireCharges || 0,
+      grimoireMaxCharges: wConfig.grimoireMaxCharges || 5,
+      grimoireFeedOnKill: false,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -859,6 +881,17 @@ const Player = {
       if (c.decoyHpBonus != null) s.decoyHp += c.decoyHpBonus;
       if (c.decoyDurationBonus != null) s.decoyDuration += c.decoyDurationBonus;
       if (c.decoyExplosion) s.decoyExplosion = true;
+      if (c.runeBlastCount != null) s.runeBlastCount += c.runeBlastCount;
+      if (c.runeBlastDamageMultiplier != null) s.runeBlastDamage = Math.round(s.runeBlastDamage * c.runeBlastDamageMultiplier);
+      if (c.runeBlastRangeMultiplier != null) s.runeBlastRange *= c.runeBlastRangeMultiplier;
+      if (c.runeBlastPierce != null) s.runeBlastPierce += c.runeBlastPierce;
+      if (c.lifesteal != null) s.lifesteal = (s.lifesteal || 0) + c.lifesteal;
+      if (c.cowardsCurse) s.cowardsCurse = true;
+      if (c.chronoMultiplierBonus != null) s.chronoMultiplierBonus += c.chronoMultiplierBonus;
+      if (c.chronoChain) s.chronoChain = true;
+      if (c.harpThird) s.harpThird = true;
+      if (c.harpPulse) s.harpPulse = true;
+      if (c.grimoireFeedOnKill) s.grimoireFeedOnKill = true;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -926,8 +959,14 @@ const Player = {
     let dx = (goRight ? 1 : 0) - (goLeft ? 1 : 0);
     let dy = (goDown  ? 1 : 0) - (goUp   ? 1 : 0);
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+    this.moveDx = dx;
+    this.moveDy = dy;
     this.x = clamp(this.x + dx * this.speed, this.radius, CONFIG.WORLD_W - this.radius);
     this.y = clamp(this.y + dy * this.speed, this.radius, CONFIG.WORLD_H - this.radius);
+    // Update Jake's Lament compass direction every frame
+    if (this.weapons.some(w => w.weaponId === 'jakes_lament')) {
+      this.jakesDir = findDenseDirection(this, enemies);
+    }
 
     // Facing direction (vertical takes priority in diagonals)
     if (goUp   && !goDown)  this.facing = 'up';
@@ -1073,6 +1112,186 @@ const Player = {
     }
   }
 };
+
+// ── BEAMS (Jake's Lament visual) ──────────────────────────────
+
+let Beams = [];
+
+function updateBeams(dt) {
+  for (let i = Beams.length - 1; i >= 0; i--) {
+    Beams[i].life -= dt;
+    if (Beams[i].life <= 0) Beams.splice(i, 1);
+  }
+}
+
+// Direction toward densest enemy cluster (weighted by proximity)
+function findDenseDirection(player, enemies) {
+  const alive = enemies.filter(e => !e.dead);
+  if (alive.length === 0) return null;
+  let wx = 0, wy = 0;
+  for (const e of alive) {
+    const ddx = e.x - player.x, ddy = e.y - player.y;
+    const d = Math.hypot(ddx, ddy) || 1;
+    const w = 280 / (d + 40);
+    wx += (ddx / d) * w;
+    wy += (ddy / d) * w;
+  }
+  const len = Math.hypot(wx, wy);
+  return len < 0.001 ? null : { x: wx / len, y: wy / len };
+}
+
+// Perpendicular distance from point (px,py) to ray from (ox,oy) in direction (dx,dy) up to range
+function distToRay(px, py, ox, oy, dx, dy, range) {
+  const ex = px - ox, ey = py - oy;
+  const t = Math.max(0, Math.min(range, ex * dx + ey * dy));
+  return Math.hypot(px - (ox + dx * t), py - (oy + dy * t));
+}
+
+function fireJakesBeam(player, dir, s, powerMult) {
+  const beamWidth = 22;
+  let totalDmg = 0;
+  for (const e of Enemies) {
+    if (e.dead) continue;
+    if (distToRay(e.x, e.y, player.x, player.y, dir.x, dir.y, s.range) < beamWidth + e.radius) {
+      const dmg = Math.round(s.damage * powerMult);
+      applyDamage(e, dmg, s.armorPenetration, s.statusEffect, 0);
+      totalDmg += dmg;
+      Particles.emit(e.x, e.y, powerMult < 1 ? '#ff9900' : '#ffee44', 8, 3);
+    }
+  }
+  if (s.lifesteal > 0 && totalDmg > 0) {
+    player.health = Math.min(player.maxHealth, player.health + Math.round(totalDmg * s.lifesteal));
+  }
+  const color = powerMult < 1 ? '#ff7700' : '#ffe066';
+  Beams.push({
+    x1: player.x, y1: player.y,
+    x2: player.x + dir.x * s.range,
+    y2: player.y + dir.y * s.range,
+    life: 0.35, maxLife: 0.35,
+    color, width: powerMult < 1 ? 6 : 10,
+  });
+}
+
+// ── CHRONO NEEDLES ────────────────────────────────────────────
+
+let ChronoMarks = []; // { enemy, timer, maxTimer, baseDamage, startX, startY, multBonus, chain, statusEffect }
+
+function updateChronoMarks(dt, enemies) {
+  for (let i = ChronoMarks.length - 1; i >= 0; i--) {
+    const m = ChronoMarks[i];
+    m.timer -= dt;
+    if (m.timer <= 0 || m.enemy.dead) {
+      if (!m.enemy.dead) {
+        const moved = Math.hypot(m.enemy.x - m.startX, m.enemy.y - m.startY);
+        const mult = 1 + moved * (0.15 + (m.multBonus || 0));
+        const dmg = Math.round(m.baseDamage * mult);
+        applyDamage(m.enemy, dmg, 2, null, 0);
+        Particles.emit(m.enemy.x, m.enemy.y, '#cc88ff', 20, 5);
+        Beams.push({ x1: m.startX, y1: m.startY, x2: m.enemy.x, y2: m.enemy.y, life: 0.4, maxLife: 0.4, color: '#cc88ff', width: 4 });
+        if (m.chain) {
+          for (const e of enemies) {
+            if (e.dead || e === m.enemy) continue;
+            if (dist(e.x, e.y, m.enemy.x, m.enemy.y) < 80) {
+              ChronoMarks.push({ enemy: e, timer: 2.0, maxTimer: 2.0, baseDamage: m.baseDamage, startX: e.x, startY: e.y, multBonus: m.multBonus, chain: false, statusEffect: m.statusEffect });
+              if (m.statusEffect) applyStatusEffect(e, m.statusEffect);
+            }
+          }
+        }
+      }
+      ChronoMarks.splice(i, 1);
+    }
+  }
+}
+
+// ── LEYLINE HARPS ─────────────────────────────────────────────
+
+let HarpBeams = []; // { x1,y1, x2,y2, x3,y3, timer, maxTimer, damage, armorPen, statusEffect, pulse, pulseTimer, third, hitIds }
+
+function updateHarpBeams(dt, enemies) {
+  for (let i = HarpBeams.length - 1; i >= 0; i--) {
+    const h = HarpBeams[i];
+    h.timer -= dt;
+    if (h.timer <= 0) { HarpBeams.splice(i, 1); continue; }
+
+    const pairs = [[h.x1, h.y1, h.x2, h.y2]];
+    if (h.third) {
+      pairs.push([h.x2, h.y2, h.x3, h.y3]);
+      pairs.push([h.x3, h.y3, h.x1, h.y1]);
+    }
+
+    // Pulse extra damage every second
+    if (h.pulse) {
+      h.pulseTimer -= dt;
+      if (h.pulseTimer <= 0) {
+        h.pulseTimer = 1.0;
+        h.hitIds.clear();
+        Particles.emit((h.x1 + h.x2) / 2, (h.y1 + h.y2) / 2, '#ffdd88', 8, 3);
+      }
+    }
+
+    for (const e of enemies) {
+      if (e.dead || h.hitIds.has(e.id)) continue;
+      for (const [ax, ay, bx, by] of pairs) {
+        if (distToSegment(e.x, e.y, ax, ay, bx, by) < e.radius + 10) {
+          applyDamage(e, h.damage, h.armorPen, h.statusEffect, 0);
+          h.hitIds.add(e.id);
+          Particles.emit(e.x, e.y, '#ffdd44', 5, 2.5);
+          break;
+        }
+      }
+    }
+  }
+}
+
+function distToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(px - ax, py - ay);
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+// ── HUNGRY GRIMOIRES ──────────────────────────────────────────
+
+let Grimoires = []; // { x, y, angle, speed, charges, maxCharges, orbitRadius, timer, feedOnKill, ... }
+
+function updateGrimoires(dt, enemies, s) {
+  for (const g of Grimoires) {
+    if (g.dead) continue;
+    g.angle += g.orbitSpeed;
+    g.x = Player.x + Math.cos(g.angle) * g.orbitRadius;
+    g.y = Player.y + Math.sin(g.angle) * g.orbitRadius;
+
+    // Absorb enemy projectiles nearby
+    for (let i = Projectiles.length - 1; i >= 0; i--) {
+      const p = Projectiles[i];
+      if (!p.isEnemyProjectile || p.dead) continue;
+      if (dist(g.x, g.y, p.x, p.y) < 28) {
+        p.dead = true;
+        g.charges = Math.min(g.maxCharges, g.charges + 1);
+        Particles.emit(g.x, g.y, '#ffaa44', 6, 2);
+      }
+    }
+
+    // Feed on kills if upgraded (checked in killEnemy via grimoireKill hook)
+    // Blast when fully charged
+    if (g.charges >= g.maxCharges) {
+      g.charges = 0;
+      for (const e of enemies) {
+        if (e.dead) continue;
+        if (dist(g.x, g.y, e.x, e.y) < g.blastRadius + e.radius) {
+          applyDamage(e, g.damage, g.armorPen, g.statusEffect, 0);
+        }
+        else if (dist(g.x, g.y, e.x, e.y) < g.blastRadius * 2 + e.radius) {
+          applyDamage(e, Math.round(g.damage * 0.5), g.armorPen, null, 0);
+        }
+      }
+      Particles.emit(g.x, g.y, '#ffaa44', 40, 8);
+      Beams.push({ x1: g.x, y1: g.y, x2: g.x, y2: g.y, life: 0.4, maxLife: 0.4, color: '#ffaa44', width: 0 });
+    }
+  }
+  Grimoires = Grimoires.filter(g => !g.dead);
+}
 
 // ── WEAPON SYSTEM ─────────────────────────────────────────────
 
@@ -1229,6 +1448,24 @@ const WeaponSystem = {
       return true;
     }
 
+    // Jake's Lament: beam toward densest cluster, only fires while moving toward it
+    if (s.targeting === 'jakes') {
+      const dir = player.jakesDir;
+      if (!dir) return false;
+      const movLen = Math.hypot(player.moveDx, player.moveDy);
+      const dot = movLen > 0.05
+        ? (player.moveDx * dir.x + player.moveDy * dir.y) / movLen
+        : 0;
+      if (dot > 0.25) {
+        fireJakesBeam(player, dir, s, 1.0);
+        return true;
+      } else if (s.cowardsCurse && dot < -0.25) {
+        fireJakesBeam(player, { x: -dir.x, y: -dir.y }, s, 0.4);
+        return true;
+      }
+      return false;
+    }
+
     // Nova: instant AOE stun + damage burst at player position
     if (s.targeting === 'nova') {
       for (const e of alive) {
@@ -1310,6 +1547,54 @@ const WeaponSystem = {
           targetEnemy: null, targetX: player.x, targetY: player.y,
         };
         Projectiles.push(p);
+      }
+      return true;
+    }
+
+    // Leyline Harp: place two note anchors left/right, connect with a beam
+    if (s.targeting === 'harp') {
+      const perp = { x: -(player.moveDy || 0), y: (player.moveDx || 0) };
+      const perpLen = Math.hypot(perp.x, perp.y) || 1;
+      const nx = perp.x / perpLen, ny = perp.y / perpLen;
+      const r = s.range;
+      const x1 = player.x + nx * r, y1 = player.y + ny * r;
+      const x2 = player.x - nx * r, y2 = player.y - ny * r;
+      let x3 = player.x, y3 = player.y - r;
+      if (s.harpThird) {
+        x3 = player.x + nx * r * 0.5 - ny * r * 0.866;
+        y3 = player.y + ny * r * 0.5 + nx * r * 0.866;
+      }
+      HarpBeams.push({
+        x1, y1, x2, y2, x3, y3,
+        timer: s.harpDuration, maxTimer: s.harpDuration,
+        damage: s.damage, armorPen: s.armorPenetration,
+        statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+        third: s.harpThird, pulse: s.harpPulse, pulseTimer: 1.0,
+        hitIds: new Set(),
+      });
+      Particles.emit(x1, y1, '#ffdd44', 10, 3);
+      Particles.emit(x2, y2, '#ffdd44', 10, 3);
+      return true;
+    }
+
+    // Hungry Grimoire: spawn an orbiting book that absorbs projectiles and blasts
+    if (s.targeting === 'grimoire') {
+      const count = s.projectileCount || 1;
+      const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+      // Kill old grimoires from this weapon before spawning new ones
+      for (const g of Grimoires) { if (g.weaponId === wi.weaponId) g.dead = true; }
+      for (let i = 0; i < count; i++) {
+        const startAngle = (Math.PI * 2 / count) * i;
+        Grimoires.push({
+          x: player.x, y: player.y,
+          angle: startAngle, orbitRadius: s.range,
+          orbitSpeed: 0.055 + i * 0.02,
+          charges: 0, maxCharges: s.grimoireMaxCharges,
+          damage: s.damage, armorPen: s.armorPenetration,
+          blastRadius: s.areaRadius, statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          feedOnKill: s.grimoireFeedOnKill,
+          weaponId: wi.weaponId, dead: false,
+        });
       }
       return true;
     }
@@ -1418,6 +1703,16 @@ const WeaponSystem = {
       wobblePhase: Math.random() * Math.PI * 2,
       acceleration: s.projectileAcceleration || 1,
       isWhirl: false, curveRate: 0,
+      runeBlastCount: s.runeBlastCount || 0,
+      runeBlastDamage: s.runeBlastDamage || 0,
+      runeBlastRange: s.runeBlastRange || 300,
+      runeBlastSpeed: s.runeBlastSpeed || 5.5,
+      runeBlastPierce: s.runeBlastPierce || 0,
+      isChrono: s.isChrono || false,
+      chronoDelay: s.chronoDelay || 2.0,
+      chronoBaseDamage: s.chronoBaseDamage || 12,
+      chronoMultiplierBonus: s.chronoMultiplierBonus || 0,
+      chronoChain: s.chronoChain || false,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
@@ -1672,6 +1967,11 @@ function updateProjectiles(dt, enemies) {
       if (dist(p.x, p.y, e.x, e.y) < e.radius + 8) {
         p.hitIds.add(e.id);
         if (p.isBoneSpear) p.pierceHitCount = (p.pierceHitCount || 0) + 1;
+        if (p.isChrono) {
+          ChronoMarks.push({ enemy: e, timer: p.chronoDelay, maxTimer: p.chronoDelay, baseDamage: p.chronoBaseDamage, startX: e.x, startY: e.y, multBonus: p.chronoMultiplierBonus, chain: p.chronoChain, statusEffect: p.statusEffect ? { ...p.statusEffect } : null });
+          if (p.statusEffect) applyStatusEffect(e, p.statusEffect);
+          Particles.emit(e.x, e.y, '#cc88ff', 8, 2);
+        }
 
         // Damage
         let dmg = p.damage;
@@ -1713,6 +2013,34 @@ function updateProjectiles(dt, enemies) {
               }
             }
           }
+        }
+
+        // Babbage Blast: detonate into radial rune burst at impact point
+        if (p.runeBlastCount > 0) {
+          Particles.emit(p.x, p.y, '#aa88ff', 18, 5);
+          for (let r = 0; r < p.runeBlastCount; r++) {
+            const ra = (Math.PI * 2 / p.runeBlastCount) * r;
+            toAdd.push({
+              id: mkId(), x: p.x, y: p.y,
+              vx: Math.cos(ra) * p.runeBlastSpeed, vy: Math.sin(ra) * p.runeBlastSpeed,
+              damage: p.runeBlastDamage, armorPen: p.armorPen,
+              pierce: p.runeBlastPierce, pierceLeft: p.runeBlastPierce,
+              bounce: 0, bounceLeft: 0, bounceCount: 0,
+              range: p.runeBlastRange, traveledSq: 0,
+              chainCount: 0, chainRange: 0, areaRadius: 0, areaDamageMultiplier: 0,
+              pullRadius: 0, pullStrength: 0, weaponId: p.weaponId,
+              statusEffect: p.statusEffect ? { ...p.statusEffect } : null,
+              hitIds: new Set([e.id]), dead: false, icon: '🔵',
+              splitProjectiles: 0, splitDamageMultiplier: 0, damagePerBounce: 1,
+              finalHitDamageMultiplier: 1, finalHitStun: 0, groundEffect: null,
+              followupMeteors: 0, followupDamageMultiplier: 0,
+              isMeteor: false, isOrbit: false, isBox: false, isWhirl: false,
+              isShadowBolt: false, isMagicMissile: false, isBoneSpear: false,
+              runeBlastCount: 0, acceleration: 1,
+            });
+          }
+          p.dead = true;
+          continue;
         }
 
         // Split projectiles
@@ -1823,6 +2151,12 @@ function killEnemy(enemy) {
   enemy.dead = true;
   Player.kills++;
   Player.addXp(Math.round(enemy.xp * (1 + Game.wave * 0.05) + enemy.maxHp * 0.04));
+  if (Player.killHeal > 0) {
+    Player.health = Math.min(Player.maxHealth, Player.health + Player.killHeal);
+  }
+  for (const g of Grimoires) {
+    if (!g.dead && g.feedOnKill) g.charges = Math.min(g.maxCharges, g.charges + 1);
+  }
   Particles.emit(enemy.x, enemy.y, '#00ff41', 8, 3.5);
   if (enemy.configId === 'dragon_boss') Game.victory();
 }
@@ -2388,6 +2722,124 @@ const Renderer = {
       }
     }
 
+    // Beams (Jake's Lament)
+    for (const b of Beams) {
+      const alpha = b.life / b.maxLife;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = b.color;
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = b.width * alpha;
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.beginPath();
+      ctx.moveTo(b.x1, b.y1);
+      ctx.lineTo(b.x2, b.y2);
+      ctx.stroke();
+      // Bright white core
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.9})`;
+      ctx.lineWidth = 2 * alpha;
+      ctx.beginPath();
+      ctx.moveTo(b.x1, b.y1);
+      ctx.lineTo(b.x2, b.y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Chrono Needle marks (purple pulsing ring on target)
+    ctx.save();
+    for (const m of ChronoMarks) {
+      if (m.enemy.dead) continue;
+      const progress = 1 - (m.timer / m.maxTimer);
+      const pulse = Math.sin(Date.now() * 0.008) * 0.5 + 0.5;
+      ctx.globalAlpha = 0.5 + pulse * 0.4;
+      ctx.strokeStyle = '#cc88ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(m.enemy.x, m.enemy.y, m.enemy.radius + 6 + pulse * 3, 0, Math.PI * 2 * progress);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Leyline Harp beams
+    for (const h of HarpBeams) {
+      const fade = Math.min(1, h.timer / 0.3) * Math.min(1, (h.maxTimer - h.timer) / 0.3);
+      const pairs = [[h.x1, h.y1, h.x2, h.y2]];
+      if (h.third) { pairs.push([h.x2, h.y2, h.x3, h.y3]); pairs.push([h.x3, h.y3, h.x1, h.y1]); }
+      ctx.save();
+      ctx.globalAlpha = (0.5 + fade * 0.5) * 0.85;
+      ctx.lineCap = 'round';
+      for (const [ax, ay, bx, by] of pairs) {
+        ctx.shadowBlur = 14; ctx.shadowColor = '#ffdd44';
+        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,200,0.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        // Anchor dots
+        ctx.fillStyle = '#ffee88';
+        ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Hungry Grimoire books
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const g of Grimoires) {
+      if (g.dead) continue;
+      const chargeFrac = g.charges / g.maxCharges;
+      ctx.save();
+      // Charge glow ring
+      ctx.beginPath(); ctx.arc(g.x, g.y, 18, -Math.PI / 2, -Math.PI / 2 + chargeFrac * Math.PI * 2);
+      ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = 4; ctx.shadowBlur = 10; ctx.shadowColor = '#ffaa44'; ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.font = '22px serif';
+      ctx.fillText('📖', g.x, g.y);
+      ctx.restore();
+    }
+
+    // Jake's Lament compass needle (drawn near player)
+    if (Player.jakesDir) {
+      const needleLen = 38;
+      const needleBase = Player.radius + 6;
+      const nx = Player.x + Player.jakesDir.x;
+      const ny = Player.y + Player.jakesDir.y;
+      // Find cooldown for pulse brightness
+      const jakesWi = Player.weapons.find(w => w.weaponId === 'jakes_lament');
+      const needleReady = jakesWi && jakesWi.cooldownRemaining <= 0;
+      const needlePulse = Math.sin(Date.now() * 0.006) * 0.5 + 0.5;
+      const needleAlpha = needleReady ? 0.6 + needlePulse * 0.4 : 0.3;
+      ctx.save();
+      ctx.globalAlpha = needleAlpha;
+      ctx.strokeStyle = needleReady ? '#ffee44' : '#887733';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = needleReady ? 10 : 0;
+      ctx.shadowColor = '#ffee44';
+      ctx.beginPath();
+      ctx.moveTo(Player.x + Player.jakesDir.x * needleBase,
+                 Player.y + Player.jakesDir.y * needleBase);
+      ctx.lineTo(Player.x + Player.jakesDir.x * (needleBase + needleLen),
+                 Player.y + Player.jakesDir.y * (needleBase + needleLen));
+      ctx.stroke();
+      // Arrowhead
+      const perpX = -Player.jakesDir.y, perpY = Player.jakesDir.x;
+      const tipX = Player.x + Player.jakesDir.x * (needleBase + needleLen);
+      const tipY = Player.y + Player.jakesDir.y * (needleBase + needleLen);
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - Player.jakesDir.x * 8 + perpX * 5,
+                 tipY - Player.jakesDir.y * 8 + perpY * 5);
+      ctx.lineTo(tipX - Player.jakesDir.x * 8 - perpX * 5,
+                 tipY - Player.jakesDir.y * 8 - perpY * 5);
+      ctx.closePath();
+      ctx.fillStyle = needleReady ? '#ffee44' : '#887733';
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Decoys
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -2682,6 +3134,10 @@ const Game = {
     Enemies = [];
     Projectiles = [];
     Decoys = [];
+    Beams = [];
+    ChronoMarks = [];
+    HarpBeams = [];
+    Grimoires = [];
     Particles.list = [];
     GroundEffects.list = [];
 
@@ -2720,6 +3176,10 @@ const Game = {
       updateEnemies(dt);
       updateDecoys(dt, Enemies);
       updateProjectiles(dt, Enemies);
+      updateBeams(dt);
+      updateChronoMarks(dt, Enemies);
+      updateHarpBeams(dt, Enemies);
+      updateGrimoires(dt, Enemies);
       GroundEffects.update(dt, Enemies);
       Particles.update(dt);
 
@@ -2767,6 +3227,10 @@ const Game = {
     Enemies = [];
     Projectiles = [];
     Decoys = [];
+    Beams = [];
+    ChronoMarks = [];
+    HarpBeams = [];
+    Grimoires = [];
     this.waveDuration = this.waveDurationFor(this.wave);
     this.waveTimer = this.waveDuration;
     this.wavePhase = 'playing';

@@ -476,6 +476,58 @@ const CONFIG = {
       ]
     },
     {
+      id: 'jakes_lament',
+      name: "Jake's Lament",
+      icon: '🧭',
+      description: "A compass needle tracks the densest enemy cluster. Charges a devastating beam in that direction — but only fires while you're moving toward the danger.",
+      cooldown: 4.5,
+      damage: 55,
+      projectileSpeed: 0,
+      armorPenetration: 4,
+      pierce: 99,
+      bounce: 0,
+      range: 420,
+      targeting: 'jakes',
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      lifesteal: 0,
+      cowardsCurse: false,
+      upgrades: [
+        { id: 'true_north',      name: 'True North',      icon: '🌐', description: 'Beam range increases dramatically.',                       changes: { rangeMultiplier: 2.0 } },
+        { id: 'crimson_bearing', name: 'Crimson Bearing', icon: '🩸', description: 'Beam lifesteals — heals 30% of all damage dealt.',          changes: { lifesteal: 0.3 } },
+        { id: 'cowards_curse',   name: "Coward's Curse",  icon: '🏳️', description: "Moving away fires a weaker backward blast instead.",       changes: { cowardsCurse: true } }
+      ]
+    },
+    {
+      id: 'babbage_blast',
+      name: 'Babbage Blast',
+      icon: '🎇',
+      description: 'Lobs a charged orb at the nearest enemy. On impact it detonates into a burst of runes that fire outward in all directions.',
+      cooldown: 2.8,
+      damage: 18,
+      projectileSpeed: 6,
+      armorPenetration: 1,
+      pierce: 0,
+      bounce: 0,
+      range: 560,
+      targeting: 'nearest',
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      runeBlastCount: 6,
+      runeBlastDamage: 10,
+      runeBlastRange: 320,
+      runeBlastSpeed: 5.5,
+      statusEffect: null,
+      upgrades: [
+        { id: 'babbage_barrage',  name: 'Babbage Barrage',  icon: '🎆', description: 'Detonation fires 4 additional runes.',                      changes: { runeBlastCount: 4 } },
+        { id: 'babbage_power',    name: 'Babbage Power',    icon: '💠', description: 'Runes hit harder and travel further.',                       changes: { runeBlastDamageMultiplier: 1.8, runeBlastRangeMultiplier: 1.5 } },
+        { id: 'babbage_chain',    name: 'Babbage Chain',    icon: '🔗', description: 'Each rune pierces one additional enemy.',                    changes: { runeBlastPierce: 1 } }
+      ]
+    },
+    {
       id: 'thunder_clap',
       name: 'Thunder Clap',
       icon: '💥',
@@ -601,6 +653,82 @@ const CONFIG = {
         { id: 'soul_barrage',    name: 'Soul Barrage',    icon: '💥', description: 'Two additional bolts arc from each side.',                  changes: { projectileCount: 2 } },
         { id: 'void_curve',      name: 'Void Curve',      icon: '🌑', description: 'Bolts hit much harder and shred armor.',                    changes: { damageMultiplier: 1.7, armorPenetration: 3 } }
       ]
+    },
+    {
+      id: 'chrono_needle',
+      name: 'Chrono Needle',
+      icon: '🕰️',
+      description: 'Fires a needle that marks an enemy. After 2 seconds, it detonates — dealing damage based on how far the target moved while marked. Punishes fast enemies.',
+      cooldown: 2.2,
+      damage: 8,
+      projectileSpeed: 14,
+      armorPenetration: 1,
+      pierce: 0,
+      bounce: 0,
+      range: 520,
+      targeting: 'nearest',
+      isChrono: true,
+      chronoDelay: 2.0,
+      chronoBaseDamage: 12,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'temporal_rupture', name: 'Temporal Rupture', icon: '⏳', description: 'Marked enemies are slowed before detonation.',            changes: { statusEffect: { type: 'slow', amount: 0.45, duration: 2.0 } } },
+        { id: 'time_debt',        name: 'Time Debt',        icon: '💸', description: 'Detonation damage multiplier increases 50% more.',        changes: { chronoMultiplierBonus: 0.5 } },
+        { id: 'paradox_chain',    name: 'Paradox Chain',    icon: '🔗', description: 'Detonation marks all nearby enemies.',                    changes: { chronoChain: true } }
+      ]
+    },
+    {
+      id: 'leyline_harp',
+      name: 'Leyline Harp',
+      icon: '🎵',
+      description: 'Places two magical notes on either side of you. A damaging beam connects them, slicing through any enemy that crosses the line.',
+      cooldown: 3.5,
+      damage: 18,
+      projectileSpeed: 0,
+      armorPenetration: 1,
+      pierce: 99,
+      bounce: 0,
+      range: 110,
+      targeting: 'harp',
+      harpDuration: 3.5,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'third_note',       name: 'Third Note',       icon: '🎶', description: 'Creates a triangle — three beams instead of one.',        changes: { harpThird: true } },
+        { id: 'resonant_strings', name: 'Resonant Strings', icon: '😵', description: 'Enemies hit by beams are briefly stunned.',               changes: { statusEffect: { type: 'stun', duration: 0.5 } } },
+        { id: 'harmonic_surge',   name: 'Harmonic Surge',   icon: '💥', description: 'Beams pulse extra damage every second.',                  changes: { harpPulse: true } }
+      ]
+    },
+    {
+      id: 'hungry_grimoire',
+      name: 'Hungry Grimoire',
+      icon: '📖',
+      description: 'A flying spellbook orbits loosely and absorbs enemy projectiles. After devouring enough, it spits out a massive arcane blast.',
+      cooldown: 8.0,
+      damage: 60,
+      projectileSpeed: 0,
+      armorPenetration: 3,
+      pierce: 99,
+      bounce: 0,
+      range: 90,
+      targeting: 'grimoire',
+      grimoireCharges: 0,
+      grimoireMaxCharges: 5,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 50,
+      areaDamageMultiplier: 0.8,
+      statusEffect: null,
+      upgrades: [
+        { id: 'voracious_pages',  name: 'Voracious Pages',  icon: '📚', description: 'Charges faster — kills also count toward the blast.',     changes: { grimoireFeedOnKill: true } },
+        { id: 'forbidden_chapter',name: 'Forbidden Chapter', icon: '☠️', description: 'Blast poisons every enemy hit.',                          changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } },
+        { id: 'library_swarm',    name: 'Library Swarm',    icon: '📕', description: 'Summons a second smaller book that orbits alongside.',    changes: { projectileCount: 1 } }
+      ]
     }
   ],
 
@@ -656,5 +784,6 @@ const PASSIVES = [
   { id: 'heal',      name: 'Mending Sigil',  icon: '✨', description: 'Restore 35% of max HP.',             apply: p => { p.health = Math.min(p.health + p.maxHealth * 0.35, p.maxHealth); } },
   { id: 'cd_global', name: 'Arcane Tempo',   icon: '⏳', description: 'All spell cooldowns −12%.',          apply: p => { p.globalCDMultiplier = (p.globalCDMultiplier || 1) * 0.88; } },
   { id: 'range_up',  name: 'Far Sight',      icon: '🔭', description: '+25% range on all spells.',          apply: p => { p.globalRangeMultiplier = (p.globalRangeMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
-  { id: 'monkey_paw', name: 'Shaolin Monkey Paw', icon: '🐾', description: '25% chance to block any hit. Also grants a full shield every 20s that absorbs one hit completely.', apply: p => { p.blockChance = Math.min(0.75, (p.blockChance || 0) + 0.25); if (!p.shieldCooldown) { p.shieldCooldown = 20; p.shieldTimer = 20; } } }
+  { id: 'monkey_paw',   name: 'Shaolin Monkey Paw', icon: '🐾', description: '25% chance to block any hit. Also grants a full shield every 20s that absorbs one hit completely.', apply: p => { p.blockChance = Math.min(0.75, (p.blockChance || 0) + 0.25); if (!p.shieldCooldown) { p.shieldCooldown = 20; p.shieldTimer = 20; } } },
+  { id: 'hondas_heals', name: "Honda's Heals",      icon: '💊', description: 'Each enemy kill restores 2 HP.',                                                                  apply: p => { p.killHeal = (p.killHeal || 0) + 2; } }
 ];

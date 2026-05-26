@@ -117,6 +117,18 @@ Conjures 4 walls of arcane energy that simultaneously sweep around the player, e
 - **Shock Walls** — each wall slows every enemy it touches
 - **Volatile Corners** — walls explode at their endpoints, dealing area damage at each corner
 
+### 🧭 Jake's Lament
+A compass needle orbits the caster, always pointing toward the densest enemy cluster. Every few seconds it fires a devastating beam in that direction — but only if you're moving toward the danger. Standing still or retreating, the beam never fires.
+- **True North** — beam range increases dramatically
+- **Crimson Bearing** — beam lifesteals, healing 30% of all damage dealt
+- **Coward's Curse** — moving away fires a weaker backward blast instead
+
+### 🎇 Babbage Blast
+Lobs a charged orb at the nearest enemy. On impact it detonates into a burst of runes that fire outward in all directions from the hit point, shredding anything nearby.
+- **Babbage Barrage** — detonation fires 4 additional runes
+- **Babbage Power** — runes hit harder and travel further
+- **Babbage Chain** — each rune pierces one additional enemy
+
 ### 💥 Thunder Clap
 Releases a thunderous concussive burst that instantly stuns and damages every enemy within range. Great for buying breathing room in a swarm.
 - **Wider Clap** — blast radius extends 60% further
@@ -134,6 +146,24 @@ Fires four brilliant bolts simultaneously along the diagonals — northeast, nor
 - **Prismatic Split** — each bolt splits into two perpendicular bolts on impact
 - **Blinding Flash** — bolts briefly stun every enemy they hit
 - **Radiant Cross** — fires 4 additional bolts filling the cardinal gaps, covering all 8 directions
+
+### 🕰️ Chrono Needle
+Fires a tiny needle that marks an enemy. Two seconds later it detonates — dealing damage based on how far the target moved while marked. The faster they run, the harder they fall.
+- **Temporal Rupture** — marked enemies are slowed before detonation
+- **Time Debt** — detonation damage scales 50% more aggressively with movement
+- **Paradox Chain** — detonation marks all nearby enemies with a fresh needle
+
+### 🎵 Leyline Harp
+Places two magical note anchors on either side of you. A golden beam connects them, slicing through any enemy that crosses the line.
+- **Third Note** — creates a triangle of three beams
+- **Resonant Strings** — enemies hit by beams are briefly stunned
+- **Harmonic Surge** — beams pulse extra damage every second
+
+### 📖 Hungry Grimoire
+A flying spellbook orbits loosely and absorbs incoming enemy projectiles. After devouring enough, it erupts in a massive arcane blast. Feed it well.
+- **Voracious Pages** — kills also count as charges toward the blast
+- **Forbidden Chapter** — blast poisons every enemy hit
+- **Library Swarm** — summons a second smaller book that orbits alongside
 
 ### 🌀 Phantom Gyre
 Three phantom orbs orbit the caster, cycling between solid and ethereal states every 1.6 seconds. Only the solid orbs deal damage — position yourself so enemies walk through them at the right moment.
@@ -192,6 +222,7 @@ These appear alongside spell upgrades on the level-up screen.
 | ⏳ Arcane Tempo | All spell cooldowns −12% |
 | 🔭 Far Sight | +25% range on all spells |
 | 🐾 Shaolin Monkey Paw | 25% chance to block any hit. Grants a full damage-absorbing shield every 20s |
+| 💊 Honda's Heals | Restore 2 HP on every enemy kill |
 
 ---
 
