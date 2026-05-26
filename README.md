@@ -243,12 +243,6 @@ Hurls vials of corrosive liquid that shatter at random nearby locations, leaving
 - **Virulent Toxin** — pools deal more damage and linger far longer
 - **Caustic Acid** — converts to burning acid with enormous tick damage
 
----
-
-## Blade Cycle
-
-A ring of five close-combat weapons for players who like to get in and stay there. Blade Cycle weapons reward aggressive positioning — blades that return to hand, shells that punish contact, traps that catch fleeing enemies, and a legendary whip of enchanted pasta.
-
 ### 🗡️ Afro Samurai's Final Blade
 Fires three devastating cutting slashes at the nearest enemy. Each slash tears through anything in its path with extreme armor penetration, and the cuts fan out slightly to cover a wide arc. Built for massive single-target and multi-pierce annihilation.
 - **Phantom Strike** — each slash splits into 2 additional cuts on contact at 70% power
@@ -278,12 +272,6 @@ A writhing length of enchanted pasta lashed from the wrist like a whip. Threads 
 - **Al Dente** — pasta hardens, dealing 75% more damage
 - **Extra Long** — range extends 50% further and curves more aggressively
 - **Carbonara Curse** — pasta poisons every enemy it wraps around
-
----
-
-## Life Cycle
-
-A ring of eight spells tied to nature, time, and growth. Life Cycle weapons emphasize sustain, mobility, and entropy — seeds that bloom into devastation, mirrors that echo what has passed, and a vine that keeps coming back.
 
 ### 🪷 Lotus Rift
 Opens a blooming lotus-shaped rift under a distant enemy. Each petal that unfolds damages nearby enemies. When the final petal opens, the lotus collapses into a healing mote that drifts back to you.
@@ -395,8 +383,6 @@ Each weapon belongs to one of eight cycles. For every weapon you own in a cycle 
 | 😈 **Demon** | Red | +1 armor |
 | ⚔️ **Blade** | Silver | +1.5 flat armor penetration |
 | 🌿 **Life** | Green | +5 max HP |
-
-Fire and Demon reward very different build directions — Fire scales spell output while Demon hardens your survivability, so running both cycles simultaneously is a natural defensive/offensive split.
 
 ---
 
