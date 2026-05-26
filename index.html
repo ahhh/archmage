@@ -1560,23 +1560,35 @@ const WeaponSystem = {
       };
     }
 
-    // Mirror: spawns orbiting mirror(s) that echo the last projectile fired
+    // Mirror: spawns orbiting mirror(s) that echo the last projectile fired.
+    // Mirrors persist continuously (full orbit); only respawn when count changes.
     if (s.targeting === 'mirror') {
-      for (const m of Mirrors) { if (m.weaponId === wi.weaponId) { m.dead = true; } }
       const count = s.mirrorCount || 1;
-      for (let i = 0; i < count; i++) {
-        Mirrors.push({
-          x: player.x, y: player.y,
-          angle: (Math.PI * 2 / count) * i,
-          orbitRadius: s.range,
-          orbitSpeed: 0.042 + i * 0.015,
-          cooldown: s.cooldown || 1.2,
-          cooldownRemaining: 0.3,
-          power: s.mirrorPower,
-          explosion: s.mirrorExplosion,
-          weaponId: wi.weaponId,
-          dead: false,
-        });
+      const existing = Mirrors.filter(m => !m.dead && m.weaponId === wi.weaponId);
+      if (existing.length !== count) {
+        for (const m of Mirrors) { if (m.weaponId === wi.weaponId) { m.dead = true; } }
+        for (let i = 0; i < count; i++) {
+          Mirrors.push({
+            x: player.x, y: player.y,
+            angle: (Math.PI * 2 / count) * i,
+            orbitRadius: s.range,
+            orbitSpeed: 0.042 + i * 0.015,
+            cooldown: s.cooldown || 1.2,
+            cooldownRemaining: 0.3,
+            power: s.mirrorPower,
+            explosion: s.mirrorExplosion,
+            weaponId: wi.weaponId,
+            dead: false,
+          });
+        }
+      } else {
+        // Keep existing mirrors alive; just sync stats that upgrades may have changed
+        for (const m of existing) {
+          m.power = s.mirrorPower;
+          m.cooldown = s.cooldown || 1.2;
+          m.orbitRadius = s.range;
+          m.explosion = s.mirrorExplosion;
+        }
       }
       return true;
     }
