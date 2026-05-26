@@ -865,6 +865,34 @@ const CONFIG = {
       ]
     },
     {
+      id: 'alexs_hax',
+      name: "Alex's Hax",
+      icon: '💻',
+      description: "Summons glitching demonic sigils that lock onto random enemy mobs and scorch the ground beneath them with cursed circles of hellfire. Enemies caught inside burn continuously.",
+      cooldown: 3.5,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 0,
+      areaRadius: 90,
+      areaDamageMultiplier: 0,
+      targeting: 'hackcircle',
+      riftCount: 3,
+      riftDuration: 0,
+      riftChain: false,
+      chainCount: 0,
+      chainRange: 0,
+      groundEffect: { type: 'burn', duration: 4.0, dps: 14 },
+      statusEffect: null,
+      upgrades: [
+        { id: 'mass_hack',     name: 'Mass Hack',     icon: '💻', description: 'Summons 2 additional cursed circles per cast.',                           changes: { riftCount: 2 } },
+        { id: 'rootkit',       name: 'Rootkit',        icon: '🔴', description: 'Circles linger 60% longer and burn enemies for more damage per second.',  changes: { groundEffect: { type: 'burn', duration: 6.4, dps: 20 } } },
+        { id: 'daemon_thread', name: 'Daemon Thread',  icon: '😈', description: 'Circles now also poison every enemy that steps inside them.',             changes: { groundEffect: { type: 'toxic', duration: 4.0, dps: 22 } } }
+      ]
+    },
+    {
       id: 'afro_samurai_blade',
       name: "Afro Samurai's Final Blade",
       icon: '🗡️',
@@ -1260,13 +1288,13 @@ const CONFIG = {
     { wave: 11, monstersTotal: 128 },
     { wave: 12, monstersTotal: 130 },
     { wave: 13, monstersTotal: 142 },
-    { wave: 14, monstersTotal: 154 },
-    { wave: 15, monstersTotal: 168 },
-    { wave: 16, monstersTotal: 170 },
-    { wave: 17, monstersTotal: 182 },
-    { wave: 18, monstersTotal: 195 },
-    { wave: 19, monstersTotal: 208 },
-    { wave: 20, monstersTotal: 211, boss: 'dragon_boss' }
+    { wave: 14, monstersTotal: 210, miniBosses: ['troll'] },
+    { wave: 15, monstersTotal: 245, miniBosses: ['troll', 'beholderkin'] },
+    { wave: 16, monstersTotal: 280, miniBosses: ['troll', 'troll'] },
+    { wave: 17, monstersTotal: 320, miniBosses: ['beholderkin', 'troll', 'beholderkin'] },
+    { wave: 18, monstersTotal: 360, miniBosses: ['troll', 'troll', 'beholderkin'] },
+    { wave: 19, monstersTotal: 405, miniBosses: ['beholderkin', 'troll', 'troll', 'beholderkin'] },
+    { wave: 20, monstersTotal: 455, boss: 'dragon_boss', miniBosses: ['troll', 'troll'] }
   ],
 
   // ── WEAPON COMBOS ─────────────────────────────────────────────
@@ -1574,6 +1602,26 @@ const CONFIG = {
       ]
     },
 
+    // ─── ALEX'S HAX COMBOS ──────────────────────────────────────
+    {
+      id: 'hex_protocol', name: 'Hex Protocol', icon: '🔥',
+      requires: ['alexs_hax', 'jakes_lament'],
+      description: "Jake's beam brands every enemy it touches. Alex's Hax locks onto branded enemies first, and cursed circles burn twice as hot. Jake's beam extends 40% further with 15% lifesteal.",
+      weaponBoosts: [
+        { weaponId: 'alexs_hax',    riftCount: 2, groundEffect: { type: 'burn', duration: 5.0, dps: 26 } },
+        { weaponId: 'jakes_lament', damageMultiplier: 1.8, rangeMultiplier: 1.4, lifesteal: 0.15 }
+      ]
+    },
+    {
+      id: 'sauce_ring', name: 'Sauce Ring', icon: '🖤',
+      requires: ['alexs_hax', 'stax_black_sauce'],
+      description: "Black Sauce pools that soak an enemy trigger a cursed hax circle at that spot. Alex's Hax summons 2 more circles per cast and fires 30% faster. Sauce deals 70% more damage.",
+      weaponBoosts: [
+        { weaponId: 'alexs_hax',      riftCount: 2, cooldownMultiplier: 0.7 },
+        { weaponId: 'stax_black_sauce', damageMultiplier: 1.7, projectileCount: 2 }
+      ]
+    },
+
     // ─── AFRO SAMURAI COMBOS ────────────────────────────────────
     {
       id: 'void_cleave', name: 'Glacial Cleave', icon: '🧊',
@@ -1755,7 +1803,7 @@ const CONFIG = {
     lightning: { name: 'Lightning Cycle', icon: '⚡', color: '#ffee44', weapons: ['spark_chain','rune_burst','arcane_orb','arcane_cube','phase_blade','thunder_clap'] },
     death:     { name: 'Death Cycle',     icon: '💀', color: '#cc66ff', weapons: ['shadow_bolt','bone_spear','phantom_double','hungry_grimoire','plague_pool','soul_whirl'] },
     arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp'] },
-    demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce'] },
+    demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce','alexs_hax'] },
     blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss','spaghettis_blade'] },
     life:      { name: 'Life Cycle',      icon: '🌿', color: '#66ff99', weapons: ['lotus_rift','scarab_halo','pollen_nova','frizzos_hourglass','molting_mirror','brood_husk','crescent_moon','ouroboros_vine'] }
   }

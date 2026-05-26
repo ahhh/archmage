@@ -868,6 +868,9 @@ const Player = {
     this.globalMirrorPowerBonus = 0;
     this.globalDecoyHpBonus = 0;
     this.globalDecoyDurationBonus = 0;
+    this.cycleBonus = { fire:0, ice:0, lightning:0, death:0, arcane:0, demon:0, blade:0, life:0 };
+    this.cycleLifeMaxHPApplied = 0;
+    this.cycleDemonArmorApplied = 0;
     this.passivesApplied = [];
     this.flashTimer = 0;
     this.glowPulse = 0;
@@ -1140,6 +1143,29 @@ const Player = {
         s.damage = Math.round(s.damage * b.fireDamageMultiplier);
       }
     }
+    // ── Cycle set bonuses ─────────────────────────────────────────
+    const cb = this.cycleBonus || {};
+    // Fire: +1 extra projectile per stack (any projectile-firing weapon)
+    if (cb.fire > 0 && s.projectileSpeed > 0)
+      s.projectileCount += cb.fire;
+    // Ice: +10% status effect duration per stack
+    if (cb.ice > 0 && s.statusEffect)
+      s.statusEffect = { ...s.statusEffect, duration: s.statusEffect.duration * (1 + cb.ice * 0.10) };
+    // Lightning: -4% cooldown per stack (floors at 75% of computed cooldown)
+    if (cb.lightning > 0)
+      s.cooldown = Math.max(s.cooldown * 0.75, s.cooldown * Math.pow(0.96, cb.lightning));
+    // Death: +5% damage per stack
+    if (cb.death > 0)
+      s.damage = Math.round(s.damage * (1 + cb.death * 0.05));
+    // Arcane: +6% range per stack
+    if (cb.arcane > 0)
+      s.range = Math.round(s.range * (1 + cb.arcane * 0.06));
+    // Demon: +1 armor per stack — handled in computeCyclePassives()
+    // Blade: +1.5 flat armor penetration per stack
+    if (cb.blade > 0)
+      s.armorPenetration += cb.blade * 1.5;
+    // Life: max HP handled in computeCyclePassives()
+
     // Mark weapon as combo-empowered if any active combo boosts it
     s.empowered = false;
     if (this.unlockedCombos) {
@@ -1183,6 +1209,7 @@ const Player = {
     const wConfig = CONFIG.weapons.find(w => w.id === weaponId);
     if (!wConfig) return;
     this.weapons.push(this.makeWeaponInstance(wConfig));
+    computeCyclePassives();
   },
 
   applyUpgrade(weaponId, upgradeId) {
@@ -1305,6 +1332,41 @@ const Player = {
     ctx.arc(this.x, this.y, rimR, 0, Math.PI * 2);
     ctx.fillStyle = rim;
     ctx.fill();
+
+    // ── Cycle set aura rings ─────────────────────────────────────
+    const CYCLE_COLORS = { fire:'#ff7733', ice:'#66ddff', lightning:'#ffee44', death:'#cc66ff', arcane:'#44ffbb', demon:'#ff4466', blade:'#cccccc', life:'#66ff99' };
+    const activeCycles = Object.entries(this.cycleBonus || {}).filter(([,stk]) => stk > 0);
+    for (let ci = 0; ci < activeCycles.length; ci++) {
+      const [key, stacks] = activeCycles[ci];
+      const col = CYCLE_COLORS[key];
+      const baseR = this.radius + 28 + ci * 11;
+      const p2 = Math.sin(this.glowPulse * 1.3 + ci * 1.05) * 0.5 + 0.5;
+      // Thin pulsing ring
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, baseR + p2 * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = 0.22 + stacks * 0.09 + p2 * 0.08;
+      ctx.lineWidth = 1.2 + stacks * 0.55;
+      ctx.shadowBlur = 6 + stacks * 4;
+      ctx.shadowColor = col;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      // Orbiting dots — one per stack beyond zero
+      const dotCount = stacks + 1;
+      const orbitR = baseR + 5;
+      const baseAngle = this.glowPulse * (0.75 + ci * 0.18);
+      for (let di = 0; di < dotCount; di++) {
+        const da = baseAngle + (Math.PI * 2 / dotCount) * di;
+        ctx.beginPath();
+        ctx.arc(this.x + Math.cos(da) * orbitR, this.y + Math.sin(da) * orbitR, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.globalAlpha = 0.55 + p2 * 0.35;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
 
     // Monkey Paw shield ring
     if (this.shieldActive) {
@@ -1767,7 +1829,7 @@ const WeaponSystem = {
 
     // Save echo template for Mirror Glyph (from any projectile-firing weapon)
     if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
-        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest'].includes(s.targeting)) {
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest', 'hackcircle'].includes(s.targeting)) {
       MirrorEchoTemplate = {
         projectileSpeed: s.projectileSpeed,
         damage: s.damage,
@@ -2197,6 +2259,21 @@ const WeaponSystem = {
           dead: false,
         });
         Particles.emit(rx, ry, '#aaddff', 8, 3);
+      }
+      return true;
+    }
+
+    // HackCircle: places cursed ground-effect circles at random alive enemy positions
+    if (s.targeting === 'hackcircle') {
+      if (!s.groundEffect) return false;
+      const count = s.riftCount || 3;
+      const alive = enemies.filter(e => !e.dead);
+      if (alive.length === 0) return false;
+      const pool = [...alive].sort(() => Math.random() - 0.5);
+      const targets = pool.slice(0, count);
+      for (const t of targets) {
+        GroundEffects.add(t.x, t.y, s.areaRadius, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
+        Particles.emit(t.x, t.y, '#ff2244', 15, 5);
       }
       return true;
     }
@@ -2876,8 +2953,10 @@ let Enemies = [];
 function spawnEnemy(configId, waveNum) {
   const cfg = CONFIG.monsters.find(m => m.id === configId);
   if (!cfg) return;
-  const hpMult = 1 + waveNum * 0.12;
-  const strMult = 1 + waveNum * 0.08;
+  // Extra scaling for the final 7 waves (+8% HP and strength per wave above 13)
+  const lateBonus = waveNum >= 14 ? 1 + (waveNum - 13) * 0.08 : 1;
+  const hpMult  = (1 + waveNum * 0.12) * lateBonus;
+  const strMult = (1 + waveNum * 0.08) * lateBonus;
   // Spawn at edge
   let x, y;
   const side = rndInt(0, 3);
@@ -3089,7 +3168,7 @@ const WaveSpawner = {
   totalToSpawn: 0,
   spawnInterval: 1.5,
   bossPending: null,
-  miniBossPending: null,
+  miniBossesPending: [],
 
   startWave(waveNum) {
     const milestone = CONFIG.waveMilestones[waveNum - 1];
@@ -3100,13 +3179,16 @@ const WaveSpawner = {
     this.spawnInterval = Math.max(0.25, spawnWindow / milestone.monstersTotal);
     this.spawnTimer = 0.3;
     this.bossPending = milestone.boss || null;
-    this.miniBossPending = milestone.miniBoss || null;
+    // Support both miniBosses array and legacy miniBoss string
+    this.miniBossesPending = milestone.miniBosses
+      ? [...milestone.miniBosses]
+      : milestone.miniBoss ? [milestone.miniBoss] : [];
   },
 
   update(dt, waveNum) {
     if (this.spawnedCount >= this.totalToSpawn) return;
     // Boss/mini-boss can spawn any time; regular enemies only in first 35% of wave
-    const inSpawnWindow = (this.bossPending || this.miniBossPending) ||
+    const inSpawnWindow = (this.bossPending || this.miniBossesPending.length > 0) ||
                           Game.waveTimer > Game.waveDuration * 0.65;
     if (!inSpawnWindow) return;
     this.spawnTimer -= dt;
@@ -3120,10 +3202,9 @@ const WaveSpawner = {
       this.spawnedCount++;
       return;
     }
-    // Mini-boss
-    if (this.miniBossPending) {
-      spawnEnemy(this.miniBossPending, waveNum);
-      this.miniBossPending = null;
+    // Mini-boss(es) — spawn one per tick until queue is drained
+    if (this.miniBossesPending.length > 0) {
+      spawnEnemy(this.miniBossesPending.shift(), waveNum);
       this.spawnedCount++;
     }
 
@@ -3156,6 +3237,42 @@ function getWeaponCycle(weaponId) {
     if (cycle.weapons.includes(weaponId)) return key;
   }
   return null;
+}
+
+function computeCyclePassives() {
+  const cb = Player.cycleBonus;
+  for (const key of Object.keys(cb)) cb[key] = 0;
+
+  for (const wi of Player.weapons) {
+    for (const [key, cycle] of Object.entries(CONFIG.cycles || {})) {
+      if (cycle.weapons.includes(wi.weaponId)) { cb[key]++; break; }
+    }
+  }
+  // Stacks = weapons beyond the first
+  for (const key of Object.keys(cb)) cb[key] = Math.max(0, cb[key] - 1);
+
+  // Life: +5 max HP per stack
+  const lifeHP = cb.life * 5;
+  const lifeHPDelta = lifeHP - (Player.cycleLifeMaxHPApplied || 0);
+  if (lifeHPDelta !== 0) {
+    Player.maxHealth += lifeHPDelta;
+    Player.health = Math.min(Player.health + Math.max(0, lifeHPDelta), Player.maxHealth);
+    Player.cycleLifeMaxHPApplied = lifeHP;
+  }
+
+  // Demon: +1 armor per stack
+  const demonArmor = cb.demon * 1;
+  const demonArmorDelta = demonArmor - (Player.cycleDemonArmorApplied || 0);
+  if (demonArmorDelta !== 0) {
+    Player.armor += demonArmorDelta;
+    Player.cycleDemonArmorApplied = demonArmor;
+  }
+
+  // Recompute all weapon stats so new stacks take effect
+  for (const wi of Player.weapons) {
+    const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+    if (wConfig) wi.computedStats = Player.computeWeaponStats(wConfig, wi.appliedUpgrades);
+  }
 }
 
 const LevelSystem = {
@@ -3222,16 +3339,31 @@ const LevelSystem = {
       }
     }
 
-    // Shuffle and take 3, but prioritize synergies
-    const shuffled = shuffle(choices);
+    // Separate weapon candidates from upgrades/passives for guaranteed weapon slots
+    const weaponChoices = shuffle(choices.filter(c => c.type === 'newWeapon'));
+    const otherChoices  = shuffle(choices.filter(c => c.type !== 'newWeapon'));
+
     const picks = [];
+    // Synergies always first
     for (const s of synergies.slice(0, 3)) picks.push(s);
-    for (const c of shuffled) {
+
+    // Guarantee at least 2 new-weapon cards when not at cap and slots remain
+    if (!atWeaponCap) {
+      const needed = Math.max(0, 2 - picks.filter(p => p.type === 'newWeapon').length);
+      for (let i = 0; i < needed && picks.length < 3 && i < weaponChoices.length; i++) {
+        picks.push(weaponChoices[i]);
+      }
+    }
+
+    // Fill remaining slots: upgrades/passives first, then leftover weapon choices
+    const usedWeaponIds = new Set(picks.filter(p => p.type === 'newWeapon').map(p => p.weaponId));
+    const remaining = [...otherChoices, ...weaponChoices.filter(w => !usedWeaponIds.has(w.weaponId))];
+    for (const c of remaining) {
       if (picks.length >= 3) break;
       picks.push(c);
     }
 
-    // Guarantee at least 1 (infinite passives as fallback if needed)
+    // Fallback: guarantee at least 1
     if (picks.length === 0) {
       picks.push({ type: 'passive', passiveId: 'heal', label: 'Mending Sigil', icon: '✨', desc: 'Restore 35% of max HP.', sub: 'Passive' });
     }

@@ -195,6 +195,12 @@ Spews a torrent of thick black arcane goo in the direction you're moving. Enemie
 - **Extra Pressure** — more projectiles, wider spray
 - **Toxic Deluge** — poison deals 60% more damage per tick
 
+### 💻 Alex's Hax
+Summons glitching demonic sigils that lock onto random enemy mobs and scorch the ground beneath them with cursed circles of hellfire. Enemies caught inside burn continuously.
+- **Mass Hack** — summons 2 additional cursed circles per cast
+- **Rootkit** — circles linger 60% longer and burn enemies for more damage per second
+- **Daemon Thread** — circles also poison every enemy that steps inside them
+
 ### 🌀 Frost Gyre
 Three orbs of crystallized frost orbit the caster, cycling between solid ice and freezing mist every 1.6 seconds. Only solid orbs deal damage — position yourself so enemies walk through them at the right moment.
 - **Crystal Surge** — solid orbs hit 60% harder
@@ -331,18 +337,66 @@ Launches a living vine that arcs outward in a looping path, then curves back tow
 
 ## Passive Upgrades
 
-These appear alongside spell upgrades on the level-up screen.
+These appear alongside spell upgrades on the level-up screen. You can take the same passive multiple times — the effects stack.
 
+### Survival
 | Passive | Effect |
 |---|---|
-| 💚 Vitality Shard | +20 max HP and restore 20 HP |
-| 💨 Swiftness Rune | +0.4 movement speed |
-| 🛡️ Stone Skin | +1 armor |
-| ✨ Mending Sigil | Restore 35% of max HP |
-| ⏳ Arcane Tempo | All spell cooldowns −12% |
-| 🔭 Far Sight | +25% range on all spells |
-| 🐾 Shaolin Monkey Paw | 25% chance to block any hit. Grants a full damage-absorbing shield every 20s |
-| 💊 Honda's Heals | Restore 2 HP on every enemy kill |
+| 💚 **Vitality Shard** | +20 max HP and restore 20 HP immediately |
+| ✨ **Mending Sigil** | Restore 35% of max HP immediately |
+| 💨 **Swiftness Rune** | +0.4 movement speed |
+| 🛡️ **Stone Skin** | +1 armor |
+| 🐾 **Shaolin Monkey Paw** | 25% chance to block any hit; also grants a full damage-absorbing shield every 20 seconds |
+| 💊 **Honda's Heals** | Each enemy kill restores 1 HP |
+
+### General Spell Power
+| Passive | Effect |
+|---|---|
+| 🔥 **Ember Core** | +15% damage on all weapons |
+| ⏳ **Arcane Tempo** | All spell cooldowns −12% |
+| 🔭 **Far Sight** | +25% range on all spells |
+| 🍃 **Wind Etching** | +20% projectile speed |
+| 🌐 **Titan Glyph** | +20% area size for applicable weapons |
+| 🕯️ **Lingering Hex** | +25% duration for applicable weapon effects |
+| 🪡 **Needle Threader** | +1 pierce for applicable projectiles |
+| 🔗 **Storm Link** | +1 chain for applicable weapons |
+| 🕳️ **Void Needle** | +2 armor penetration on all weapons |
+| 🧪 **Hex Resin** | +20% duration for all status effects (stun, poison, slow) |
+| ✋ **Thunder Palm** | +30% knockback force |
+| 🪢 **Gravity Knot** | +35% pull strength |
+
+### Weapon-Type Specializations
+| Passive | Applies To | Effect |
+|---|---|---|
+| 🔷 **Echo Prism** | Multi-shot weapons | +1 projectile per cast |
+| 🧭 **Star Compass** | Nova / radial weapons | +2 radial shots per cast |
+| 💎 **Fracture Lens** | Splitting projectiles | +1 extra split |
+| 🌀 **Gyre Engine** | Orbiting weapons | +30% orbit speed |
+| 🌙 **Crescent Geometry** | Arcing / spiral projectiles | +35% curve rate |
+| ⏳ **Time Interest** | Frost Needle (chrono) | Detonations gain +35% damage scaling |
+| 💠 **Crackling Fault** | Rift / spike / trap weapons | +1 rift, spike, or trap per cast |
+| 🔥 **Scorched Covenant** | Ground effect weapons | +25% ground effect damage and duration |
+| 🪞 **Silvered Echo** | Mirror Glyph | +20% mirror echo power |
+| 👤 **False Idol** | Phantom Double | +50 decoy HP and +3 seconds decoy duration |
+
+---
+
+## Cycle Set Bonuses
+
+Each weapon belongs to one of eight cycles. For every weapon you own in a cycle **beyond the first**, you gain a stacking passive bonus — shown as a colored ring with orbiting dots around your character. The more stacks, the more rings and the brighter the glow.
+
+| Cycle | Color | Bonus per additional weapon |
+|---|---|---|
+| 🔥 **Fire** | Orange | +1 projectile on all projectile-firing spells |
+| ❄️ **Ice** | Cyan | +10% status effect duration |
+| ⚡ **Lightning** | Yellow | −4% spell cooldown (min 75% of base) |
+| 💀 **Death** | Violet | +5% weapon damage |
+| ✨ **Arcane** | Teal | +6% spell range |
+| 😈 **Demon** | Red | +1 armor |
+| ⚔️ **Blade** | Silver | +1.5 flat armor penetration |
+| 🌿 **Life** | Green | +5 max HP |
+
+Fire and Demon reward very different build directions — Fire scales spell output while Demon hardens your survivability, so running both cycles simultaneously is a natural defensive/offensive split.
 
 ---
 
@@ -406,13 +460,15 @@ Weapons are grouped into eight **Cycles**. Each weapon within a cycle participat
 | 🎶 **Harmonic Barrage** | Leyline Harp + Magic Missiles | Leyline Harp adds a third beam and pulses every second. Magic Missiles deals double damage at 50% more speed. |
 
 ### 😈 Demon Cycle
-*Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → (back to Jake's Lament)*
+*Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → Alex's Hax → (back to Jake's Lament)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🧭 **Bombastic Bearing** | Jake's Lament + Babbage Blast | Jake's beam extends 50% further with 15% lifesteal. Babbage Blast detonates twice as many runes at double damage. |
 | 🤡 **Cringe Barrage** | Babbage Blast + Viceroy's Cringe Missile | Viceroy Missiles explode into full rune bursts on impact. Babbage Blast fires 4 extra runes with halved cooldown. |
 | 🖤 **Hazmat Missile** | Viceroy's Cringe Missile + Stax's Black Sauce | Viceroy Missiles poison every enemy they hit and bounce 3 more times. Black Sauce fires 80% further at twice the speed. |
 | 💨 **Trail Blazer** | Stax's Black Sauce + Jake's Lament | Black Sauce fires 5× faster. Jake's beam extends further and lifesteals 20% of all damage dealt. |
+| 🔥 **Hex Protocol** | Alex's Hax + Jake's Lament | Jake's beam brands enemies — Alex's Hax targets branded enemies first and circles burn twice as hot. Jake's beam extends 40% further with 15% lifesteal. |
+| 🖤 **Sauce Ring** | Alex's Hax + Stax's Black Sauce | Black Sauce pools trigger hax circles wherever they soak an enemy. Alex's Hax summons 2 more circles per cast and fires 30% faster. Sauce deals 70% more damage. |
 
 ### ⚔️ Blade Cycle
 *Afro Samurai's Final Blade → Spaghetti's Blade → Hammer Toss → Battle Shell → Field Caltrops → (back to Final Blade)*
@@ -425,11 +481,11 @@ Within-cycle synergies:
 | 🏰 **Battering Fortress** | Hammer Toss + Battle Shell | The shell launches repelled enemies into the hammer's path. Shell contact damage doubles. Hammer chains to 3 more targets and hits 70% harder. |
 | 🌵 **Thornwall** | Battle Shell + Field Caltrops | Shell and caltrops form a layered defense. Shell radius grows 40%, caltrops deal 80% more damage and two extra caltrops are hurled each cast. |
 | 🗡️ **Blade Trap** | Field Caltrops + Afro Samurai's Final Blade | Enemies slowed by caltrops meet the returning blade at their worst moment. Blade deals double damage and pierces 3 extra enemies. Caltrops shred armor. |
+| 🪓 **Executioner's Cadence** | Hammer Toss + Afro Samurai's Final Blade | The Hammer stuns. The Blade finishes. Final Blade deals double damage and pierces 3 extra enemies. Hammer shockwave grows wider and stuns longer. |
 
 Cross-cycle synergies (Blade weapons that combo with other cycles):
 | Synergy | Weapons | Effect |
 |---|---|---|
-| 🪓 **Executioner's Cadence** | Hammer Toss + Afro Samurai's Final Blade | The Hammer stuns. The Blade finishes. Final Blade deals double damage and pierces 3 extra enemies. Hammer shockwave grows wider and stuns longer. |
 | 🧊 **Glacial Cleave** | Afro Samurai's Final Blade + Glacial Lance | Each slash shatters ice — dealing area damage and pulling nearby enemies into the cut. Glacial Lance pierces 4 extra enemies and deals 80% more damage. |
 | ⚔️ **Dual Blade Mastery** | Afro Samurai's Final Blade + Lightning Edge | Lightning Edge orbit radius triples at 3× damage. The Final Blade fires 40% faster with a wider cut. |
 | 🌪️ **Iron Whirlwind** | Hammer Toss + Lightning Edge | Steel meets lightning. Lightning Edge orbit radius doubles at 2.5× damage. The Hammer ricochets to 3 more targets and hits 60% harder. |
