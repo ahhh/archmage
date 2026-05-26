@@ -293,6 +293,15 @@ body::after {
 .upgrade-icon { font-size: 32px; margin-bottom: 10px; display: block; }
 .upgrade-name { font-size: 13px; color: var(--g1); margin-bottom: 8px; }
 .upgrade-type { font-size: 10px; color: var(--g3); margin-bottom: 6px; letter-spacing: 0.1em; text-transform: uppercase; }
+.upgrade-cycle { font-size: 9px; margin-bottom: 5px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+.cycle-fire      { color: #ff7733; }
+.cycle-ice       { color: #66ddff; }
+.cycle-lightning { color: #ffee44; }
+.cycle-death     { color: #cc66ff; }
+.cycle-arcane    { color: #44ffbb; }
+.cycle-demon     { color: #ff4466; }
+.cycle-blade     { color: #cccccc; }
+.cycle-life      { color: #66ff99; }
 .upgrade-desc { font-size: 10px; color: var(--text); line-height: 1.5; }
 
 /* ── SYNERGY (COMBO) CARDS ──────────────── */
@@ -3142,6 +3151,13 @@ function getBanId(choice) {
   return 'x:' + choice.label;
 }
 
+function getWeaponCycle(weaponId) {
+  for (const [key, cycle] of Object.entries(CONFIG.cycles || {})) {
+    if (cycle.weapons.includes(weaponId)) return key;
+  }
+  return null;
+}
+
 const LevelSystem = {
   generateChoices() {
     const banned = Game.bannedIds || new Set();
@@ -3151,7 +3167,7 @@ const LevelSystem = {
     const atWeaponCap = Player.weapons.length >= (CONFIG.MAX_WEAPONS ?? 10);
     for (const w of CONFIG.weapons) {
       if (!atWeaponCap && !Player.hasWeapon(w.id)) {
-        const candidate = { type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell', comboPotentials: [] };
+        const candidate = { type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell', cycle: getWeaponCycle(w.id), comboPotentials: [] };
         if (banned.has(getBanId(candidate))) continue;
         for (const combo of (CONFIG.combos || [])) {
           if (Player.unlockedCombos.has(combo.id)) continue;
@@ -3181,7 +3197,7 @@ const LevelSystem = {
       }
       for (const upg of wConfig.upgrades) {
         if (!wi.appliedUpgrades.includes(upg.id)) {
-          const candidate = { type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}`, empoweredBy };
+          const candidate = { type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}`, cycle: getWeaponCycle(wi.weaponId), empoweredBy };
           if (!banned.has(getBanId(candidate))) choices.push(candidate);
         }
       }
@@ -4487,9 +4503,13 @@ const Game = {
           .map(e => `<span class="empowered-label">⚡ ${e.comboIcon} ${e.comboName}</span>`)
           .join('');
 
+        const cycleBadge = choice.cycle
+          ? `<div class="upgrade-cycle cycle-${choice.cycle}">${CONFIG.cycles[choice.cycle].icon} ${CONFIG.cycles[choice.cycle].name}</div>`
+          : '';
         card.innerHTML = `
           <span class="upgrade-icon">${choice.icon}</span>
           <div class="upgrade-type">${choice.sub}</div>
+          ${cycleBadge}
           <div class="upgrade-name">${choice.label}</div>
           <div class="upgrade-desc">${choice.desc}</div>
           ${comboHints}${empoweredLabels}

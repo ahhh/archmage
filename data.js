@@ -1696,7 +1696,20 @@ const CONFIG = {
         { weaponId: 'frizzos_hourglass', chronoChain: true, chronoMultiplierBonus: 0.25 }
       ]
     }
-  ]
+  ],
+
+  // ── CYCLES ─────────────────────────────────────────────────
+  // Each cycle is a thematic ring of related weapons.
+  cycles: {
+    fire:      { name: 'Fire Cycle',      icon: '🔥', color: '#ff7733', weapons: ['firebolt','phoenix_wings','magma_orb','meteor_sigil','starfall','arcane_trail'] },
+    ice:       { name: 'Ice Cycle',       icon: '❄️', color: '#66ddff', weapons: ['frost_shard','void_lance','fault_lines','force_pulse','chrono_needle','phantom_gyre'] },
+    lightning: { name: 'Lightning Cycle', icon: '⚡', color: '#ffee44', weapons: ['spark_chain','rune_burst','arcane_orb','arcane_cube','phase_blade','thunder_clap'] },
+    death:     { name: 'Death Cycle',     icon: '💀', color: '#cc66ff', weapons: ['shadow_bolt','bone_spear','phantom_double','hungry_grimoire','plague_pool','soul_whirl'] },
+    arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp'] },
+    demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce'] },
+    blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss'] },
+    life:      { name: 'Life Cycle',      icon: '🌿', color: '#66ff99', weapons: ['lotus_rift','scarab_halo','pollen_nova','frizzos_hourglass','molting_mirror','brood_husk','crescent_moon','ouroboros_vine'] }
+  }
 };
 
 // ── PASSIVE UPGRADES ─────────────────────────────────────────

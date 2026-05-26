@@ -243,6 +243,78 @@ Fires three devastating cutting slashes at the nearest enemy. Each slash tears t
 - **Blood Price** — lifesteal 25% of all damage dealt back as health
 - **Final Form** — damage nearly doubled and armor penetration greatly increased
 
+### 🫧 Ward Shell
+Conjures a tiny arcane shell that clings right around you. Destroys incoming projectiles on contact and violently repels any enemy that touches it.
+- **Fortified Shell** — shell damage doubled and lasts 1.5 seconds longer
+- **Spiked Shell** — repelled enemies are slowed for 1.5 seconds
+- **Resonant Ward** — activates 40% more often and grows 30% larger
+
+### 🔺 Arcane Spikes
+Plants 3 small arcane spike traps at distant positions. Any enemy that walks through one takes damage, slows to a crawl, and triggers the trap.
+- **More Spikes** — plants 3 additional spikes per cast
+- **Venomous Tips** — spikes poison enemies instead of slowing
+- **Iron Spikes** — spike damage doubled and armor penetration greatly increased
+
+### 🔨 Hammer Toss
+Hurls a massive war hammer that crashes into the highest-threat enemy with a shockwave, then ricochets to the next closest target. Slow, heavy, and devastating.
+- **Shockwave Slam** — impact shockwave grows 60% wider, stunning all nearby foes
+- **Ricochet Fury** — hammer ricochets to 3 more enemies and fires 20% faster
+- **Mjolnir** — damage nearly doubled and armor shredding greatly increased
+
+---
+
+## Life Cycle
+
+A ring of eight spells tied to nature, time, and growth. Life Cycle weapons emphasize sustain, mobility, and entropy — seeds that bloom into devastation, mirrors that echo what has passed, and a vine that keeps coming back.
+
+### 🪷 Lotus Rift
+Opens a blooming lotus-shaped rift under a distant enemy. Each petal that unfolds damages nearby enemies. When the final petal opens, the lotus collapses into a healing mote that drifts back to you.
+- **More Petals** — opens 2 additional rifts, each dealing damage
+- **Deep Roots** — rift lasts 3 seconds longer and slows enemies inside
+- **Nectar Return** — healing mote restores 20 additional HP
+
+### 🪲 Scarab Halo
+Summons three golden scarabs that orbit the player. Each scarab charges up while avoiding enemies — the longer it goes without striking, the more damage it deals on impact.
+- **Wider Halo** — scarabs orbit at a 50% greater radius
+- **Patient Swarm** — scarabs charge up significantly faster
+- **Carapace Swarm** — summons 2 additional scarabs
+
+### 🌸 Pollen Nova
+Releases a radial burst of glowing pollen spores in all directions. Spores deal light damage and slow any enemy they hit.
+- **Thicker Pollen** — fires 6 additional spores per burst
+- **Fertile Ground** — spores deal 60% more damage
+- **Spring Fever** — slow is stronger and lasts longer
+
+### ⌛ Frizzo's Hourglass
+Fires at the furthest visible enemy and marks them with a glowing seed of time. After a short delay it blooms — dealing damage based on how far the enemy moved since being marked. Fast-moving enemies are punished hardest.
+- **Early Spring** — fires 25% faster — more seeds, more blooms
+- **Aging Bloom** — bloom damage scales harder with elapsed time
+- **Full Season** — bloom spreads to two additional nearby enemies
+
+### 🪞 Molting Mirror
+A living mirror slides slowly back and forth behind the player, periodically echoing your last fired spell from its current position at reduced power.
+- **Longer Swing** — mirror travels 50% farther from the caster
+- **Polished Carapace** — reflected spells deal 88% power instead of 65%
+- **Twin Molt** — creates a second mirror
+
+### 🐣 Brood Husk
+Drops a fragile egg-like decoy that attracts nearby enemies. When destroyed or expired, it hatches into a burst of damaging life spores erupting in all directions.
+- **Thicker Shell** — husk has 80 more HP and lasts 3 seconds longer
+- **Clutch Spawn** — drops two husks at once
+- **Violent Hatching** — hatch burst deals more than double damage
+
+### 🌙 Crescent Moon
+Fires pale crescent-moon blades that arc outward and curve inward like lunar scythes, hooking sharply around enemies before cutting through them.
+- **Waxing Arc** — moons curve harder and travel 30% farther
+- **Twin Crescents** — fires 2 additional moon blades
+- **Harvest Moon** — moon blades pierce 2 enemies and apply poison
+
+### 🐍 Ouroboros Vine
+Launches a living vine that arcs outward in a looping path, then curves back toward the caster. Hits enemies both on the way out and on the return.
+- **Tighter Coil** — vine curves more aggressively, tightening its loop
+- **Regrowth Loop** — vine lifesteals, healing 12% of all damage dealt
+- **Endless Ring** — vine travels farther and pierces 2 additional enemies
+
 ---
 
 ## Passive Upgrades
@@ -266,9 +338,10 @@ These appear alongside spell upgrades on the level-up screen.
 
 When you own both weapons in a pair, a **✦ SYNERGY** upgrade appears in the level-up screen — always shown first, guaranteed to appear. These are the most powerful upgrades in the game and are worth building toward.
 
-Each weapon participates in exactly two synergies.
+Weapons are grouped into eight **Cycles**. Each weapon within a cycle participates in two synergies with its neighbors on the ring. The cycle badge on each upgrade card tells you which cycle it belongs to.
 
 ### 🔥 Fire Cycle
+*Firebolt → Phoenix Wings → Magma Orb → Meteor Sigil → Starfall → Arcane Trail → (back to Firebolt)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🦅 **Blazing Phoenix** | Firebolt + Phoenix Wings | Firebolt splits into 3 bolts on impact. Phoenix Wings deals 80% more damage and pierces one extra enemy. |
@@ -278,7 +351,8 @@ Each weapon participates in exactly two synergies.
 | 💫 **Comet Wake** | Starfall + Arcane Trail | Starfall impacts leave burning ground. Arcane Trail spheres deal triple damage. |
 | 🔥 **Infernal March** | Arcane Trail + Firebolt | Arcane Trail now poisons enemies. Firebolt deals double damage and pierces 2 extra enemies. |
 
-### ❄️ Ice / Void Cycle
+### ❄️ Ice Cycle
+*Frost Shard → Void Lance → Fault Lines → Force Pulse → Chrono Needle → Phantom Gyre → (back to Frost Shard)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | ❄️ **Null Winter** | Frost Shard + Void Lance | Void Lance slows everything it tears through. Frost Shard gains massive armor pen and fires 40% faster. |
@@ -288,7 +362,8 @@ Each weapon participates in exactly two synergies.
 | 🌀 **Phase Paradox** | Chrono Needle + Phantom Gyre | Phantom Gyre orbits 50% faster at double damage. Chrono Needles chain to nearby enemies on detonation. |
 | 🧊 **Glacial Orbit** | Phantom Gyre + Frost Shard | Phantom Gyre orbs slow every enemy they pass through. Frost Shard splits into 4 shards on impact. |
 
-### ⚡ Lightning / Arcane Cycle
+### ⚡ Lightning Cycle
+*Spark Chain → Rune Burst → Arcane Orb → Arcane Cube → Phase Blade → Thunder Clap → (back to Spark Chain)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | ⚡ **Electrostatic Field** | Spark Chain + Rune Burst | Spark Chain gains 6 more chains and fires 30% faster. Rune Burst deals double damage with 4 extra runes. |
@@ -298,7 +373,8 @@ Each weapon participates in exactly two synergies.
 | 🌩️ **Thunderblade** | Phase Blade + Thunder Clap | Thunder Clap blasts 60% wider at double damage. Phase Blade stuns every enemy it slices. |
 | 🌩️ **Rolling Thunder** | Thunder Clap + Spark Chain | Spark Chain gains 8 extra chains and fires twice as fast. Thunder Clap cooldown halved and stun duration doubled. |
 
-### 💀 Shadow / Death Cycle
+### 💀 Death Cycle
+*Shadow Bolt → Bone Spear → Phantom Double → Hungry Grimoire → Plague Pool → Soul Whirl → (back to Shadow Bolt)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🦴 **Plague Spine** | Shadow Bolt + Bone Spear | Bone Spear poisons every enemy it pierces. Shadow Bolt travels at double speed and deals triple damage. |
@@ -308,7 +384,8 @@ Each weapon participates in exactly two synergies.
 | 💫 **Toxic Spiral** | Plague Pool + Soul Whirl | Soul Whirl bolts poison every enemy they arc through. Plague Pools linger far longer at triple damage. |
 | 💜 **Venom Vortex** | Soul Whirl + Shadow Bolt | Shadow Bolt deals triple damage and arcs like Soul Whirl. Soul Whirl bolts spiral more tightly and pierce. |
 
-### ✨ Utility / Arcane Cycle
+### ✨ Arcane Cycle
+*Magic Missiles → Mirror Glyph → Dazzling Lights → Leyline Harp → (back to Magic Missiles)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | ✨ **Missile Storm** | Magic Missiles + Mirror Glyph | Mirror echoes full barrages at near-full power. Magic Missiles gains 5 extra missiles and fires 50% faster. |
@@ -316,7 +393,8 @@ Each weapon participates in exactly two synergies.
 | 🎵 **Prismatic Strings** | Dazzling Lights + Leyline Harp | Dazzling Lights stuns every enemy hit. Leyline Harp beams stun and pulse extra damage every second. |
 | 🎶 **Harmonic Barrage** | Leyline Harp + Magic Missiles | Leyline Harp adds a third beam and pulses every second. Magic Missiles deals double damage at 50% more speed. |
 
-### 🧭 Named / Unique Cycle
+### 😈 Demon Cycle
+*Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → (back to Jake's Lament)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🧭 **Bombastic Bearing** | Jake's Lament + Babbage Blast | Jake's beam extends 50% further with 15% lifesteal. Babbage Blast detonates twice as many runes at double damage. |
@@ -324,11 +402,26 @@ Each weapon participates in exactly two synergies.
 | 🖤 **Hazmat Missile** | Viceroy's Cringe Missile + Stax's Black Sauce | Viceroy Missiles poison every enemy they hit and bounce 3 more times. Black Sauce fires 80% further at twice the speed. |
 | 💨 **Trail Blazer** | Stax's Black Sauce + Jake's Lament | Black Sauce fires 5× faster. Jake's beam extends further and lifesteals 20% of all damage dealt. |
 
-### 🗡️ Blade Synergies
+### ⚔️ Blade Cycle
+*Afro Samurai's Final Blade → Ward Shell → Arcane Spikes → Hammer Toss → (back to Final Blade)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🌑 **Void Cleave** | Afro Samurai's Final Blade + Void Lance | Each slash deals area damage and pulls nearby enemies into the cut. Void Lance pierces 4 extra enemies and deals 80% more damage. |
 | ⚔️ **Dual Blade Mastery** | Afro Samurai's Final Blade + Phase Blade | Phase Blade orbit radius triples at 3× damage. The Final Blade fires 40% faster with a tighter cut arc. |
+
+### 🌿 Life Cycle
+*Lotus Rift → Scarab Halo → Pollen Nova → Frizzo's Hourglass → Molting Mirror → Brood Husk → Crescent Moon → Ouroboros Vine → (back to Lotus Rift)*
+| Synergy | Weapons | Effect |
+|---|---|---|
+| 🐍 **The Wheel Turns** | Ouroboros Vine + Lotus Rift | Vine plants Lotus Rifts at each enemy it strikes. Lotus petals launch returning vines when they bloom. |
+| 🪷 **Golden Bloom** | Lotus Rift + Scarab Halo | Scarabs that pass over Lotus Rifts become empowered. Lotus Rift releases scarabs outward when it collapses. |
+| 🪲 **Swarm Season** | Scarab Halo + Pollen Nova | Pollen doubles the scarab charge rate for 5 seconds. Scarabs release mini pollen bursts when they strike. |
+| 🌸 **Fertile Reflection** | Pollen Nova + Frizzo's Hourglass | Frizzo blooms trigger extra secondary pollen blooms. Pollen slows fertile enemies harder. |
+| 🕰️ **Seasonal Reflection** | Frizzo's Hourglass + Molting Mirror | Molting Mirror echoes Frizzo blooms from behind the player. Frizzo always marks the furthest enemy. |
+| 🪞 **False Hatchling** | Molting Mirror + Brood Husk | Mirror echoes Brood Husk explosions from its position. Brood Husks last longer and hit harder. |
+| 🐣 **Moonlit Brood** | Brood Husk + Crescent Moon | Husks release Crescent Moon blades when they hatch. Crescent Moon blades curve harder and hit 50% harder. |
+| 🌙 **Lunar Ouroboros** | Crescent Moon + Ouroboros Vine | Crescent Moon blades orbit briefly before launching. Ouroboros Vine sheds extra moon blades along its path. |
+| 🐍 **Seed and Serpent** | Ouroboros Vine + Frizzo's Hourglass | Ouroboros Vine applies Frizzo marks to every enemy it hits. Frizzo blooms send a returning vine toward you. |
 
 ---
 
