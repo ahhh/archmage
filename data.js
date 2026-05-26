@@ -13,6 +13,8 @@ const CONFIG = {
   WAVE_BREAK: 4,           // seconds between waves
   CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
   REROLLS: 99,              // rerolls available per run on the level-up screen
+  BANS: 3,                  // number of times the player can ban a choice per run
+  MAX_WEAPONS: 10,          // maximum number of active powers a player can hold
 
   // ── CHARACTERS ─────────────────────────────────────────────
   characters: [
@@ -1400,5 +1402,49 @@ const PASSIVES = [
   { id: 'cd_global', name: 'Arcane Tempo',   icon: '⏳', description: 'All spell cooldowns −12%.',          apply: p => { p.globalCDMultiplier = (p.globalCDMultiplier || 1) * 0.88; } },
   { id: 'range_up',  name: 'Far Sight',      icon: '🔭', description: '+25% range on all spells.',          apply: p => { p.globalRangeMultiplier = (p.globalRangeMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'monkey_paw',   name: 'Shaolin Monkey Paw', icon: '🐾', description: '25% chance to block any hit. Also grants a full shield every 20s that absorbs one hit completely.', apply: p => { p.blockChance = Math.min(0.75, (p.blockChance || 0) + 0.25); if (!p.shieldCooldown) { p.shieldCooldown = 20; p.shieldTimer = 20; } } },
-  { id: 'hondas_heals', name: "Honda's Heals",      icon: '💊', description: 'Each enemy kill restores 1 HP.',                                                                  apply: p => { p.killHeal = (p.killHeal || 0) + 1; } }
+  { id: 'hondas_heals', name: "Honda's Heals",      icon: '💊', description: 'Each enemy kill restores 1 HP.',                                                                  apply: p => { p.killHeal = (p.killHeal || 0) + 1; } },
+
+  // ── Weapon-type passives ──────────────────────────────────
+  { id: 'multicast_up',   name: 'Echo Prism',         icon: '🔷', description: '+1 projectile for applicable multi-shot weapons.',
+    apply: p => { p.globalProjectileCountBonus = (p.globalProjectileCountBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'radial_up',      name: 'Star Compass',        icon: '🧭', description: '+2 radial shots for applicable nova and radial weapons.',
+    apply: p => { p.globalRadialCountBonus = (p.globalRadialCountBonus || 0) + 2; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'split_up',       name: 'Fracture Lens',       icon: '💎', description: 'Splitting projectiles create +1 extra split.',
+    apply: p => { p.globalSplitProjectilesBonus = (p.globalSplitProjectilesBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'orbit_speed_up', name: 'Gyre Engine',         icon: '🌀', description: '+30% orbit speed for orbiting weapons.',
+    apply: p => { p.globalOrbitSpeedMultiplier = (p.globalOrbitSpeedMultiplier || 1) * 1.30; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'curve_up',       name: 'Crescent Geometry',   icon: '🌙', description: '+35% curve rate for arcing and spiral projectiles.',
+    apply: p => { p.globalCurveRateMultiplier = (p.globalCurveRateMultiplier || 1) * 1.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'chrono_up',      name: 'Time Interest',       icon: '⏳', description: 'Chrono detonations gain +35% bonus scaling.',
+    apply: p => { p.globalChronoMultiplierBonus = (p.globalChronoMultiplierBonus || 0) + 0.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'rift_up',        name: 'Crackling Fault',     icon: '💠', description: '+1 rift, spike, or trap for applicable ground weapons.',
+    apply: p => { p.globalTrapCountBonus = (p.globalTrapCountBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'ground_effect_up', name: 'Scorched Covenant', icon: '🔥', description: '+25% ground effect duration and damage.',
+    apply: p => { p.globalGroundEffectDurationMultiplier = (p.globalGroundEffectDurationMultiplier || 1) * 1.25; p.globalGroundEffectDamageMultiplier = (p.globalGroundEffectDamageMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'mirror_power_up', name: 'Silvered Echo',      icon: '🪞', description: '+20% mirror echo power.',
+    apply: p => { p.globalMirrorPowerBonus = (p.globalMirrorPowerBonus || 0) + 0.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'decoy_mastery',  name: 'False Idol',          icon: '👤', description: '+50 decoy HP and +3 seconds decoy duration.',
+    apply: p => { p.globalDecoyHpBonus = (p.globalDecoyHpBonus || 0) + 50; p.globalDecoyDurationBonus = (p.globalDecoyDurationBonus || 0) + 3.0; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+
+  // ── General stat passives ─────────────────────────────────
+  { id: 'damage_up',          name: 'Ember Core',       icon: '🔥', description: '+15% damage on all weapons.',
+    apply: p => { p.globalDamageMultiplier = (p.globalDamageMultiplier || 1) * 1.15; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'projectile_speed_up',name: 'Wind Etching',     icon: '🍃', description: '+20% projectile speed.',
+    apply: p => { p.globalProjectileSpeedMultiplier = (p.globalProjectileSpeedMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'area_up',            name: 'Titan Glyph',      icon: '🌐', description: '+20% area size for applicable weapons.',
+    apply: p => { p.globalAreaMultiplier = (p.globalAreaMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'duration_up',        name: 'Lingering Hex',    icon: '🕯️', description: '+25% duration for applicable weapon effects.',
+    apply: p => { p.globalDurationMultiplier = (p.globalDurationMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'pierce_up',          name: 'Needle Threader',  icon: '🪡', description: '+1 pierce for applicable projectiles.',
+    apply: p => { p.globalPierceBonus = (p.globalPierceBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'chain_up',           name: 'Storm Link',       icon: '🔗', description: '+1 chain for applicable weapons.',
+    apply: p => { p.globalChainBonus = (p.globalChainBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'armor_pierce_up',    name: 'Void Needle',      icon: '🕳️', description: '+2 armor penetration on applicable weapons.',
+    apply: p => { p.globalArmorPenetrationBonus = (p.globalArmorPenetrationBonus || 0) + 2; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'pull_force_up',      name: 'Gravity Knot',     icon: '🪢', description: 'Pull effects gain +35% pull strength.',
+    apply: p => { p.globalPullStrengthMultiplier = (p.globalPullStrengthMultiplier || 1) * 1.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'status_duration_up', name: 'Hex Resin',        icon: '🧪', description: '+20% duration for stun, poison, slow, and other status effects.',
+    apply: p => { p.globalStatusDurationMultiplier = (p.globalStatusDurationMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'knockback_up',       name: 'Thunder Palm',     icon: '✋', description: '+30% knockback force.',
+    apply: p => { p.globalKnockbackMultiplier = (p.globalKnockbackMultiplier || 1) * 1.30; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
 ];

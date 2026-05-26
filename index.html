@@ -236,6 +236,23 @@ body::after {
 }
 .btn-reroll:hover:not(:disabled) { color: var(--g1); border-color: var(--g1); }
 .btn-reroll:disabled { opacity: 0.28; cursor: default; }
+.btn-ban {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 3px 0;
+  font-size: 9px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: 1px solid #3a1818;
+  color: #664444;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-ban:hover:not(:disabled) { color: #ff4444; border-color: #ff4444; }
+.btn-ban:disabled { opacity: 0.25; cursor: default; }
+.ban-counter { font-size: 11px; color: #884444; letter-spacing: 0.08em; margin-left: 14px; }
 .upgrade-cards {
   display: flex;
   gap: 14px;
@@ -519,6 +536,7 @@ body::after {
   <div class="upgrade-cards" id="upgrade-cards"></div>
   <div class="reroll-row">
     <button class="btn-reroll" id="btn-reroll">↺ REROLL <span id="reroll-count">(3)</span></button>
+    <span class="ban-counter" id="ban-counter">✕ BANS (<span id="ban-count">3</span>)</span>
   </div>
 </div>
 
@@ -813,6 +831,28 @@ const Player = {
     this.kills = 0;
     this.globalCDMultiplier = 1;
     this.globalRangeMultiplier = 1;
+    this.globalDamageMultiplier = 1;
+    this.globalProjectileSpeedMultiplier = 1;
+    this.globalAreaMultiplier = 1;
+    this.globalDurationMultiplier = 1;
+    this.globalPierceBonus = 0;
+    this.globalChainBonus = 0;
+    this.globalArmorPenetrationBonus = 0;
+    this.globalKnockbackMultiplier = 1;
+    this.globalPullStrengthMultiplier = 1;
+    this.globalStatusDurationMultiplier = 1;
+    this.globalProjectileCountBonus = 0;
+    this.globalRadialCountBonus = 0;
+    this.globalSplitProjectilesBonus = 0;
+    this.globalOrbitSpeedMultiplier = 1;
+    this.globalCurveRateMultiplier = 1;
+    this.globalChronoMultiplierBonus = 0;
+    this.globalTrapCountBonus = 0;
+    this.globalGroundEffectDurationMultiplier = 1;
+    this.globalGroundEffectDamageMultiplier = 1;
+    this.globalMirrorPowerBonus = 0;
+    this.globalDecoyHpBonus = 0;
+    this.globalDecoyDurationBonus = 0;
     this.passivesApplied = [];
     this.flashTimer = 0;
     this.glowPulse = 0;
@@ -907,6 +947,7 @@ const Player = {
       spikeCount: wConfig.spikeCount || 3,
       spikeRadius: wConfig.spikeRadius || 26,
       spikeDuration: wConfig.spikeDuration || 8.0,
+      orbitDuration: wConfig.orbitDuration || 5.0,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -1014,8 +1055,59 @@ const Player = {
         if (c.spikeCount != null)         s.spikeCount += c.spikeCount;
       }
     }
-    // Global range multiplier from passive
+    // ── Global passive multipliers ────────────────────────────
     s.range *= (this.globalRangeMultiplier || 1);
+    if ((this.globalDamageMultiplier || 1) !== 1)
+      s.damage = Math.round(s.damage * this.globalDamageMultiplier);
+    if ((this.globalProjectileSpeedMultiplier || 1) !== 1 && s.projectileSpeed > 0)
+      s.projectileSpeed *= this.globalProjectileSpeedMultiplier;
+    if ((this.globalAreaMultiplier || 1) !== 1 && s.areaRadius > 0)
+      s.areaRadius *= this.globalAreaMultiplier;
+    if (this.globalPierceBonus) s.pierce += this.globalPierceBonus;
+    if (this.globalChainBonus && s.chainCount > 0) s.chainCount += this.globalChainBonus;
+    if (this.globalArmorPenetrationBonus) s.armorPenetration += this.globalArmorPenetrationBonus;
+    if ((this.globalKnockbackMultiplier || 1) !== 1 && s.knockback > 0)
+      s.knockback *= this.globalKnockbackMultiplier;
+    if ((this.globalPullStrengthMultiplier || 1) !== 1 && s.pullStrength > 0)
+      s.pullStrength *= this.globalPullStrengthMultiplier;
+    if ((this.globalStatusDurationMultiplier || 1) !== 1 && s.statusEffect)
+      s.statusEffect = { ...s.statusEffect, duration: s.statusEffect.duration * this.globalStatusDurationMultiplier };
+    if ((this.globalDurationMultiplier || 1) !== 1) {
+      const dm = this.globalDurationMultiplier;
+      s.harpDuration  *= dm;
+      s.spikeDuration *= dm;
+      s.shellDuration *= dm;
+      s.decoyDuration *= dm;
+      s.orbitDuration *= dm;
+    }
+    if (s.groundEffect) {
+      const gd   = (this.globalDurationMultiplier || 1) * (this.globalGroundEffectDurationMultiplier || 1);
+      const gdmg = (this.globalGroundEffectDamageMultiplier || 1);
+      if (gd !== 1 || gdmg !== 1)
+        s.groundEffect = { ...s.groundEffect, duration: s.groundEffect.duration * gd, dps: s.groundEffect.dps * gdmg };
+    }
+    if (this.globalProjectileCountBonus && wConfig.projectileCount > 1)
+      s.projectileCount += this.globalProjectileCountBonus;
+    if (this.globalRadialCountBonus && s.targeting === 'radial')
+      s.radialCount += this.globalRadialCountBonus;
+    if (this.globalSplitProjectilesBonus && s.splitProjectiles > 0)
+      s.splitProjectiles += this.globalSplitProjectilesBonus;
+    if ((this.globalOrbitSpeedMultiplier || 1) !== 1 && s.targeting === 'orbit')
+      s.orbitSpeed = (s.orbitSpeed || wConfig.orbitSpeed || 0.065) * this.globalOrbitSpeedMultiplier;
+    if ((this.globalCurveRateMultiplier || 1) !== 1 && s.curveRate > 0)
+      s.curveRate *= this.globalCurveRateMultiplier;
+    if (this.globalChronoMultiplierBonus && s.isChrono)
+      s.chronoMultiplierBonus += this.globalChronoMultiplierBonus;
+    if (this.globalTrapCountBonus) {
+      if (s.targeting === 'rift')   s.riftCount  += this.globalTrapCountBonus;
+      if (s.targeting === 'spikes') s.spikeCount += this.globalTrapCountBonus;
+    }
+    if (this.globalMirrorPowerBonus && s.targeting === 'mirror')
+      s.mirrorPower = Math.min(1, s.mirrorPower + this.globalMirrorPowerBonus);
+    if (s.targeting === 'decoy') {
+      if (this.globalDecoyHpBonus)       s.decoyHp       += this.globalDecoyHpBonus;
+      if (this.globalDecoyDurationBonus) s.decoyDuration += this.globalDecoyDurationBonus;
+    }
     // Character bonus
     if (this.charConfig) {
       const b = this.charConfig.bonus;
@@ -1795,7 +1887,7 @@ const WeaponSystem = {
           orbitAngle: startAngle,
           orbitRadius: s.range,
           orbitSpeed: speed,
-          lifetimer: wConfig.orbitDuration || 5.0,
+          lifetimer: s.orbitDuration || 5.0,
           hitRefreshTimer: 0.5,
           isPhasing: s.phasing,
           phased: false,
@@ -2984,14 +3076,26 @@ const WaveSpawner = {
 
 // ── LEVEL UP SYSTEM ───────────────────────────────────────────
 
+// Returns a stable ban key for a choice object
+function getBanId(choice) {
+  if (choice.type === 'newWeapon')     return 'w:' + choice.weaponId;
+  if (choice.type === 'weaponUpgrade') return 'u:' + choice.weaponId + ':' + choice.upgradeId;
+  if (choice.type === 'passive')       return 'p:' + choice.passiveId;
+  if (choice.type === 'combo')         return 'c:' + choice.comboId;
+  return 'x:' + choice.label;
+}
+
 const LevelSystem = {
   generateChoices() {
+    const banned = Game.bannedIds || new Set();
     const choices = [];
 
-    // New weapons
+    // New weapons — only offered if the player hasn't hit the cap
+    const atWeaponCap = Player.weapons.length >= (CONFIG.MAX_WEAPONS ?? 10);
     for (const w of CONFIG.weapons) {
-      if (!Player.hasWeapon(w.id)) {
-        const comboPotentials = [];
+      if (!atWeaponCap && !Player.hasWeapon(w.id)) {
+        const candidate = { type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell', comboPotentials: [] };
+        if (banned.has(getBanId(candidate))) continue;
         for (const combo of (CONFIG.combos || [])) {
           if (Player.unlockedCombos.has(combo.id)) continue;
           const [wA, wB] = combo.requires;
@@ -2999,11 +3103,11 @@ const LevelSystem = {
             const partnerId = wA === w.id ? wB : wA;
             if (Player.weapons.some(pw => pw.weaponId === partnerId)) {
               const partnerName = CONFIG.weapons.find(pw => pw.id === partnerId)?.name || partnerId;
-              comboPotentials.push({ comboName: combo.name, comboIcon: combo.icon, partnerName });
+              candidate.comboPotentials.push({ comboName: combo.name, comboIcon: combo.icon, partnerName });
             }
           }
         }
-        choices.push({ type: 'newWeapon', weaponId: w.id, label: w.name, icon: w.icon, desc: w.description, sub: 'New Spell', comboPotentials });
+        choices.push(candidate);
       }
     }
 
@@ -3020,7 +3124,8 @@ const LevelSystem = {
       }
       for (const upg of wConfig.upgrades) {
         if (!wi.appliedUpgrades.includes(upg.id)) {
-          choices.push({ type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}`, empoweredBy });
+          const candidate = { type: 'weaponUpgrade', weaponId: wi.weaponId, upgradeId: upg.id, label: upg.name, icon: upg.icon, desc: upg.description, sub: `Upgrade: ${wConfig.name}`, empoweredBy };
+          if (!banned.has(getBanId(candidate))) choices.push(candidate);
         }
       }
     }
@@ -3028,7 +3133,8 @@ const LevelSystem = {
     // Passives
     for (const p of PASSIVES) {
       if (!Player.passivesApplied.includes(p.id)) {
-        choices.push({ type: 'passive', passiveId: p.id, label: p.name, icon: p.icon, desc: p.description, sub: 'Passive' });
+        const candidate = { type: 'passive', passiveId: p.id, label: p.name, icon: p.icon, desc: p.description, sub: 'Passive' };
+        if (!banned.has(getBanId(candidate))) choices.push(candidate);
       }
     }
 
@@ -3038,9 +3144,8 @@ const LevelSystem = {
       if (Player.unlockedCombos.has(combo.id)) continue;
       const [wA, wB] = combo.requires;
       if (Player.weapons.some(w => w.weaponId === wA) && Player.weapons.some(w => w.weaponId === wB)) {
-        const [nameA] = [CONFIG.weapons.find(w => w.id === wA)?.name || wA];
-        const [nameB] = [CONFIG.weapons.find(w => w.id === wB)?.name || wB];
-        synergies.push({ type: 'combo', comboId: combo.id, label: combo.name, icon: combo.icon, desc: combo.description, sub: `✦ SYNERGY: ${nameA} + ${nameB}` });
+        const candidate = { type: 'combo', comboId: combo.id, label: combo.name, icon: combo.icon, desc: combo.description, sub: `✦ SYNERGY: ${CONFIG.weapons.find(w => w.id === wA)?.name || wA} + ${CONFIG.weapons.find(w => w.id === wB)?.name || wB}` };
+        if (!banned.has(getBanId(candidate))) synergies.push(candidate);
       }
     }
 
@@ -3055,7 +3160,7 @@ const LevelSystem = {
 
     // Guarantee at least 1 (infinite passives as fallback if needed)
     if (picks.length === 0) {
-      picks = [{ type: 'passive', passiveId: 'heal', label: 'Mending Sigil', icon: '✨', desc: 'Restore 35% of max HP.', sub: 'Passive' }];
+      picks.push({ type: 'passive', passiveId: 'heal', label: 'Mending Sigil', icon: '✨', desc: 'Restore 35% of max HP.', sub: 'Passive' });
     }
     return picks;
   },
@@ -4005,6 +4110,8 @@ const Game = {
   lastTime: 0,
   pendingLevelUps: 0,
   rerollsLeft: 0,
+  bansLeft: 0,
+  bannedIds: new Set(),
   selectedChar: null,
   waveDurationFor(w) { return CONFIG.WAVE_DURATION * Math.pow(1.1, w - 1); },
   animFrameId: null,
@@ -4108,6 +4215,8 @@ const Game = {
     this.paused = false;
     this.pendingLevelUps = 0;
     this.rerollsLeft = CONFIG.REROLLS;
+    this.bansLeft = CONFIG.BANS ?? 3;
+    this.bannedIds = new Set();
     this.firstWave = true;
     this.speedMultiplier = 1;
     Input.autoAim = true;
@@ -4266,11 +4375,19 @@ const Game = {
     const screen = document.getElementById('screen-levelup');
     document.getElementById('levelup-sub').textContent = `LEVEL ${Player.level} — CHOOSE AN ENHANCEMENT`;
 
+    let currentChoices = LevelSystem.generateChoices();
+
+    const updateBanCounter = () => {
+      document.getElementById('ban-count').textContent = this.bansLeft;
+      const counter = document.getElementById('ban-counter');
+      counter.style.opacity = this.bansLeft > 0 ? '1' : '0.28';
+    };
+
     const renderCards = () => {
       const container = document.getElementById('upgrade-cards');
       container.innerHTML = '';
-      const choices = LevelSystem.generateChoices();
-      for (const choice of choices) {
+      for (let i = 0; i < currentChoices.length; i++) {
+        const choice = currentChoices[i];
         const card = document.createElement('div');
         let cardClass = 'upgrade-card';
         if (choice.type === 'combo') cardClass += ' synergy';
@@ -4291,6 +4408,28 @@ const Game = {
           <div class="upgrade-desc">${choice.desc}</div>
           ${comboHints}${empoweredLabels}
         `;
+
+        // Ban button — replaces just this slot
+        const banBtn = document.createElement('button');
+        banBtn.className = 'btn-ban';
+        banBtn.textContent = '✕ BAN';
+        banBtn.disabled = this.bansLeft <= 0;
+        banBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (this.bansLeft <= 0) return;
+          this.bansLeft--;
+          this.bannedIds.add(getBanId(choice));
+          // Replace this slot: generate fresh pool (excludes banned), pick first not already shown
+          const pool = LevelSystem.generateChoices();
+          const shownIds = new Set(currentChoices.map((c, j) => j !== i ? getBanId(c) : null));
+          const replacement = pool.find(c => !shownIds.has(getBanId(c)));
+          if (replacement) currentChoices[i] = replacement;
+          else currentChoices.splice(i, 1);
+          renderCards();
+          updateBanCounter();
+        });
+        card.appendChild(banBtn);
+
         card.addEventListener('click', () => {
           LevelSystem.applyChoice(choice);
           screen.classList.add('hidden');
@@ -4303,6 +4442,7 @@ const Game = {
     };
 
     renderCards();
+    updateBanCounter();
 
     const rerollBtn = document.getElementById('btn-reroll');
     const rerollCount = document.getElementById('reroll-count');
@@ -4314,6 +4454,7 @@ const Game = {
     rerollBtn.onclick = () => {
       if (this.rerollsLeft <= 0) return;
       this.rerollsLeft--;
+      currentChoices = LevelSystem.generateChoices();
       renderCards();
       updateRerollBtn();
     };
