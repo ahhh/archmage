@@ -815,6 +815,10 @@ const Player = {
       knockback: wConfig.knockback || 0,
       spreadAngle: wConfig.spreadAngle || 0.18,
       projectileAcceleration: wConfig.projectileAcceleration || 1,
+      phasing: wConfig.phasing || false,
+      phaseDuration: wConfig.phaseDuration || 1.6,
+      curveRate: wConfig.curveRate || 0,
+      angleOffset: wConfig.angleOffset || 0,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -847,6 +851,8 @@ const Player = {
       if (c.knockbackMultiplier != null) s.knockback *= c.knockbackMultiplier;
       if (c.spreadAngle != null) s.spreadAngle += c.spreadAngle;
       if (c.projectileAccelerationMultiplier != null) s.projectileAcceleration = 1 + (s.projectileAcceleration - 1) * c.projectileAccelerationMultiplier;
+      if (c.orbitSpeedMultiplier != null) s.orbitSpeed = (s.orbitSpeed || wConfig.orbitSpeed || 0.065) * c.orbitSpeedMultiplier;
+      if (c.curveRateMultiplier != null) s.curveRate *= c.curveRateMultiplier;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1072,8 +1078,9 @@ const WeaponSystem = {
     // Radial: always fires a ring in all directions regardless of aim mode
     if (s.targeting === 'radial') {
       const count = s.radialCount || 8;
+      const offset = s.angleOffset || 0;
       for (let i = 0; i < count; i++) {
-        this.spawnProjectile(player, (Math.PI * 2 / count) * i, wi, s, null);
+        this.spawnProjectile(player, offset + (Math.PI * 2 / count) * i, wi, s, null);
       }
       return true;
     }
@@ -1150,7 +1157,8 @@ const WeaponSystem = {
       const icon  = wConfig.icon;
       for (let i = 0; i < count; i++) {
         const startAngle = (Math.PI * 2 / count) * i;
-        const speed = i % 2 === 0 ? (wConfig.orbitSpeed || 0.12) : -(wConfig.orbitSpeed || 0.12);
+        const baseOrbitSpeed = s.orbitSpeed || wConfig.orbitSpeed || 0.12;
+        const speed = i % 2 === 0 ? baseOrbitSpeed : -baseOrbitSpeed;
         Projectiles.push({
           id: mkId(),
           x: player.x + Math.cos(startAngle) * s.range,
@@ -1174,6 +1182,10 @@ const WeaponSystem = {
           orbitSpeed: speed,
           lifetimer: wConfig.orbitDuration || 5.0,
           hitRefreshTimer: 0.5,
+          isPhasing: s.phasing,
+          phased: false,
+          phaseTimer: s.phaseDuration,
+          phaseDuration: s.phaseDuration,
           targetEnemy: null, targetX: player.x, targetY: player.y,
         });
       }
@@ -1207,6 +1219,53 @@ const WeaponSystem = {
           isMeteor: true, acceleration: 1, isOrbit: false, isBox: false,
           targetEnemy: null, targetX: tx, targetY: ty,
         });
+      }
+      return true;
+    }
+
+    // Whirl: bolts that curve in arcs (half left, half right)
+    if (s.targeting === 'whirl') {
+      let aimAngle;
+      if (!Input.autoAim) {
+        const mw = Input.mouseWorld();
+        aimAngle = Math.atan2(mw.y - player.y, mw.x - player.x);
+      } else {
+        if (alive.length === 0) return false;
+        let closest = null, closestSq = Infinity;
+        for (const e of alive) {
+          const dx = e.x - player.x, dy = e.y - player.y;
+          const sq = dx * dx + dy * dy;
+          if (sq < closestSq) { closestSq = sq; closest = e; }
+        }
+        aimAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
+      }
+      const count = s.projectileCount || 2;
+      for (let t = 0; t < count; t++) {
+        const spread = (t - (count - 1) / 2) * 0.22;
+        const angle = aimAngle + spread;
+        const curveSign = t % 2 === 0 ? 1 : -1;
+        const p = {
+          id: mkId(), x: player.x, y: player.y,
+          vx: Math.cos(angle) * s.projectileSpeed,
+          vy: Math.sin(angle) * s.projectileSpeed,
+          damage: s.damage, armorPen: s.armorPenetration,
+          pierce: s.pierce, pierceLeft: s.pierce,
+          bounce: 0, bounceLeft: 0, bounceCount: 0,
+          range: s.range, traveledSq: 0,
+          chainCount: 0, chainRange: 0,
+          areaRadius: s.areaRadius, areaDamageMultiplier: s.areaDamageMultiplier,
+          pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+          statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          hitIds: new Set(), dead: false,
+          icon: CONFIG.weapons.find(w => w.id === wi.weaponId).icon,
+          splitProjectiles: 0, splitDamageMultiplier: 0,
+          damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+          groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
+          isMeteor: false, acceleration: 1, isOrbit: false, isBox: false,
+          isWhirl: true, curveRate: s.curveRate * curveSign,
+          targetEnemy: null, targetX: player.x, targetY: player.y,
+        };
+        Projectiles.push(p);
       }
       return true;
     }
@@ -1308,7 +1367,13 @@ const WeaponSystem = {
       followupMeteors: s.followupMeteors || 0,
       followupDamageMultiplier: s.followupDamageMultiplier || 0,
       isMeteor: wi.weaponId === 'meteor_sigil',
+      isShadowBolt: wi.weaponId === 'shadow_bolt',
+      isMagicMissile: wi.weaponId === 'magic_missiles',
+      isBoneSpear: wi.weaponId === 'bone_spear',
+      pierceHitCount: 0,
+      wobblePhase: Math.random() * Math.PI * 2,
       acceleration: s.projectileAcceleration || 1,
+      isWhirl: false, curveRate: 0,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
@@ -1439,7 +1504,51 @@ function updateProjectiles(dt, enemies) {
       p.orbitAngle += p.orbitSpeed;
       p.x = Player.x + Math.cos(p.orbitAngle) * p.orbitRadius;
       p.y = Player.y + Math.sin(p.orbitAngle) * p.orbitRadius;
+      // Phasing: cycle solid ↔ ethereal
+      if (p.isPhasing) {
+        p.phaseTimer -= dt;
+        if (p.phaseTimer <= 0) {
+          p.phased = !p.phased;
+          p.phaseTimer = p.phaseDuration;
+          if (!p.phased) Particles.emit(p.x, p.y, '#aa88ff', 8, 3);
+        }
+        if (p.phased) continue; // ethereal: skip collision
+      }
     } else {
+      // Soul Whirl: continuously curve the velocity vector
+      if (p.isWhirl) {
+        const spd = Math.hypot(p.vx, p.vy);
+        const a = Math.atan2(p.vy, p.vx) + p.curveRate;
+        p.vx = Math.cos(a) * spd; p.vy = Math.sin(a) * spd;
+      }
+      // Shadow Bolt: sinusoidal wobble perpendicular to travel
+      if (p.isShadowBolt) {
+        const spd = Math.hypot(p.vx, p.vy);
+        const fwd = Math.atan2(p.vy, p.vx);
+        const wobble = Math.sin(p.wobblePhase + p.traveledSq * 0.045) * 0.07;
+        const a = fwd + wobble;
+        p.vx = Math.cos(a) * spd; p.vy = Math.sin(a) * spd;
+      }
+      // Magic Missiles: slight homing toward nearest alive enemy
+      if (p.isMagicMissile && enemies.length > 0) {
+        let nearestE = null, nearestSq = Infinity;
+        for (const e of enemies) {
+          if (e.dead) continue;
+          const sq = (e.x - p.x) ** 2 + (e.y - p.y) ** 2;
+          if (sq < nearestSq) { nearestSq = sq; nearestE = e; }
+        }
+        if (nearestE) {
+          const desired = Math.atan2(nearestE.y - p.y, nearestE.x - p.x);
+          const current = Math.atan2(p.vy, p.vx);
+          let diff = desired - current;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          const turn = Math.sign(diff) * Math.min(Math.abs(diff), 0.035);
+          const spd = Math.hypot(p.vx, p.vy);
+          const a = current + turn;
+          p.vx = Math.cos(a) * spd; p.vy = Math.sin(a) * spd;
+        }
+      }
       if (p.acceleration > 1) { p.vx *= p.acceleration; p.vy *= p.acceleration; }
       p.x += p.vx;
       p.y += p.vy;
@@ -1471,6 +1580,7 @@ function updateProjectiles(dt, enemies) {
       if (e.dead || p.hitIds.has(e.id)) continue;
       if (dist(p.x, p.y, e.x, e.y) < e.radius + 8) {
         p.hitIds.add(e.id);
+        if (p.isBoneSpear) p.pierceHitCount = (p.pierceHitCount || 0) + 1;
 
         // Damage
         let dmg = p.damage;
@@ -2052,21 +2162,33 @@ const Renderer = {
         ctx.fillStyle = 'rgba(220,245,255,0.95)';
         ctx.fill();
       } else if (p.isOrbit) {
-        const tx = -Math.sin(p.orbitAngle);
-        const ty =  Math.cos(p.orbitAngle);
-        const len = 28;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(p.x - tx * len / 2, p.y - ty * len / 2);
-        ctx.lineTo(p.x + tx * len / 2, p.y + ty * len / 2);
-        ctx.strokeStyle = 'rgba(180,230,255,0.9)';
-        ctx.lineWidth = 5;
-        ctx.lineCap = 'round';
-        ctx.shadowBlur = 14;
-        ctx.shadowColor = '#88ccff';
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.restore();
+        if (p.isPhasing && p.phased) {
+          // Ethereal: faint ghost ring
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(160,120,255,0.25)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          // Solid: glowing blade line
+          const tx = -Math.sin(p.orbitAngle);
+          const ty =  Math.cos(p.orbitAngle);
+          const len = p.isPhasing ? 22 : 28;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(p.x - tx * len / 2, p.y - ty * len / 2);
+          ctx.lineTo(p.x + tx * len / 2, p.y + ty * len / 2);
+          ctx.strokeStyle = p.isPhasing ? 'rgba(200,160,255,0.95)' : 'rgba(180,230,255,0.9)';
+          ctx.lineWidth = p.isPhasing ? 6 : 5;
+          ctx.lineCap = 'round';
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = p.isPhasing ? '#cc88ff' : '#88ccff';
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
       } else if (p.isPulse) {
         const fade = 1 - (p.pulseRadius / p.range);
         ctx.save();
@@ -2084,12 +2206,18 @@ const Renderer = {
         ctx.stroke();
         ctx.restore();
       } else {
-        // Glow behind projectile
+        // Bone spear: grows larger with each pierce hit
+        const boneScale = p.isBoneSpear ? 1 + (p.pierceHitCount || 0) * 0.4 : 1;
+        const glowR = 13 * boneScale;
+        const fontSize = Math.round(22 * boneScale);
+        const glowColor = p.isShadowBolt ? 'rgba(160,80,220,0.35)'
+                        : p.isWhirl       ? 'rgba(120,200,255,0.3)'
+                        : 'rgba(180,255,200,0.28)';
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(180,255,200,0.28)';
+        ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
         ctx.fill();
-        ctx.font = '22px serif';
+        ctx.font = `${fontSize}px serif`;
         ctx.filter = 'brightness(2)';
         ctx.fillText(p.icon, p.x, p.y);
         ctx.filter = 'none';

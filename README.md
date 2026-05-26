@@ -76,19 +76,19 @@ Calls a meteor down from the sky onto the nearest enemy. Massive area damage, lo
 - **Comet Storm** — drops two smaller follow-up meteors
 
 ### 💜 Shadow Bolt
-A dark bolt that poisons the target. Low upfront damage, high sustained damage over time.
+A dark bolt that poisons the target. Snakes toward its prey in a sinusoidal wobble — harder to predict, harder to dodge around.
 - **Virulent Toxin** — poison deals more damage and lasts longer
 - **Dark Pierce** — pierces 2 enemies, travels faster
 - **Twin Shadows** — fires two bolts simultaneously
 
 ### 🦴 Bone Spear
-A slow, heavy lance that pierces through every enemy in a straight line. Great for killing entire columns.
+A slow, heavy lance that pierces through every enemy in a straight line. Grows visually larger and more menacing with each enemy it passes through.
 - **Crushing Force** — deals nearly double damage
 - **Marrow Eruption** — each enemy hit erupts in a small blast
 - **Shattering Blow** — slows every enemy it passes through
 
 ### ✨ Magic Missiles
-Fires a burst of three arcane bolts at once. Low individual damage, high combined output.
+Fires a burst of three arcane bolts at once. Each missile gently homes toward the nearest enemy as it flies — hard to outrun.
 - **Missile Barrage** — fires 2 additional missiles per cast
 - **Arcane Velocity** — faster projectiles, faster cast rate
 - **Arcane Overload** — each missile hits much harder
@@ -100,7 +100,7 @@ Detonates a ring of arcane runes in all directions simultaneously. Ignores aim m
 - **Arcane Ricochet** — each rune bounces once off world edges
 
 ### 🌑 Void Lance
-A slow, devastating spear of void energy with extreme armor penetration. The answer to armored elites.
+A slow, devastating spear of void energy with extreme armor penetration. Warps space as it flies, pulling nearby enemies into its path.
 - **Annihilator** — nearly double damage
 - **Phase Strike** — phases through 3 enemies
 - **Void Implosion** — explodes on impact for area damage
@@ -116,6 +116,24 @@ Conjures 4 walls of arcane energy that simultaneously sweep around the player, e
 - **Larger Cube** — cube extends 50% further from the caster
 - **Shock Walls** — each wall slows every enemy it touches
 - **Volatile Corners** — walls explode at their endpoints, dealing area damage at each corner
+
+### ✦ Dazzling Lights
+Fires four brilliant bolts simultaneously along the diagonals — northeast, northwest, southeast, southwest. Ignores aim mode entirely.
+- **Prismatic Split** — each bolt splits into two perpendicular bolts on impact
+- **Blinding Flash** — bolts briefly stun every enemy they hit
+- **Radiant Cross** — fires 4 additional bolts filling the cardinal gaps, covering all 8 directions
+
+### 🌀 Phantom Gyre
+Three phantom orbs orbit the caster, cycling between solid and ethereal states every 1.6 seconds. Only the solid orbs deal damage — position yourself so enemies walk through them at the right moment.
+- **Spectral Surge** — solid orbs hit 60% harder
+- **Rapid Phase** — a fourth orb joins, all orbiting faster
+- **Ghost Surge** — ethereal orbs now slow enemies they pass through
+
+### 💫 Soul Whirl
+Fires bolts that curve in wide arcs, sweeping around the caster in spiral patterns. Half curve left, half curve right — together they scythe through crowds in an X pattern.
+- **Tighter Spiral** — bolts curve more sharply, sweeping a wider arc
+- **Soul Barrage** — two additional bolts spiral from each side
+- **Void Curve** — bolts hit much harder and shred armor
 
 ### ⚔️ Phase Blade
 Conjures an ethereal blade that orbits the caster continuously, carving through any enemy it passes.
