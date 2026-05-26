@@ -236,29 +236,35 @@ body::after {
 }
 .btn-reroll:hover:not(:disabled) { color: var(--g1); border-color: var(--g1); }
 .btn-reroll:disabled { opacity: 0.28; cursor: default; }
-.btn-ban {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 3px 0;
-  font-size: 9px;
-  font-family: 'Share Tech Mono', monospace;
-  letter-spacing: 0.12em;
-  background: transparent;
-  border: 1px solid #3a1818;
-  color: #664444;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-}
-.btn-ban:hover:not(:disabled) { color: #ff4444; border-color: #ff4444; }
-.btn-ban:disabled { opacity: 0.25; cursor: default; }
-.ban-counter { font-size: 11px; color: #884444; letter-spacing: 0.08em; margin-left: 14px; }
 .upgrade-cards {
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
   justify-content: center;
 }
+.card-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 190px;
+}
+.btn-ban {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 0;
+  font-size: 9px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.14em;
+  background: transparent;
+  border: 1px solid #3a1818;
+  color: #664444;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  text-transform: uppercase;
+}
+.btn-ban:hover:not(:disabled) { color: #ff4444; border-color: #882222; }
+.btn-ban:disabled { opacity: 0.22; cursor: default; }
+.ban-counter { font-size: 11px; color: #884444; letter-spacing: 0.08em; margin-left: 14px; }
 .upgrade-card {
   width: 190px;
   border: 1px solid var(--border);
@@ -4048,6 +4054,7 @@ const Music = {
   audio: null,
   lossAudio: null,
   muted: false,
+  _lossFadeId: null,
 
   init() {
     this.audio = new Audio('Archmage_Loop.mp3');
@@ -4055,12 +4062,12 @@ const Music = {
     this.audio.volume = 0.55;
     this.lossAudio = new Audio('Archmage_Loss.mp3');
     this.lossAudio.loop = true;
-    this.lossAudio.volume = 0.55;
+    this.lossAudio.volume = 0;
   },
 
   play() {
     if (!this.audio) this.init();
-    this._stop(this.lossAudio);
+    this._stopLoss();
     this.audio.currentTime = 0;
     if (!this.muted) this.audio.play().catch(() => {});
   },
@@ -4068,19 +4075,44 @@ const Music = {
   playLoss() {
     if (!this.lossAudio) this.init();
     this._stop(this.audio);
+    this._stopLoss();
+
     this.lossAudio.currentTime = 0;
-    if (!this.muted) this.lossAudio.play().catch(() => {});
+    this.lossAudio.volume = 0;
+    this.lossAudio.playbackRate = 0.6;   // half-tempo — slow, pitch-dropped, creepy
+
+    if (this.muted) return;
+    this.lossAudio.play().catch(() => {});
+
+    // Fade in from silence to target volume over ~5 seconds
+    const TARGET = 0.55;
+    const TICK   = 60;   // ms between steps
+    const STEPS  = (5000 / TICK);
+    const DELTA  = TARGET / STEPS;
+    this._lossFadeId = setInterval(() => {
+      if (!this.lossAudio) { clearInterval(this._lossFadeId); return; }
+      this.lossAudio.volume = Math.min(TARGET, this.lossAudio.volume + DELTA);
+      if (this.lossAudio.volume >= TARGET) {
+        clearInterval(this._lossFadeId);
+        this._lossFadeId = null;
+      }
+    }, TICK);
   },
 
   stop() {
     this._stop(this.audio);
-    this._stop(this.lossAudio);
+    this._stopLoss();
   },
 
   _stop(track) {
     if (!track) return;
     track.pause();
     track.currentTime = 0;
+  },
+
+  _stopLoss() {
+    if (this._lossFadeId) { clearInterval(this._lossFadeId); this._lossFadeId = null; }
+    if (this.lossAudio) { this.lossAudio.pause(); this.lossAudio.currentTime = 0; this.lossAudio.volume = 0; }
   },
 
   toggleMute() {
@@ -4090,7 +4122,6 @@ const Music = {
       this.audio.pause();
       if (this.lossAudio) this.lossAudio.pause();
     } else {
-      // Resume whichever track is active
       if (this.audio.currentTime > 0) this.audio.play().catch(() => {});
       if (this.lossAudio && this.lossAudio.currentTime > 0) this.lossAudio.play().catch(() => {});
     }
@@ -4388,6 +4419,10 @@ const Game = {
       container.innerHTML = '';
       for (let i = 0; i < currentChoices.length; i++) {
         const choice = currentChoices[i];
+
+        const slot = document.createElement('div');
+        slot.className = 'card-slot';
+
         const card = document.createElement('div');
         let cardClass = 'upgrade-card';
         if (choice.type === 'combo') cardClass += ' synergy';
@@ -4409,17 +4444,23 @@ const Game = {
           ${comboHints}${empoweredLabels}
         `;
 
-        // Ban button — replaces just this slot
+        card.addEventListener('click', () => {
+          LevelSystem.applyChoice(choice);
+          screen.classList.add('hidden');
+          this.pendingLevelUps--;
+          if (this.pendingLevelUps > 0) { this.showLevelUp(); }
+          else { this.paused = false; }
+        });
+
+        // Ban button lives below the card, outside it
         const banBtn = document.createElement('button');
         banBtn.className = 'btn-ban';
         banBtn.textContent = '✕ BAN';
         banBtn.disabled = this.bansLeft <= 0;
-        banBtn.addEventListener('click', e => {
-          e.stopPropagation();
+        banBtn.addEventListener('click', () => {
           if (this.bansLeft <= 0) return;
           this.bansLeft--;
           this.bannedIds.add(getBanId(choice));
-          // Replace this slot: generate fresh pool (excludes banned), pick first not already shown
           const pool = LevelSystem.generateChoices();
           const shownIds = new Set(currentChoices.map((c, j) => j !== i ? getBanId(c) : null));
           const replacement = pool.find(c => !shownIds.has(getBanId(c)));
@@ -4428,16 +4469,10 @@ const Game = {
           renderCards();
           updateBanCounter();
         });
-        card.appendChild(banBtn);
 
-        card.addEventListener('click', () => {
-          LevelSystem.applyChoice(choice);
-          screen.classList.add('hidden');
-          this.pendingLevelUps--;
-          if (this.pendingLevelUps > 0) { this.showLevelUp(); }
-          else { this.paused = false; }
-        });
-        container.appendChild(card);
+        slot.appendChild(card);
+        slot.appendChild(banBtn);
+        container.appendChild(slot);
       }
     };
 
