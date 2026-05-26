@@ -134,9 +134,9 @@ const CONFIG = {
     },
     {
       id: 'arcane_orb',
-      name: 'Arcane Orb',
-      icon: '🔮',
-      description: 'Releases a bouncing orb of arcane energy.',
+      name: 'Voltaic Orb',
+      icon: '⚡',
+      description: 'Fires a crackling sphere of electrical energy at a random enemy. Bounces off world edges, growing more dangerous with every ricochet.',
       cooldown: 2.0,
       damage: 14,
       projectileSpeed: 3.5,
@@ -150,9 +150,9 @@ const CONFIG = {
       areaRadius: 0,
       statusEffect: null,
       upgrades: [
-        { id: 'unstable_orb',      name: 'Unstable Orb',      icon: '🔮', description: 'Grows stronger after each bounce.',             changes: { damagePerBounce: 1.3 } },
+        { id: 'unstable_orb',      name: 'Unstable Charge',   icon: '⚡', description: 'Orb grows stronger after each bounce.',         changes: { damagePerBounce: 1.3 } },
         { id: 'gravity_well',      name: 'Gravity Well',      icon: '🌀', description: 'Orb pulls nearby enemies inward.',              changes: { pullRadius: 100, pullStrength: 0.55 } },
-        { id: 'twin_orbs',         name: 'Twin Orbs',         icon: '🔵', description: 'Fires an additional orb.',                     changes: { projectileCount: 1 } }
+        { id: 'twin_orbs',         name: 'Twin Orbs',         icon: '⚡', description: 'Fires an additional orb.',                     changes: { projectileCount: 1 } }
       ]
     },
     {
@@ -251,9 +251,9 @@ const CONFIG = {
     },
     {
       id: 'rune_burst',
-      name: 'Rune Burst',
-      icon: '🔵',
-      description: 'Detonates a ring of arcane runes that fire in all directions.',
+      name: 'Arc Burst',
+      icon: '⚡',
+      description: 'Releases a crackling ring of electrical arcs in all directions simultaneously. Ignores aim mode.',
       cooldown: 2.5,
       damage: 12,
       projectileSpeed: 5.5,
@@ -268,16 +268,16 @@ const CONFIG = {
       areaRadius: 0,
       statusEffect: null,
       upgrades: [
-        { id: 'rune_cascade',      name: 'Rune Cascade',      icon: '🔷', description: 'Fires 4 additional runes per burst.',               changes: { radialCount: 4 } },
-        { id: 'runic_empowerment', name: 'Runic Empowerment', icon: '💠', description: 'Each rune deals much more damage.',                  changes: { damageMultiplier: 1.6 } },
-        { id: 'arcane_ricochet',   name: 'Arcane Ricochet',   icon: '🔄', description: 'Each rune bounces once off world edges.',            changes: { bounce: 1 } }
+        { id: 'rune_cascade',      name: 'Arc Cascade',       icon: '⚡', description: 'Fires 4 additional arcs per burst.',                changes: { radialCount: 4 } },
+        { id: 'runic_empowerment', name: 'Overcharge',        icon: '⚡', description: 'Each arc deals much more damage.',                   changes: { damageMultiplier: 1.6 } },
+        { id: 'arcane_ricochet',   name: 'Static Ricochet',   icon: '🔄', description: 'Each arc bounces once off world edges.',             changes: { bounce: 1 } }
       ]
     },
     {
       id: 'void_lance',
-      name: 'Void Lance',
-      icon: '🌑',
-      description: 'Slow but devastating spear of void energy that shreds armor. Warps space as it flies, pulling nearby enemies toward it.',
+      name: 'Glacial Lance',
+      icon: '🧊',
+      description: 'A slow, devastating lance of crystallized ice with extreme armor penetration. Flash-freezes the air around it, pulling nearby enemies into the kill zone.',
       cooldown: 3.8,
       damage: 58,
       projectileSpeed: 4.5,
@@ -293,9 +293,9 @@ const CONFIG = {
       pullStrength: 1.8,
       statusEffect: null,
       upgrades: [
-        { id: 'annihilator',       name: 'Annihilator',       icon: '💀', description: 'Lance deals nearly double damage.',                 changes: { damageMultiplier: 1.9 } },
-        { id: 'phase_strike',      name: 'Phase Strike',      icon: '👻', description: 'Lance phases through 3 enemies.',                   changes: { pierce: 3 } },
-        { id: 'void_implosion',    name: 'Void Implosion',    icon: '🕳️', description: 'Lance explodes on impact for area damage.',         changes: { areaRadius: 60, areaDamageMultiplier: 0.8 } }
+        { id: 'annihilator',       name: 'Absolute Zero',     icon: '🧊', description: 'Lance deals nearly double damage.',                 changes: { damageMultiplier: 1.9 } },
+        { id: 'phase_strike',      name: 'Ice Bore',          icon: '❄️', description: 'Lance bores through 3 enemies.',                    changes: { pierce: 3 } },
+        { id: 'void_implosion',    name: 'Glacial Implosion', icon: '💥', description: 'Lance detonates on impact for area damage.',         changes: { areaRadius: 60, areaDamageMultiplier: 0.8 } }
       ]
     },
     {
@@ -327,9 +327,9 @@ const CONFIG = {
     },
     {
       id: 'arcane_cube',
-      name: 'Arcane Cube',
-      icon: '🔲',
-      description: 'Conjures 4 walls of arcane energy that simultaneously sweep around the player, damaging every enemy they pass through.',
+      name: 'Volt Cage',
+      icon: '⚡',
+      description: 'Conjures 4 crackling walls of electricity that sweep around the player simultaneously, shocking every enemy they pass through.',
       cooldown: 2.2,
       damage: 18,
       projectileSpeed: 3,
@@ -345,16 +345,16 @@ const CONFIG = {
       projectileCount: 4,
       statusEffect: null,
       upgrades: [
-        { id: 'larger_cube',      name: 'Larger Cube',      icon: '🔲', description: 'The cube extends 50% further from the caster.',                    changes: { rangeMultiplier: 1.5 } },
+        { id: 'larger_cube',      name: 'Wider Cage',       icon: '⚡', description: 'The cage extends 50% further from the caster.',                  changes: { rangeMultiplier: 1.5 } },
         { id: 'shock_walls',      name: 'Shock Walls',      icon: '⚡', description: 'Each wall slows every enemy it passes through.',                   changes: { statusEffect: { type: 'slow', amount: 0.45, duration: 2.0 } } },
         { id: 'volatile_corners', name: 'Volatile Corners', icon: '💥', description: 'Walls explode at their endpoints, dealing area damage at each corner.', changes: { areaRadius: 55, areaDamageMultiplier: 0.7 } }
       ]
     },
     {
       id: 'phase_blade',
-      name: 'Phase Blade',
-      icon: '⚔️',
-      description: 'Conjures an ethereal blade that orbits the caster continuously, slicing through every enemy it passes.',
+      name: 'Lightning Edge',
+      icon: '⚡',
+      description: 'Conjures a crackling blade of electrical force that orbits the caster continuously, slicing through every enemy it contacts.',
       cooldown: 5.5,
       damage: 22,
       projectileSpeed: 0,
@@ -372,9 +372,9 @@ const CONFIG = {
       projectileCount: 1,
       statusEffect: null,
       upgrades: [
-        { id: 'twin_blades',    name: 'Twin Blades',    icon: '⚔️', description: 'A second blade orbits counter-clockwise simultaneously.',  changes: { projectileCount: 1 } },
-        { id: 'phantom_edge',   name: 'Phantom Edge',   icon: '👻', description: 'Blade applies poison to every enemy it cuts.',             changes: { statusEffect: { type: 'poison', amount: 6, duration: 2.0 } } },
-        { id: 'expanded_orbit', name: 'Expanded Orbit', icon: '🔄', description: 'Blade orbits at a 60% greater radius.',                   changes: { rangeMultiplier: 1.6 } }
+        { id: 'twin_blades',    name: 'Twin Blades',    icon: '⚡', description: 'A second edge orbits counter-clockwise simultaneously.',  changes: { projectileCount: 1 } },
+        { id: 'phantom_edge',   name: 'Storm Edge',     icon: '⚡', description: 'Blade crackles with venom, applying poison to every enemy it cuts.', changes: { statusEffect: { type: 'poison', amount: 6, duration: 2.0 } } },
+        { id: 'expanded_orbit', name: 'Expanded Orbit', icon: '🔄', description: 'Edge orbits at a 60% greater radius.',                   changes: { rangeMultiplier: 1.6 } }
       ]
     },
     {
@@ -404,9 +404,9 @@ const CONFIG = {
     },
     {
       id: 'arcane_trail',
-      name: 'Arcane Trail',
-      icon: '💜',
-      description: 'Leaves a trail of damaging arcane spheres behind you as you move.',
+      name: 'Ember Wake',
+      icon: '🔥',
+      description: 'Leaves a smoldering trail of embers as you move. Enemies that step through are scorched.',
       cooldown: 0.55,
       damage: 0,
       projectileSpeed: 0,
@@ -422,8 +422,8 @@ const CONFIG = {
       statusEffect: null,
       groundEffect: { type: 'arcane', duration: 2.0, dps: 3 },
       upgrades: [
-        { id: 'volatile_residue', name: 'Volatile Residue', icon: '💥', description: 'Spheres appear more often and cover a wider area.',          changes: { cooldownMultiplier: 0.6, areaRadiusMultiplier: 1.4 } },
-        { id: 'toxic_residue',    name: 'Toxic Residue',    icon: '☠️', description: 'Spheres now poison enemies that linger in them.',            changes: { groundEffect: { type: 'poison', duration: 2.5, dps: 6 } } },
+        { id: 'volatile_residue', name: 'Volatile Embers',  icon: '💥', description: 'Embers appear more often and scorch a wider area.',           changes: { cooldownMultiplier: 0.6, areaRadiusMultiplier: 1.4 } },
+        { id: 'toxic_residue',    name: 'Ashen Residue',    icon: '☠️', description: 'Embers release toxic ash that poisons enemies who linger.',   changes: { groundEffect: { type: 'poison', duration: 2.5, dps: 6 } } },
         { id: 'blazing_path',     name: 'Blazing Path',     icon: '🔥', description: 'Converts to searing fire — much higher damage output.',       changes: { groundEffect: { type: 'burn', duration: 2.5, dps: 10 }, areaRadiusMultiplier: 1.25 } }
       ]
     },
@@ -454,9 +454,9 @@ const CONFIG = {
     },
     {
       id: 'force_pulse',
-      name: 'Force Pulse',
-      icon: '💨',
-      description: 'Releases an expanding shockwave of arcane force that hurls all nearby enemies outward. Deals no damage.',
+      name: 'Cryo Blast',
+      icon: '❄️',
+      description: 'Releases a burst of super-cooled air that flash-freezes everything nearby and hurls it outward. Deals no damage — pure glacial force.',
       cooldown: 3.5,
       damage: 0,
       projectileSpeed: 6,
@@ -472,9 +472,9 @@ const CONFIG = {
       areaDamageMultiplier: 0,
       statusEffect: null,
       upgrades: [
-        { id: 'wider_pulse',       name: 'Wider Pulse',       icon: '💨', description: 'Shockwave extends 60% further.',                                     changes: { rangeMultiplier: 1.6 } },
-        { id: 'violent_repulsion', name: 'Violent Repulsion', icon: '🌪️', description: 'Enemies are thrown twice as far.',                                  changes: { knockbackMultiplier: 2.0 } },
-        { id: 'arcane_trauma',     name: 'Arcane Trauma',     icon: '⚡', description: 'Shockwave now deals 25 damage and slows every enemy it hits.',       changes: { damage: 25, statusEffect: { type: 'slow', amount: 0.5, duration: 2.0 } } }
+        { id: 'wider_pulse',       name: 'Wider Blast',       icon: '❄️', description: 'Cryo blast extends 60% further.',                                  changes: { rangeMultiplier: 1.6 } },
+        { id: 'violent_repulsion', name: 'Violent Repulsion', icon: '🌪️', description: 'Enemies are hurled twice as far.',                                  changes: { knockbackMultiplier: 2.0 } },
+        { id: 'arcane_trauma',     name: 'Frost Trauma',      icon: '🧊', description: 'Blast now deals 25 damage and slows every enemy it hits.',          changes: { damage: 25, statusEffect: { type: 'slow', amount: 0.5, duration: 2.0 } } }
       ]
     },
     {
@@ -605,9 +605,9 @@ const CONFIG = {
     },
     {
       id: 'phantom_gyre',
-      name: 'Phantom Gyre',
+      name: 'Frost Gyre',
       icon: '🌀',
-      description: 'Three phantom orbs orbit the caster, cycling between solid and ethereal states. Only damage enemies while solid — plan your positioning.',
+      description: 'Three orbs of crystallized frost orbit the caster, cycling between solid ice and freezing mist. Only solid orbs deal damage — position yourself so enemies walk through them.',
       cooldown: 7.5,
       damage: 26,
       projectileSpeed: 0,
@@ -626,9 +626,9 @@ const CONFIG = {
       projectileCount: 3,
       statusEffect: null,
       upgrades: [
-        { id: 'spectral_surge',  name: 'Spectral Surge',  icon: '👻', description: 'Orbs deal 60% more damage while solid.',                   changes: { damageMultiplier: 1.6 } },
-        { id: 'rapid_phase',     name: 'Rapid Phase',     icon: '🔄', description: 'Adds a fourth orb and orbs orbit faster.',                  changes: { projectileCount: 1, orbitSpeedMultiplier: 1.4 } },
-        { id: 'ghost_surge',     name: 'Ghost Surge',     icon: '💀', description: 'Orbs now also damage and slow enemies while ethereal.',     changes: { statusEffect: { type: 'slow', amount: 0.35, duration: 1.0 } } }
+        { id: 'spectral_surge',  name: 'Crystal Surge',   icon: '🧊', description: 'Orbs deal 60% more damage while solid.',                   changes: { damageMultiplier: 1.6 } },
+        { id: 'rapid_phase',     name: 'Rapid Freeze',    icon: '🔄', description: 'Adds a fourth orb and all orbs orbit faster.',              changes: { projectileCount: 1, orbitSpeedMultiplier: 1.4 } },
+        { id: 'ghost_surge',     name: 'Mist Surge',      icon: '❄️', description: 'Frost mist orbs now damage and slow enemies they drift through.', changes: { statusEffect: { type: 'slow', amount: 0.35, duration: 1.0 } } }
       ]
     },
     {
@@ -658,9 +658,9 @@ const CONFIG = {
     },
     {
       id: 'chrono_needle',
-      name: 'Chrono Needle',
-      icon: '🕰️',
-      description: 'Fires a needle that marks an enemy. After 2 seconds, it detonates — dealing damage based on how far the target moved while marked. Punishes fast enemies.',
+      name: 'Frost Needle',
+      icon: '❄️',
+      description: 'Fires a sliver of crystallized frost into an enemy, marking them. After 2 seconds it shatters — dealing damage based on how far the target fled while marked. Punishes fast enemies.',
       cooldown: 2.2,
       damage: 8,
       projectileSpeed: 14,
@@ -677,9 +677,9 @@ const CONFIG = {
       areaRadius: 0,
       statusEffect: null,
       upgrades: [
-        { id: 'temporal_rupture', name: 'Temporal Rupture', icon: '⏳', description: 'Marked enemies are slowed before detonation.',            changes: { statusEffect: { type: 'slow', amount: 0.45, duration: 2.0 } } },
-        { id: 'time_debt',        name: 'Time Debt',        icon: '💸', description: 'Detonation damage multiplier increases 50% more.',        changes: { chronoMultiplierBonus: 0.5 } },
-        { id: 'paradox_chain',    name: 'Paradox Chain',    icon: '🔗', description: 'Detonation marks all nearby enemies.',                    changes: { chronoChain: true } }
+        { id: 'temporal_rupture', name: 'Frozen Moment',    icon: '❄️', description: 'Marked enemies are slowed before the shard shatters.',   changes: { statusEffect: { type: 'slow', amount: 0.45, duration: 2.0 } } },
+        { id: 'time_debt',        name: 'Frost Debt',       icon: '🌡️', description: 'Shatter damage multiplier increases 50% more.',          changes: { chronoMultiplierBonus: 0.5 } },
+        { id: 'paradox_chain',    name: 'Cryo Chain',       icon: '🔗', description: 'Shatter marks all nearby enemies with fresh needles.',   changes: { chronoChain: true } }
       ]
     },
     {
@@ -787,9 +787,9 @@ const CONFIG = {
     },
     {
       id: 'fault_lines',
-      name: 'Fault Lines',
+      name: 'Frost Rifts',
       icon: '💠',
-      description: 'Tears open glowing arcane rifts in the ground nearby. Any enemy that walks through one detonates it for massive area damage.',
+      description: 'Splits the frozen ground open nearby, leaving jagged rifts. Any enemy that walks through one triggers a shattering ice explosion.',
       cooldown: 3.5,
       damage: 58,
       projectileSpeed: 0,
@@ -808,7 +808,7 @@ const CONFIG = {
       statusEffect: null,
       upgrades: [
         { id: 'deeper_cracks',   name: 'Deeper Cracks',   icon: '🌐', description: 'Places 2 additional rifts per cast.',                                      changes: { riftCount: 2 } },
-        { id: 'shockwave_burst', name: 'Shockwave Burst', icon: '⚡', description: 'Detonation stuns every enemy in the blast for 1 second.',                  changes: { statusEffect: { type: 'stun', duration: 1.0 } } },
+        { id: 'shockwave_burst', name: 'Frozen Burst',    icon: '❄️', description: 'Detonation flash-freezes every enemy in the blast for 1 second.',          changes: { statusEffect: { type: 'stun', duration: 1.0 } } },
         { id: 'cascade',         name: 'Cascade',         icon: '🔗', description: 'Detonating a rift instantly detonates all nearby rifts in a chain.',       changes: { riftChain: true } }
       ]
     },
@@ -892,9 +892,9 @@ const CONFIG = {
     },
     {
       id: 'ward_shell',
-      name: 'Ward Shell',
+      name: 'Battle Shell',
       icon: '🫧',
-      description: 'Conjures a tiny arcane shell that clings right around you. Destroys incoming projectiles on contact and violently repels any enemy that touches it.',
+      description: 'Conjures a hardened combat shell right around you. Destroys incoming projectiles on contact and violently repels any enemy that touches it.',
       cooldown: 3.5,
       damage: 18,
       projectileSpeed: 0,
@@ -919,9 +919,9 @@ const CONFIG = {
     },
     {
       id: 'arcane_spikes',
-      name: 'Arcane Spikes',
+      name: 'Field Caltrops',
       icon: '🔺',
-      description: 'Plants 3 small arcane spike traps at distant positions. Any enemy that walks through one takes damage — small, static, and easy to miss in the chaos.',
+      description: 'Hurls razor-edged caltrops at distant positions. Any enemy that walks through one is stabbed and slowed — easy to miss in the chaos, deadly in the right lane.',
       cooldown: 5.5,
       damage: 42,
       projectileSpeed: 0,
@@ -941,9 +941,9 @@ const CONFIG = {
       spikeRadius: 26,
       spikeDuration: 8.0,
       upgrades: [
-        { id: 'more_spikes',    name: 'More Spikes',    icon: '⬆️', description: 'Plants 3 additional spikes per cast.',                              changes: { spikeCount: 3 } },
-        { id: 'venomous_tips',  name: 'Venomous Tips',  icon: '☠️', description: 'Spikes now poison enemies for 3 seconds instead of slowing.',       changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } },
-        { id: 'iron_spikes',    name: 'Iron Spikes',    icon: '⚙️', description: 'Spike damage doubled and armor penetration greatly increased.',      changes: { damageMultiplier: 2.0, armorPenetration: 6 } }
+        { id: 'more_spikes',    name: 'Extra Caltrops', icon: '⬆️', description: 'Hurls 3 additional caltrops per cast.',                           changes: { spikeCount: 3 } },
+        { id: 'venomous_tips',  name: 'Venomous Tips',  icon: '☠️', description: 'Caltrops now poison enemies for 3 seconds instead of slowing.',     changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } },
+        { id: 'iron_spikes',    name: 'Serrated Steel', icon: '⚙️', description: 'Caltrop damage doubled and armor penetration greatly increased.',    changes: { damageMultiplier: 2.0, armorPenetration: 6 } }
       ]
     },
     {
@@ -970,6 +970,35 @@ const CONFIG = {
         { id: 'shockwave_slam', name: 'Shockwave Slam', icon: '💥', description: 'Impact shockwave grows 60% wider, stunning all nearby foes.',           changes: { areaRadius: 40 } },
         { id: 'ricochet_fury',  name: 'Ricochet Fury',  icon: '🔁', description: 'Hammer ricochets to 3 more enemies and fires 20% faster.',             changes: { chainCount: 3, cooldownMultiplier: 0.8 } },
         { id: 'mjolnir',        name: 'Mjolnir',        icon: '⚡', description: 'Damage nearly doubled and armor shredding greatly increased.',          changes: { damageMultiplier: 1.9, armorPenetration: 7 } }
+      ]
+    },
+
+    // ── SPAGHETTI'S BLADE ──────────────────────────────────────
+    {
+      id: 'spaghettis_blade',
+      name: "Spaghetti's Blade",
+      icon: '🍝',
+      description: "A writhing length of enchanted pasta lashed from the wrist like a whip. Threads through every enemy in a wide spiraling arc and entangles them, then snaps back to your hand.",
+      cooldown: 2.2,
+      damage: 18,
+      projectileSpeed: 7,
+      armorPenetration: 1,
+      pierce: 99,
+      bounce: 0,
+      range: 900,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'whirl',
+      curveRate: 0.06,
+      projectileCount: 1,
+      returnsToPlayer: true,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: { type: 'slow', amount: 0.3, duration: 1.5 },
+      upgrades: [
+        { id: 'al_dente',         name: 'Al Dente',         icon: '🍝', description: 'Pasta hardens — deals 75% more damage.',                               changes: { damageMultiplier: 1.75 } },
+        { id: 'extra_long',       name: 'Extra Long',       icon: '🌀', description: 'Range extends 50% further and curves more aggressively.',               changes: { rangeMultiplier: 1.5, curveRateMultiplier: 1.35 } },
+        { id: 'carbonara_curse',  name: 'Carbonara Curse',  icon: '☠️', description: 'Pasta poisons every enemy it wraps around.',                           changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } }
       ]
     },
 
@@ -1285,7 +1314,7 @@ const CONFIG = {
     {
       id: 'comet_wake', name: 'Comet Wake', icon: '💫',
       requires: ['starfall', 'arcane_trail'],
-      description: 'Starfall impacts leave burning ground. Arcane Trail spheres deal triple damage.',
+      description: 'Starfall impacts leave burning ground. Ember Wake deals triple damage.',
       weaponBoosts: [
         { weaponId: 'starfall',     damageMultiplier: 1.8, groundEffect: { type: 'burn', duration: 3.0, dps: 14 } },
         { weaponId: 'arcane_trail', damageMultiplier: 3.0 }
@@ -1294,7 +1323,7 @@ const CONFIG = {
     {
       id: 'infernal_march', name: 'Infernal March', icon: '🔥',
       requires: ['arcane_trail', 'firebolt'],
-      description: 'Arcane Trail now poisons every enemy it scars. Firebolt deals double damage and pierces 2 additional enemies.',
+      description: 'Ember Wake now poisons every enemy it scars. Firebolt deals double damage and pierces 2 additional enemies.',
       weaponBoosts: [
         { weaponId: 'arcane_trail', damageMultiplier: 2.0, statusEffect: { type: 'poison', amount: 10, duration: 3.0 } },
         { weaponId: 'firebolt',     damageMultiplier: 2.0, pierce: 2 }
@@ -1305,43 +1334,43 @@ const CONFIG = {
     {
       id: 'null_winter', name: 'Null Winter', icon: '❄️',
       requires: ['frost_shard', 'void_lance'],
-      description: 'Void Lance now slows everything it tears through. Frost Shard gains massive armor penetration and fires 40% faster.',
+      description: 'Glacial Lance now freezes everything it tears through. Frost Shard gains massive armor penetration and fires 40% faster.',
       weaponBoosts: [
         { weaponId: 'frost_shard', damageMultiplier: 1.8, armorPenetration: 5, cooldownMultiplier: 0.6 },
         { weaponId: 'void_lance',  statusEffect: { type: 'slow', amount: 0.55, duration: 3.5 }, damageMultiplier: 1.6 }
       ]
     },
     {
-      id: 'void_fissure', name: 'Void Fissure', icon: '🕳️',
+      id: 'void_fissure', name: 'Frost Fissure', icon: '🧊',
       requires: ['void_lance', 'fault_lines'],
-      description: 'Fault Lines now pull enemies to their center before detonating. Void Lance pull range doubles and damage increases 80%.',
+      description: 'Frost Rifts now pull enemies to their center before detonating. Glacial Lance pull range doubles and damage increases 80%.',
       weaponBoosts: [
         { weaponId: 'void_lance',  pullRadius: 160, pullStrength: 4.0, damageMultiplier: 1.8 },
         { weaponId: 'fault_lines', damageMultiplier: 2.0, areaRadiusMultiplier: 1.5, riftCount: 1 }
       ]
     },
     {
-      id: 'seismic_blast', name: 'Seismic Blast', icon: '💥',
+      id: 'seismic_blast', name: 'Glacial Rupture', icon: '💥',
       requires: ['fault_lines', 'force_pulse'],
-      description: 'Force Pulse now deals 40 damage and detonates all nearby rifts when it fires. Fault Lines gain instant chain detonation.',
+      description: 'Cryo Blast now deals 40 damage and shatters all nearby frost rifts when it fires. Frost Rifts gain instant chain detonation.',
       weaponBoosts: [
         { weaponId: 'fault_lines', damageMultiplier: 1.8, riftChain: true },
         { weaponId: 'force_pulse', damageOverride: 40, areaRadius: 55, areaDamageMultiplier: 1.0, statusEffect: { type: 'stun', duration: 0.8 } }
       ]
     },
     {
-      id: 'temporal_shockwave', name: 'Temporal Shockwave', icon: '🕰️',
+      id: 'temporal_shockwave', name: 'Glacial Shockwave', icon: '❄️',
       requires: ['force_pulse', 'chrono_needle'],
-      description: 'Force Pulse marks every enemy it hits with a Chrono Needle. Chrono detonations deal double damage and chain to nearby enemies.',
+      description: 'Cryo Blast marks every enemy it hits with a Frost Needle. Frost Needle shatter deals double damage and chains to nearby enemies.',
       weaponBoosts: [
         { weaponId: 'force_pulse',   damageOverride: 25, areaRadius: 45, areaDamageMultiplier: 1.0, statusEffect: { type: 'stun', duration: 1.0 } },
         { weaponId: 'chrono_needle', damageMultiplier: 2.0, chronoMultiplierBonus: 0.5, chronoChain: true }
       ]
     },
     {
-      id: 'phase_paradox', name: 'Phase Paradox', icon: '🌀',
+      id: 'phase_paradox', name: 'Frozen Paradox', icon: '🌀',
       requires: ['chrono_needle', 'phantom_gyre'],
-      description: 'Phantom Gyre orbits 50% faster and deals double damage. Chrono Needles chain to nearby enemies on detonation.',
+      description: 'Frost Gyre orbits 50% faster and deals double damage. Frost Needles chain to nearby enemies on shatter.',
       weaponBoosts: [
         { weaponId: 'chrono_needle', damageMultiplier: 1.8, chronoChain: true },
         { weaponId: 'phantom_gyre',  damageMultiplier: 2.0, orbitSpeedMultiplier: 1.5 }
@@ -1350,7 +1379,7 @@ const CONFIG = {
     {
       id: 'glacial_orbit', name: 'Glacial Orbit', icon: '🧊',
       requires: ['phantom_gyre', 'frost_shard'],
-      description: 'Phantom Gyre orbs slow every enemy they pass through. Frost Shard splits into 4 shards on impact.',
+      description: 'Frost Gyre orbs slow every enemy they pass through. Frost Shard splits into 4 shards on impact.',
       weaponBoosts: [
         { weaponId: 'phantom_gyre', damageMultiplier: 1.7, statusEffect: { type: 'slow', amount: 0.45, duration: 2.5 } },
         { weaponId: 'frost_shard',  damageMultiplier: 1.8, splitProjectiles: 3, splitDamageMultiplier: 0.65 }
@@ -1361,16 +1390,16 @@ const CONFIG = {
     {
       id: 'electrostatic_field', name: 'Electrostatic Field', icon: '⚡',
       requires: ['spark_chain', 'rune_burst'],
-      description: 'Spark Chain gains 6 more chains and fires 30% faster. Rune Burst deals double damage with 4 extra runes per burst.',
+      description: 'Spark Chain gains 6 more chains and fires 30% faster. Arc Burst deals double damage with 4 extra arcs per burst.',
       weaponBoosts: [
         { weaponId: 'spark_chain', chainCount: 6, damageMultiplier: 1.8, cooldownMultiplier: 0.7 },
         { weaponId: 'rune_burst',  damageMultiplier: 2.0, radialCount: 4 }
       ]
     },
     {
-      id: 'orbiting_runes', name: 'Orbiting Runes', icon: '🔮',
+      id: 'orbiting_runes', name: 'Arc Storm', icon: '⚡',
       requires: ['rune_burst', 'arcane_orb'],
-      description: 'Arcane Orb detonates a rune burst on every bounce and gains 2 extra bounces. Rune Burst pierces enemies and fires 2 extra runes.',
+      description: 'Voltaic Orb detonates an arc burst on every bounce and gains 2 extra bounces. Arc Burst pierces enemies and fires 2 extra arcs.',
       weaponBoosts: [
         { weaponId: 'rune_burst',  damageMultiplier: 1.8, pierce: 2, radialCount: 2 },
         { weaponId: 'arcane_orb',  damageMultiplier: 2.5, bounce: 2, runeBlastCount: 6, runeBlastDamage: 14 }
@@ -1379,16 +1408,16 @@ const CONFIG = {
     {
       id: 'prismatic_lattice', name: 'Prismatic Lattice', icon: '🔷',
       requires: ['arcane_orb', 'arcane_cube'],
-      description: 'Arcane Cube walls slow and detonate with area energy at their corners. Arcane Orb pulls enemies on each bounce.',
+      description: 'Volt Cage walls slow and detonate with electrical energy at their corners. Voltaic Orb pulls enemies on each bounce.',
       weaponBoosts: [
         { weaponId: 'arcane_orb',  damageMultiplier: 2.0, pullRadius: 80, pullStrength: 2.0, bounce: 1 },
         { weaponId: 'arcane_cube', damageMultiplier: 1.8, areaRadius: 65, areaDamageMultiplier: 0.85, statusEffect: { type: 'slow', amount: 0.4, duration: 1.5 } }
       ]
     },
     {
-      id: 'resonant_edge', name: 'Resonant Edge', icon: '⚔️',
+      id: 'resonant_edge', name: 'Resonant Edge', icon: '⚡',
       requires: ['arcane_cube', 'phase_blade'],
-      description: 'Phase Blade orbit radius doubles and damage triples. Arcane Cube walls stun every enemy they sweep through.',
+      description: 'Lightning Edge orbit radius doubles and damage triples. Volt Cage walls stun every enemy they sweep through.',
       weaponBoosts: [
         { weaponId: 'arcane_cube', statusEffect: { type: 'stun', duration: 0.7 }, damageMultiplier: 1.5 },
         { weaponId: 'phase_blade', damageMultiplier: 3.0, rangeMultiplier: 2.0 }
@@ -1397,7 +1426,7 @@ const CONFIG = {
     {
       id: 'thunderblade', name: 'Thunderblade', icon: '🌩️',
       requires: ['phase_blade', 'thunder_clap'],
-      description: 'Thunder Clap blasts 60% wider and deals double damage with 40% shorter cooldown. Phase Blade stuns every enemy it slices.',
+      description: 'Thunder Clap blasts 60% wider and deals double damage with 40% shorter cooldown. Lightning Edge stuns every enemy it slices.',
       weaponBoosts: [
         { weaponId: 'phase_blade',  damageMultiplier: 2.5, statusEffect: { type: 'stun', duration: 0.5 } },
         { weaponId: 'thunder_clap', damageMultiplier: 2.0, areaRadiusMultiplier: 1.6, cooldownMultiplier: 0.6 }
@@ -1547,9 +1576,9 @@ const CONFIG = {
 
     // ─── AFRO SAMURAI COMBOS ────────────────────────────────────
     {
-      id: 'void_cleave', name: 'Void Cleave', icon: '🌑',
+      id: 'void_cleave', name: 'Glacial Cleave', icon: '🧊',
       requires: ['afro_samurai_blade', 'void_lance'],
-      description: "The Blade's slashes rend the void — each strike deals area damage and pulls nearby enemies into the cut. Void Lance pierces 4 extra enemies and deals 80% more damage.",
+      description: "The Blade's slashes shatter ice — each strike deals area damage and pulls nearby enemies into the cut. Glacial Lance pierces 4 extra enemies and deals 80% more damage.",
       weaponBoosts: [
         { weaponId: 'afro_samurai_blade', damageMultiplier: 1.8, areaRadius: 45, areaDamageMultiplier: 0.7, pullRadius: 60, pullStrength: 2.0 },
         { weaponId: 'void_lance',         pierce: 4, damageMultiplier: 1.8, armorPenetration: 4 }
@@ -1558,7 +1587,7 @@ const CONFIG = {
     {
       id: 'dual_blade_mastery', name: 'Dual Blade Mastery', icon: '⚔️',
       requires: ['afro_samurai_blade', 'phase_blade'],
-      description: "Two blade weapons, one devastating rhythm. Phase Blade orbit radius triples and deals 3× damage. The Final Blade fires 40% faster with a wider cut.",
+      description: "Two blade weapons, one devastating rhythm. Lightning Edge orbit radius triples and deals 3× damage. The Final Blade fires 40% faster with a wider cut.",
       weaponBoosts: [
         { weaponId: 'afro_samurai_blade', cooldownMultiplier: 0.6, spreadAngle: 0.12, damageMultiplier: 1.6 },
         { weaponId: 'phase_blade',        damageMultiplier: 3.0, rangeMultiplier: 3.0 }
@@ -1569,7 +1598,7 @@ const CONFIG = {
     {
       id: 'thornwall', name: 'Thornwall', icon: '🌵',
       requires: ['ward_shell', 'arcane_spikes'],
-      description: "Shell and spikes form a layered defense. Shell radius grows 40%, spikes deal 80% more damage and two extra spikes are planted each cast.",
+      description: "Shell and caltrops form a layered defense. Shell radius grows 40%, caltrops deal 80% more damage and two extra caltrops are hurled each cast.",
       weaponBoosts: [
         { weaponId: 'ward_shell',     damageMultiplier: 1.5, rangeMultiplier: 1.4 },
         { weaponId: 'arcane_spikes',  damageMultiplier: 1.8, spikeCount: 2 }
@@ -1587,10 +1616,30 @@ const CONFIG = {
     {
       id: 'blade_trap', name: 'Blade Trap', icon: '🗡️',
       requires: ['arcane_spikes', 'afro_samurai_blade'],
-      description: "Enemies slowed by spikes meet the returning blade at their worst moment. Blade deals double damage and pierces 3 extra enemies. Spikes shred armor.",
+      description: "Enemies slowed by caltrops meet the returning blade at their worst moment. Blade deals double damage and pierces 3 extra enemies. Caltrops shred armor.",
       weaponBoosts: [
         { weaponId: 'arcane_spikes',      damageMultiplier: 1.6, armorPenetration: 6 },
         { weaponId: 'afro_samurai_blade', damageMultiplier: 2.0, pierce: 3 }
+      ]
+    },
+
+    // ─── SPAGHETTI'S BLADE COMBOS ───────────────────────────────
+    {
+      id: 'full_spread', name: 'Full Spread', icon: '🍝',
+      requires: ['spaghettis_blade', 'afro_samurai_blade'],
+      description: "Spaghetti marks every enemy it threads through. The Final Blade follows the same arc immediately after, dealing double damage to each marked target. Spaghetti fires 40% faster.",
+      weaponBoosts: [
+        { weaponId: 'spaghettis_blade',   cooldownMultiplier: 0.6, damageMultiplier: 1.5 },
+        { weaponId: 'afro_samurai_blade', damageMultiplier: 2.0, pierce: 2 }
+      ]
+    },
+    {
+      id: 'hammer_and_noodle', name: 'Hammer & Noodle', icon: '🔨',
+      requires: ['spaghettis_blade', 'hammer_toss'],
+      description: "Stunned enemies are automatically targeted by spaghetti and take double damage from it. Hammer ricochets to 2 more targets and fires 30% faster.",
+      weaponBoosts: [
+        { weaponId: 'spaghettis_blade', damageMultiplier: 2.0, rangeMultiplier: 1.3 },
+        { weaponId: 'hammer_toss',      cooldownMultiplier: 0.7, chainCount: 2 }
       ]
     },
 
@@ -1607,7 +1656,7 @@ const CONFIG = {
     {
       id: 'iron_whirlwind', name: 'Iron Whirlwind', icon: '🌪️',
       requires: ['hammer_toss', 'phase_blade'],
-      description: "Steel meets steel. Phase Blade orbit radius doubles at 2.5× damage. The Hammer ricochets to 3 more targets and hits 60% harder.",
+      description: "Steel meets lightning. Lightning Edge orbit radius doubles at 2.5× damage. The Hammer ricochets to 3 more targets and hits 60% harder.",
       weaponBoosts: [
         { weaponId: 'hammer_toss',  damageMultiplier: 1.6, chainCount: 3 },
         { weaponId: 'phase_blade',  damageMultiplier: 2.5, rangeMultiplier: 2.0 }
@@ -1707,7 +1756,7 @@ const CONFIG = {
     death:     { name: 'Death Cycle',     icon: '💀', color: '#cc66ff', weapons: ['shadow_bolt','bone_spear','phantom_double','hungry_grimoire','plague_pool','soul_whirl'] },
     arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp'] },
     demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce'] },
-    blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss'] },
+    blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss','spaghettis_blade'] },
     life:      { name: 'Life Cycle',      icon: '🌿', color: '#66ff99', weapons: ['lotus_rift','scarab_halo','pollen_nova','frizzos_hourglass','molting_mirror','brood_husk','crescent_moon','ouroboros_vine'] }
   }
 };
