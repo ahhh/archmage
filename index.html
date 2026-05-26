@@ -555,6 +555,66 @@ body::after {
   color: var(--cycle-color, var(--g1));
   opacity: 0.9;
 }
+.pause-cycle-ring {
+  font-size: 7.5px;
+  color: var(--g3);
+  font-style: italic;
+  line-height: 1.5;
+  opacity: 0.7;
+  margin-bottom: 1px;
+}
+.pause-cycle-synergies {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pcs-title {
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--g3);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.pause-cycle-synergy {
+  padding: 3px 4px;
+  border-left: 2px solid transparent;
+  opacity: 0.35;
+}
+.pause-cycle-synergy.partial { opacity: 0.65; }
+.pause-cycle-synergy.ready {
+  opacity: 1;
+  border-left-color: color-mix(in srgb, var(--cycle-color, #0f0) 60%, transparent);
+  background: color-mix(in srgb, var(--cycle-color, #0f0) 5%, transparent);
+}
+.pause-cycle-synergy.unlocked {
+  opacity: 1;
+  border-left-color: var(--cycle-color, var(--g1));
+  background: color-mix(in srgb, var(--cycle-color, #0f0) 8%, transparent);
+}
+.pcs-name {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--g1);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.3;
+}
+.pcs-check {
+  font-size: 8px;
+  color: var(--cycle-color, #0f0);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.pcs-reqs {
+  font-size: 7.5px;
+  color: var(--g3);
+  line-height: 1.3;
+  margin-top: 1px;
+}
 @media (max-width: 820px) {
   #pause-cycle-grid { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
 }
@@ -3346,14 +3406,14 @@ function getWeaponCycle(weaponId) {
 }
 
 const CYCLE_BONUS_LABELS = {
-  fire:      'Set bonus: +1 projectile per stack',
-  ice:       'Set bonus: +10% status duration per stack',
-  lightning: 'Set bonus: −4% cooldown per stack',
-  death:     'Set bonus: +5% damage per stack',
-  arcane:    'Set bonus: +6% range per stack',
-  demon:     'Set bonus: +1 armor per stack',
-  blade:     'Set bonus: +1.5 armor pen per stack',
-  life:      'Set bonus: +5 max HP per stack',
+  fire:      '+1 projectile per stack',
+  ice:       '+10% status duration per stack',
+  lightning: '−4% cooldown per stack',
+  death:     '+5% damage per stack',
+  arcane:    '+6% range per stack',
+  demon:     '+1 armor per stack',
+  blade:     '+1.5 armor pen per stack',
+  life:      '+5 max HP per stack',
 };
 
 function buildPauseScreen() {
@@ -3361,25 +3421,65 @@ function buildPauseScreen() {
   if (!grid) return;
   grid.innerHTML = '';
   const ownedIds = new Set(Player.weapons.map(w => w.weaponId));
+  const unlockedCombos = Player.unlockedCombos || new Set();
+
   for (const [key, cycle] of Object.entries(CONFIG.cycles || {})) {
     const stacks = Player.cycleBonus?.[key] || 0;
-    const owned  = cycle.weapons.filter(id => ownedIds.has(id)).length;
-    const active = owned > 0;
+    const active = cycle.weapons.some(id => ownedIds.has(id));
     const card = document.createElement('div');
     card.className = 'pause-cycle-card' + (active ? ' active' : '');
     card.style.setProperty('--cycle-color', cycle.color);
+
+    // Weapon ring order string
+    const wNames = cycle.weapons.map(id => CONFIG.weapons.find(w => w.id === id)?.name || id);
+    const ringStr = wNames.join(' → ') + ' → (back to ' + wNames[0] + ')';
+
+    // Weapon icons
     const weaponIcons = cycle.weapons.map(id => {
       const w = CONFIG.weapons.find(w => w.id === id);
       return `<span class="pause-cycle-weapon${ownedIds.has(id) ? ' owned' : ''}" title="${w?.name || id}">${w?.icon || '?'}</span>`;
     }).join('');
+
+    // Stack / set bonus lines
     const stackLine = stacks > 0
-      ? `<div class="pause-cycle-stacks">${'▪'.repeat(stacks)} ${stacks} stack${stacks !== 1 ? 's' : ''} active</div>`
-      : '';
+      ? `<div class="pause-cycle-stacks">▪ ${stacks} stack${stacks !== 1 ? 's' : ''} — ${CYCLE_BONUS_LABELS[key] || ''}</div>`
+      : `<div class="pause-cycle-bonus">Set bonus: ${CYCLE_BONUS_LABELS[key] || ''}</div>`;
+
+    // Synergies relevant to this cycle
+    const relevantCombos = (CONFIG.combos || []).filter(combo =>
+      combo.requires.some(wId => cycle.weapons.includes(wId))
+    );
+
+    let synergiesHtml = '';
+    if (relevantCombos.length > 0) {
+      const rows = relevantCombos.map(combo => {
+        const [wA, wB] = combo.requires;
+        const ownsA = ownedIds.has(wA);
+        const ownsB = ownedIds.has(wB);
+        const isUnlocked = unlockedCombos.has(combo.id);
+        const isReady = ownsA && ownsB && !isUnlocked;
+        const isPartial = (ownsA || ownsB) && !(ownsA && ownsB);
+        let cls = '';
+        if (isUnlocked) cls = 'unlocked';
+        else if (isReady) cls = 'ready';
+        else if (ownsA || ownsB) cls = 'partial';
+        const nameA = CONFIG.weapons.find(w => w.id === wA)?.name || wA;
+        const nameB = CONFIG.weapons.find(w => w.id === wB)?.name || wB;
+        const checkMark = isUnlocked ? `<span class="pcs-check">✓</span>` : (isReady ? `<span class="pcs-check">!</span>` : '');
+        return `<div class="pause-cycle-synergy ${cls}">
+          <div class="pcs-name">${combo.icon} ${combo.name}${checkMark}</div>
+          <div class="pcs-reqs">${nameA} + ${nameB}</div>
+        </div>`;
+      }).join('');
+      synergiesHtml = `<div class="pause-cycle-synergies"><div class="pcs-title">Synergies</div>${rows}</div>`;
+    }
+
     card.innerHTML = `
       <div class="pause-cycle-header">${cycle.icon} ${cycle.name}</div>
+      <div class="pause-cycle-ring">${ringStr}</div>
       <div class="pause-cycle-weapons">${weaponIcons}</div>
       ${stackLine}
-      <div class="pause-cycle-bonus">${CYCLE_BONUS_LABELS[key] || ''}</div>
+      ${synergiesHtml}
     `;
     grid.appendChild(card);
   }
