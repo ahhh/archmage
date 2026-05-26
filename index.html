@@ -954,6 +954,10 @@ const Player = {
       spikeRadius: wConfig.spikeRadius || 26,
       spikeDuration: wConfig.spikeDuration || 8.0,
       orbitDuration: wConfig.orbitDuration || 5.0,
+      healOnExpire: wConfig.healOnExpire || 0,
+      chargesUp: wConfig.chargesUp || false,
+      chargeRate: wConfig.chargeRate || 0,
+      returnsToPlayer: wConfig.returnsToPlayer || false,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -1011,6 +1015,9 @@ const Player = {
       if (c.spikeCount != null) s.spikeCount += c.spikeCount;
       if (c.damageOverride != null) s.damage = c.damageOverride;
       if (c.runeBlastDamage != null) s.runeBlastDamage = c.runeBlastDamage;
+      if (c.riftDuration != null)  s.riftDuration += c.riftDuration;
+      if (c.healOnExpire != null)  s.healOnExpire += c.healOnExpire;
+      if (c.chargeRate != null)    s.chargeRate = c.chargeRate;
     }
     // Apply active combo boosts (same change format as upgrades)
     if (this.unlockedCombos) {
@@ -1059,6 +1066,9 @@ const Player = {
         if (c.riftChain)                  s.riftChain = true;
         if (c.shellDurationBonus != null) s.shellDuration += c.shellDurationBonus;
         if (c.spikeCount != null)         s.spikeCount += c.spikeCount;
+        if (c.riftDuration != null)       s.riftDuration += c.riftDuration;
+        if (c.healOnExpire != null)       s.healOnExpire += c.healOnExpire;
+        if (c.chargeRate != null)         s.chargeRate = c.chargeRate;
       }
     }
     // ── Global passive multipliers ────────────────────────────
@@ -1632,7 +1642,13 @@ function updateRifts(dt, enemies) {
   for (const r of Rifts) {
     if (r.dead) continue;
     r.timer -= dt;
-    if (r.timer <= 0) { r.dead = true; continue; }
+    if (r.timer <= 0) {
+      if (r.healOnExpire > 0) {
+        Player.health = Math.min(Player.maxHealth, Player.health + r.healOnExpire);
+        Particles.emit(r.x, r.y, '#88ff88', 10, 4);
+      }
+      r.dead = true; continue;
+    }
     for (const e of enemies) {
       if (e.dead) continue;
       if (dist(r.x, r.y, e.x, e.y) < 26 + e.radius) {
@@ -1742,7 +1758,7 @@ const WeaponSystem = {
 
     // Save echo template for Mirror Glyph (from any projectile-firing weapon)
     if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
-        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes'].includes(s.targeting)) {
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest'].includes(s.targeting)) {
       MirrorEchoTemplate = {
         projectileSpeed: s.projectileSpeed,
         damage: s.damage,
@@ -1899,6 +1915,9 @@ const WeaponSystem = {
           phased: false,
           phaseTimer: s.phaseDuration,
           phaseDuration: s.phaseDuration,
+          chargesUp: s.chargesUp || false,
+          chargeRate: s.chargeRate || 0,
+          chargeAccumTimer: 0,
           targetEnemy: null, targetX: player.x, targetY: player.y,
         });
       }
@@ -1989,6 +2008,8 @@ const WeaponSystem = {
           flashTimer: 0,
           contactTimers: {},
           explosive: s.decoyExplosion,
+          explosionDamage: s.damage,
+          explosionRadius: s.areaRadius > 0 ? s.areaRadius : 120,
           dead: false,
           icon: player.charConfig.icon,
         });
@@ -2037,6 +2058,7 @@ const WeaponSystem = {
           groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
           isMeteor: false, acceleration: 1, isOrbit: false, isBox: false,
           isWhirl: true, curveRate: s.curveRate * curveSign,
+          returnsToPlayer: s.returnsToPlayer || false, returning: false,
           targetEnemy: null, targetX: player.x, targetY: player.y,
         };
         Projectiles.push(p);
@@ -2162,6 +2184,7 @@ const WeaponSystem = {
           areaRadius: s.areaRadius,
           statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
           chain: s.riftChain,
+          healOnExpire: s.healOnExpire || 0,
           dead: false,
         });
         Particles.emit(rx, ry, '#aaddff', 8, 3);
@@ -2189,6 +2212,22 @@ const WeaponSystem = {
     }
 
     // highestThreat: always targets nearest enemy, ignores aim mode (meteor, etc.)
+    if (s.targeting === 'furthest') {
+      if (alive.length === 0) return false;
+      let target = null, maxSq = -1;
+      for (const e of alive) {
+        const dx = e.x - player.x, dy = e.y - player.y;
+        const sq = dx * dx + dy * dy;
+        if (sq > maxSq) { maxSq = sq; target = e; }
+      }
+      const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
+      for (let t = 0; t < s.projectileCount; t++) {
+        const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * s.spreadAngle : 0;
+        this.spawnProjectile(player, baseAngle + spread, wi, s, target);
+      }
+      return true;
+    }
+
     if (s.targeting === 'highestThreat') {
       if (alive.length === 0) return false;
       let closest = null, closestSq = Infinity;
@@ -2381,9 +2420,11 @@ function updateDecoys(dt, enemies) {
 function _killDecoy(d) {
   d.dead = true;
   if (d.explosive) {
+    const exDmg = d.explosionDamage || 60;
+    const exRad = d.explosionRadius || 120;
     for (const e of Enemies) {
-      if (!e.dead && dist(d.x, d.y, e.x, e.y) < 120) {
-        applyDamage(e, 60, 2, null, 0);
+      if (!e.dead && dist(d.x, d.y, e.x, e.y) < exRad) {
+        applyDamage(e, exDmg, 2, null, 0);
       }
     }
     Particles.emit(d.x, d.y, '#ff8800', 30, 7);
@@ -2473,6 +2514,7 @@ function updateProjectiles(dt, enemies) {
       if (p.lifetimer <= 0) { p.dead = true; continue; }
       p.hitRefreshTimer -= dt;
       if (p.hitRefreshTimer <= 0) { p.hitIds.clear(); p.hitRefreshTimer = 0.5; }
+      if (p.chargesUp) p.chargeAccumTimer += dt;
       p.orbitAngle += p.orbitSpeed;
       p.x = Player.x + Math.cos(p.orbitAngle) * p.orbitRadius;
       p.y = Player.y + Math.sin(p.orbitAngle) * p.orbitRadius;
@@ -2489,6 +2531,11 @@ function updateProjectiles(dt, enemies) {
     } else {
       // Soul Whirl: continuously curve the velocity vector
       if (p.isWhirl) {
+        if (p.returnsToPlayer && !p.returning && p.traveledSq > p.range * 0.5) {
+          p.returning = true;
+          p.curveRate = -p.curveRate;
+          p.hitIds.clear();
+        }
         const spd = Math.hypot(p.vx, p.vy);
         const a = Math.atan2(p.vy, p.vx) + p.curveRate;
         p.vx = Math.cos(a) * spd; p.vy = Math.sin(a) * spd;
@@ -2618,6 +2665,10 @@ function updateProjectiles(dt, enemies) {
 
         // Damage
         let dmg = p.damage;
+        if (p.chargesUp && p.chargeAccumTimer > 0) {
+          dmg = Math.round(dmg * (1 + p.chargeAccumTimer * p.chargeRate));
+          p.chargeAccumTimer = 0;
+        }
         const chainIdx = (p.chainCount - (p.chainCount)) ; // resolved per-chain
         applyDamage(e, dmg, p.armorPen, p.statusEffect, p.finalHitStun && p.chainCount === 0 ? p.finalHitStun : 0);
         if (p.lifesteal > 0 && dmg > 0) {

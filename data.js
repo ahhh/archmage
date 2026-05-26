@@ -971,6 +971,231 @@ const CONFIG = {
         { id: 'ricochet_fury',  name: 'Ricochet Fury',  icon: '🔁', description: 'Hammer ricochets to 3 more enemies and fires 20% faster.',             changes: { chainCount: 3, cooldownMultiplier: 0.8 } },
         { id: 'mjolnir',        name: 'Mjolnir',        icon: '⚡', description: 'Damage nearly doubled and armor shredding greatly increased.',          changes: { damageMultiplier: 1.9, armorPenetration: 7 } }
       ]
+    },
+
+    // ── LIFE CYCLE ─────────────────────────────────────────────
+    {
+      id: 'lotus_rift',
+      name: 'Lotus Rift',
+      icon: '🪷',
+      description: 'Opens a blooming lotus-shaped rift under a distant enemy. Each petal that unfolds damages nearby enemies. When the final petal opens, the lotus collapses into a healing mote that drifts back to you.',
+      cooldown: 6.0,
+      damage: 25,
+      projectileSpeed: 0,
+      projectileCount: 0,
+      spreadAngle: 0,
+      armorPenetration: 2,
+      pierce: 0,
+      bounce: 0,
+      range: 350,
+      areaRadius: 70,
+      areaDamageMultiplier: 1,
+      targeting: 'rift',
+      riftCount: 1,
+      riftDuration: 5.0,
+      riftChain: false,
+      healOnExpire: 15,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'more_petals',   name: 'More Petals',   icon: '🌸', description: 'Lotus opens 2 additional rifts, each dealing damage.',  changes: { riftCount: 2 } },
+        { id: 'deep_roots',    name: 'Deep Roots',    icon: '🌿', description: 'Rift lasts 3 seconds longer and slows enemies inside.', changes: { riftDuration: 3.0, statusEffect: { type: 'slow', amount: 0.35, duration: 1.5 } } },
+        { id: 'nectar_return', name: 'Nectar Return', icon: '💚', description: 'Healing mote restores 20 additional HP on return.',     changes: { healOnExpire: 20 } }
+      ]
+    },
+    {
+      id: 'scarab_halo',
+      name: 'Scarab Halo',
+      icon: '🪲',
+      description: 'Summons three golden scarabs that orbit the player. Each scarab charges up while avoiding enemies — the longer it goes without striking, the more damage it deals on impact.',
+      cooldown: 8.0,
+      damage: 18,
+      projectileSpeed: 0,
+      projectileCount: 3,
+      spreadAngle: 0,
+      armorPenetration: 2,
+      pierce: 99,
+      bounce: 0,
+      range: 92,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'orbit',
+      orbitSpeed: 0.07,
+      orbitDuration: 9.0,
+      chargesUp: true,
+      chargeRate: 0.12,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'wider_halo',     name: 'Wider Halo',     icon: '⭕', description: 'Scarabs orbit at a 50% greater radius.',                 changes: { rangeMultiplier: 1.5 } },
+        { id: 'patient_swarm',  name: 'Patient Swarm',  icon: '⏳', description: 'Scarabs charge up significantly faster while orbiting.', changes: { chargeRate: 0.22 } },
+        { id: 'carapace_swarm', name: 'Carapace Swarm', icon: '🪲', description: 'Summons 2 additional scarabs.',                          changes: { projectileCount: 2 } }
+      ]
+    },
+    {
+      id: 'pollen_nova',
+      name: 'Pollen Nova',
+      icon: '🌸',
+      description: 'Releases a radial burst of glowing pollen spores. Spores deal light damage and slow any enemy they hit.',
+      cooldown: 3.5,
+      damage: 10,
+      projectileSpeed: 6,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 500,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'radial',
+      radialCount: 10,
+      angleOffset: 0,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: { type: 'slow', amount: 0.35, duration: 1.8 },
+      upgrades: [
+        { id: 'thicker_pollen', name: 'Thicker Pollen', icon: '🌼', description: 'Fires 6 additional spores in the radial burst.',  changes: { radialCount: 6 } },
+        { id: 'fertile_ground', name: 'Fertile Ground', icon: '🌱', description: 'Spores deal 60% more damage per hit.',            changes: { damageMultiplier: 1.6 } },
+        { id: 'spring_fever',   name: 'Spring Fever',   icon: '🌡️', description: 'Slow is stronger and lasts longer.',              changes: { statusEffect: { type: 'slow', amount: 0.50, duration: 2.5 } } }
+      ]
+    },
+    {
+      id: 'frizzos_hourglass',
+      name: "Frizzo's Hourglass",
+      icon: '⌛',
+      description: 'Fires at the furthest visible enemy and marks them with a glowing seed of time. After a short delay it blooms — dealing damage based on how far the enemy moved since being marked.',
+      cooldown: 3.5,
+      damage: 10,
+      projectileSpeed: 13,
+      armorPenetration: 1,
+      pierce: 0,
+      bounce: 0,
+      range: 1100,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'furthest',
+      isChrono: true,
+      chronoDelay: 2.5,
+      chronoBaseDamage: 20,
+      chronoMultiplierBonus: 0,
+      chronoChain: false,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'early_spring', name: 'Early Spring', icon: '🌤️', description: 'Fires 25% faster — more seeds, more blooms.',      changes: { cooldownMultiplier: 0.75 } },
+        { id: 'aging_bloom',  name: 'Aging Bloom',  icon: '📈',  description: 'Bloom damage scales harder with elapsed time.',   changes: { chronoMultiplierBonus: 0.35 } },
+        { id: 'full_season',  name: 'Full Season',  icon: '🌻',  description: 'Bloom spreads to two additional nearby enemies.', changes: { chronoChain: true } }
+      ]
+    },
+    {
+      id: 'molting_mirror',
+      name: 'Molting Mirror',
+      icon: '🪞',
+      description: 'A living mirror slides slowly back and forth behind the player. It periodically echoes your last fired spell from its current position at reduced power.',
+      cooldown: 1.2,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 130,
+      targeting: 'mirror',
+      mirrorCount: 1,
+      mirrorPower: 0.65,
+      mirrorExplosion: false,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'longer_swing',      name: 'Longer Swing',      icon: '↔️', description: 'Mirror travels 50% farther from the caster.',       changes: { rangeMultiplier: 1.5 } },
+        { id: 'polished_carapace', name: 'Polished Carapace', icon: '✨', description: 'Reflected spells deal 88% power instead of 65%.', changes: { mirrorPower: 0.88 } },
+        { id: 'twin_molt',         name: 'Twin Molt',         icon: '🔀', description: 'Creates a second mirror.',                          changes: { mirrorCount: 1 } }
+      ]
+    },
+    {
+      id: 'brood_husk',
+      name: 'Brood Husk',
+      icon: '🐣',
+      description: 'Drops a fragile egg-like decoy that attracts nearby enemies. When destroyed or expired, it hatches into a burst of damaging life spores erupting in all directions.',
+      cooldown: 9.0,
+      damage: 55,
+      projectileSpeed: 0,
+      armorPenetration: 2,
+      pierce: 0,
+      bounce: 0,
+      range: 0,
+      targeting: 'decoy',
+      decoyHp: 80,
+      decoyDuration: 7.0,
+      decoyExplosion: true,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 80,
+      areaDamageMultiplier: 1,
+      statusEffect: null,
+      projectileCount: 1,
+      upgrades: [
+        { id: 'thicker_shell',    name: 'Thicker Shell',    icon: '🛡️', description: 'Husk has 80 more HP and lasts 3 seconds longer.', changes: { decoyHpBonus: 80, decoyDurationBonus: 3.0 } },
+        { id: 'clutch_spawn',     name: 'Clutch Spawn',     icon: '🥚', description: 'Drops two husks at once.',                         changes: { projectileCount: 1 } },
+        { id: 'violent_hatching', name: 'Violent Hatching', icon: '💥', description: 'Hatch burst deals more than double damage.',        changes: { damageMultiplier: 2.2 } }
+      ]
+    },
+    {
+      id: 'crescent_moon',
+      name: 'Crescent Moon',
+      icon: '🌙',
+      description: 'Fires pale crescent-moon blades that arc outward and curve inward like lunar scythes, hooking sharply around enemies before cutting through them.',
+      cooldown: 1.8,
+      damage: 22,
+      projectileSpeed: 7,
+      armorPenetration: 1,
+      pierce: 0,
+      bounce: 0,
+      range: 600,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'whirl',
+      curveRate: 0.065,
+      projectileCount: 2,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'waxing_arc',     name: 'Waxing Arc',     icon: '🌛', description: 'Moons curve harder and travel 30% farther.',      changes: { curveRateMultiplier: 1.45, rangeMultiplier: 1.3 } },
+        { id: 'twin_crescents', name: 'Twin Crescents', icon: '🌙', description: 'Fires 2 additional moon blades.',                 changes: { projectileCount: 2 } },
+        { id: 'harvest_moon',   name: 'Harvest Moon',   icon: '🍂', description: 'Moon blades pierce 2 enemies and apply poison.', changes: { pierce: 2, statusEffect: { type: 'poison', amount: 7, duration: 2.5 } } }
+      ]
+    },
+    {
+      id: 'ouroboros_vine',
+      name: 'Ouroboros Vine',
+      icon: '🐍',
+      description: 'Launches a living vine that arcs outward in a looping path, then curves back toward the caster. Hits enemies both on the way out and on the return.',
+      cooldown: 2.5,
+      damage: 16,
+      projectileSpeed: 6,
+      armorPenetration: 1,
+      pierce: 1,
+      bounce: 0,
+      range: 1400,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'whirl',
+      curveRate: 0.08,
+      projectileCount: 1,
+      returnsToPlayer: true,
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'tighter_coil',  name: 'Tighter Coil',  icon: '🌀', description: 'Vine curves more aggressively, tightening its loop.',   changes: { curveRateMultiplier: 1.5 } },
+        { id: 'regrowth_loop', name: 'Regrowth Loop', icon: '💚', description: 'Vine lifesteals — heals 12% of all damage dealt.',      changes: { lifesteal: 0.12 } },
+        { id: 'endless_ring',  name: 'Endless Ring',  icon: '♾️', description: 'Vine travels farther and pierces 2 additional enemies.', changes: { rangeMultiplier: 1.4, pierce: 2 } }
+      ]
     }
   ],
 
@@ -1386,6 +1611,89 @@ const CONFIG = {
       weaponBoosts: [
         { weaponId: 'hammer_toss',  damageMultiplier: 1.6, chainCount: 3 },
         { weaponId: 'phase_blade',  damageMultiplier: 2.5, rangeMultiplier: 2.0 }
+      ]
+    },
+
+    // ─── LIFE CYCLE ─────────────────────────────────────────────
+    {
+      id: 'the_wheel_turns', name: 'The Wheel Turns', icon: '🐍',
+      requires: ['ouroboros_vine', 'lotus_rift'],
+      description: 'Ouroboros Vine plants Lotus Rifts at each enemy it strikes. Lotus petals launch returning vines when they bloom.',
+      weaponBoosts: [
+        { weaponId: 'ouroboros_vine', damageMultiplier: 1.5, pierce: 1 },
+        { weaponId: 'lotus_rift',     riftCount: 1, statusEffect: { type: 'slow', amount: 0.40, duration: 2.0 } }
+      ]
+    },
+    {
+      id: 'golden_bloom', name: 'Golden Bloom', icon: '🪷',
+      requires: ['lotus_rift', 'scarab_halo'],
+      description: 'Scarabs that pass over Lotus Rifts become empowered. Lotus Rift releases scarabs outward when it collapses.',
+      weaponBoosts: [
+        { weaponId: 'lotus_rift',  riftDuration: 2.0, healOnExpire: 10 },
+        { weaponId: 'scarab_halo', damageMultiplier: 1.6, chargeRate: 0.20 }
+      ]
+    },
+    {
+      id: 'swarm_season', name: 'Swarm Season', icon: '🪲',
+      requires: ['scarab_halo', 'pollen_nova'],
+      description: 'Pollen doubles the scarab charge rate for 5 seconds. Scarabs release mini pollen bursts when they strike.',
+      weaponBoosts: [
+        { weaponId: 'scarab_halo', projectileCount: 2, orbitSpeedMultiplier: 1.2 },
+        { weaponId: 'pollen_nova', damageMultiplier: 1.5, radialCount: 4 }
+      ]
+    },
+    {
+      id: 'fertile_reflection', name: 'Fertile Reflection', icon: '🌸',
+      requires: ['pollen_nova', 'frizzos_hourglass'],
+      description: "Frizzo's Hourglass blooms trigger extra secondary pollen blooms. Pollen slows fertile enemies harder.",
+      weaponBoosts: [
+        { weaponId: 'pollen_nova',       damageMultiplier: 1.5, statusEffect: { type: 'slow', amount: 0.55, duration: 2.0 } },
+        { weaponId: 'frizzos_hourglass', chronoChain: true, chronoMultiplierBonus: 0.20 }
+      ]
+    },
+    {
+      id: 'seasonal_reflection', name: 'Seasonal Reflection', icon: '🕰️',
+      requires: ['frizzos_hourglass', 'molting_mirror'],
+      description: 'Molting Mirror echoes Frizzo blooms from behind the player. Frizzo always marks the furthest enemy for long-range detonations.',
+      weaponBoosts: [
+        { weaponId: 'frizzos_hourglass', chronoMultiplierBonus: 0.30, rangeMultiplier: 1.25 },
+        { weaponId: 'molting_mirror',    mirrorPower: 0.85, mirrorCount: 1 }
+      ]
+    },
+    {
+      id: 'false_hatchling', name: 'False Hatchling', icon: '🪞',
+      requires: ['molting_mirror', 'brood_husk'],
+      description: 'Molting Mirror echoes Brood Husk explosions from its current position. Brood Husks last longer and hit harder.',
+      weaponBoosts: [
+        { weaponId: 'molting_mirror', mirrorPower: 0.80, mirrorCount: 1 },
+        { weaponId: 'brood_husk',     decoyHpBonus: 80, damageMultiplier: 1.6 }
+      ]
+    },
+    {
+      id: 'moonlit_brood', name: 'Moonlit Brood', icon: '🐣',
+      requires: ['brood_husk', 'crescent_moon'],
+      description: 'Husks release Crescent Moon blades when they hatch. Crescent Moon blades curve toward nearby husks.',
+      weaponBoosts: [
+        { weaponId: 'brood_husk',    decoyHpBonus: 60, statusEffect: { type: 'slow', amount: 0.40, duration: 1.5 } },
+        { weaponId: 'crescent_moon', curveRateMultiplier: 1.4, damageMultiplier: 1.5 }
+      ]
+    },
+    {
+      id: 'lunar_ouroboros', name: 'Lunar Ouroboros', icon: '🌙',
+      requires: ['crescent_moon', 'ouroboros_vine'],
+      description: 'Crescent Moon blades orbit briefly before launching. Ouroboros Vine sheds extra moon blades along its curved path.',
+      weaponBoosts: [
+        { weaponId: 'crescent_moon',  projectileCount: 2, damageMultiplier: 1.5 },
+        { weaponId: 'ouroboros_vine', curveRateMultiplier: 1.4, pierce: 2 }
+      ]
+    },
+    {
+      id: 'seed_and_serpent', name: 'Seed and Serpent', icon: '🐍',
+      requires: ['ouroboros_vine', 'frizzos_hourglass'],
+      description: 'Ouroboros Vine applies Frizzo marks to every enemy it hits. Frizzo blooms send a returning vine toward you.',
+      weaponBoosts: [
+        { weaponId: 'ouroboros_vine',    pierce: 3, damageMultiplier: 1.4 },
+        { weaponId: 'frizzos_hourglass', chronoChain: true, chronoMultiplierBonus: 0.25 }
       ]
     }
   ]
