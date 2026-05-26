@@ -307,7 +307,7 @@ const CONFIG = {
       bounce: 0,
       range: 420,
       targeting: 'spiral',
-      spiralAngularSpeed: 0.114,
+      spiralAngularSpeed: 0.25,
       chainCount: 0,
       chainRange: 0,
       areaRadius: 0,
@@ -393,6 +393,31 @@ const CONFIG = {
         { id: 'wider_pools',      name: 'Wider Pools',      icon: '💧', description: 'Pools are 45% wider, covering much more ground.',                   changes: { areaRadiusMultiplier: 1.45 } },
         { id: 'virulent_toxin',   name: 'Virulent Toxin',   icon: '☠️', description: 'Pools deal more damage per second and linger far longer.',          changes: { groundEffect: { type: 'toxic', duration: 5.0, dps: 6 } } },
         { id: 'caustic_acid',     name: 'Caustic Acid',     icon: '🔥', description: 'Converts to burning acid — enormous damage, slightly wider area.',  changes: { groundEffect: { type: 'burn', duration: 4.5, dps: 11 }, areaRadiusMultiplier: 1.3 } }
+      ]
+    },
+    {
+      id: 'force_pulse',
+      name: 'Force Pulse',
+      icon: '💨',
+      description: 'Releases an expanding shockwave of arcane force that hurls all nearby enemies outward. Deals no damage.',
+      cooldown: 3.5,
+      damage: 0,
+      projectileSpeed: 6,
+      armorPenetration: 0,
+      pierce: 99,
+      bounce: 0,
+      range: 220,
+      targeting: 'pulse',
+      knockback: 90,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'wider_pulse',       name: 'Wider Pulse',       icon: '💨', description: 'Shockwave extends 60% further.',                                     changes: { rangeMultiplier: 1.6 } },
+        { id: 'violent_repulsion', name: 'Violent Repulsion', icon: '🌪️', description: 'Enemies are thrown twice as far.',                                  changes: { knockbackMultiplier: 2.0 } },
+        { id: 'arcane_trauma',     name: 'Arcane Trauma',     icon: '⚡', description: 'Shockwave now deals 25 damage and slows every enemy it hits.',       changes: { damage: 25, statusEffect: { type: 'slow', amount: 0.5, duration: 2.0 } } }
       ]
     }
   ],

@@ -804,6 +804,7 @@ const Player = {
       followupDamageMultiplier: 0,
       groundEffect: wConfig.groundEffect ? { ...wConfig.groundEffect } : null,
       areaDamageMultiplier: 0.5,
+      knockback: wConfig.knockback || 0,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -833,6 +834,7 @@ const Player = {
       if (c.followupDamageMultiplier != null) s.followupDamageMultiplier = c.followupDamageMultiplier;
       if (c.groundEffect != null) s.groundEffect = { ...c.groundEffect };
       if (c.rangeMultiplier != null) s.range *= c.rangeMultiplier;
+      if (c.knockbackMultiplier != null) s.knockback *= c.knockbackMultiplier;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1030,6 +1032,28 @@ const WeaponSystem = {
       return true;
     }
 
+    // Pulse: single expanding ring that pushes enemies outward
+    if (s.targeting === 'pulse') {
+      Projectiles.push({
+        id: mkId(), x: player.x, y: player.y, vx: 0, vy: 0,
+        damage: s.damage, armorPen: s.armorPenetration,
+        pierce: 99, pierceLeft: 99, bounce: 0, bounceLeft: 0, bounceCount: 0,
+        range: s.range, traveledSq: 0,
+        chainCount: 0, chainRange: 0, areaRadius: 0, areaDamageMultiplier: 0,
+        pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+        statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+        hitIds: new Set(), dead: false,
+        icon: CONFIG.weapons.find(w => w.id === wi.weaponId).icon,
+        splitProjectiles: 0, splitDamageMultiplier: 0,
+        damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+        groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
+        isMeteor: false, isSpiral: false, isBox: false,
+        isPulse: true, pulseRadius: 0, pulseSpeed: s.projectileSpeed, knockback: s.knockback,
+        targetEnemy: null, targetX: player.x, targetY: player.y,
+      });
+      return true;
+    }
+
     // Pool: hurls a vial to a random location within range
     if (s.targeting === 'pool') {
       if (s.groundEffect) {
@@ -1222,6 +1246,30 @@ function updateProjectiles(dt, enemies) {
   for (let i = Projectiles.length - 1; i >= 0; i--) {
     const p = Projectiles[i];
     if (p.dead) { Projectiles.splice(i, 1); continue; }
+
+    // Pulse: expanding ring — handles all its own logic then skips normal collision
+    if (p.isPulse) {
+      const prevR = p.pulseRadius;
+      p.pulseRadius += p.pulseSpeed;
+      p.x = Player.x;
+      p.y = Player.y;
+      if (p.pulseRadius >= p.range) { p.dead = true; Projectiles.splice(i, 1); continue; }
+      for (const e of enemies) {
+        if (e.dead || p.hitIds.has(e.id)) continue;
+        const d = dist(Player.x, Player.y, e.x, e.y);
+        if (d <= p.pulseRadius && d > prevR) {
+          p.hitIds.add(e.id);
+          if (p.damage > 0) applyDamage(e, p.damage, p.armorPen, p.statusEffect, 0);
+          else if (p.statusEffect) applyDamage(e, 0, 0, p.statusEffect, 0);
+          const dx = e.x - Player.x, dy = e.y - Player.y;
+          const len = Math.hypot(dx, dy) || 1;
+          e.x = clamp(e.x + (dx / len) * p.knockback, e.radius, CONFIG.WORLD_W - e.radius);
+          e.y = clamp(e.y + (dy / len) * p.knockback, e.radius, CONFIG.WORLD_H - e.radius);
+          Particles.emit(e.x, e.y, '#88ccff', 4, 3);
+        }
+      }
+      continue;
+    }
 
     // Pull effect
     if (p.pullRadius > 0) {
@@ -1873,6 +1921,22 @@ const Renderer = {
         ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(220,245,255,0.95)';
         ctx.fill();
+      } else if (p.isPulse) {
+        const fade = 1 - (p.pulseRadius / p.range);
+        ctx.save();
+        // Outer soft ring
+        ctx.beginPath();
+        ctx.arc(Player.x, Player.y, p.pulseRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(120,210,255,${0.35 * fade})`;
+        ctx.lineWidth = 18;
+        ctx.stroke();
+        // Inner crisp ring
+        ctx.beginPath();
+        ctx.arc(Player.x, Player.y, p.pulseRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(200,240,255,${0.9 * fade})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
       } else if (p.isSpiral) {
         // Draw the full spiral arm as a glowing arc from start radius to tip
         const angPerR = p.spiralAngularSpeed / p.spiralRadialSpeed;

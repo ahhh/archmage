@@ -123,6 +123,12 @@ Leaves a trail of damaging arcane spheres at your feet as you move. Rewards aggr
 - **Toxic Residue** — spheres now poison enemies that linger
 - **Blazing Path** — converts to searing fire, much higher damage
 
+### 💨 Force Pulse
+Releases an expanding shockwave of arcane force that hurls all nearby enemies outward. Deals no damage — pure crowd control.
+- **Wider Pulse** — shockwave extends 60% further
+- **Violent Repulsion** — enemies are thrown twice as far
+- **Arcane Trauma** — shockwave now deals 25 damage and slows every enemy it hits
+
 ### 🧪 Plague Pool
 Hurls vials of corrosive liquid that shatter at random nearby locations, leaving large toxic ground pools.
 - **Wider Pools** — pools are 45% larger
