@@ -13,7 +13,7 @@ const CONFIG = {
   WAVE_BREAK: 4,           // seconds between waves
   CONTACT_DAMAGE_INTERVAL: 0.35,  // seconds between contact damage ticks
   REROLLS: 99,              // rerolls available per run on the level-up screen
-  BANS: 3,                  // number of times the player can ban a choice per run
+  BANS: 99,                  // number of times the player can ban a choice per run
   MAX_WEAPONS: 10,          // maximum number of active powers a player can hold
 
   // ── CHARACTERS ─────────────────────────────────────────────
