@@ -117,6 +117,18 @@ Conjures 4 walls of arcane energy that simultaneously sweep around the player, e
 - **Shock Walls** — each wall slows every enemy it touches
 - **Volatile Corners** — walls explode at their endpoints, dealing area damage at each corner
 
+### ⚔️ Phase Blade
+Conjures an ethereal blade that orbits the caster continuously, carving through any enemy it passes.
+- **Twin Blades** — a second blade orbits in the opposite direction
+- **Phantom Edge** — blade now poisons every enemy it cuts
+- **Expanded Orbit** — orbit radius grows 60% wider
+
+### 🌠 Starfall
+Calls down a barrage of shooting stars that crash into random locations around the caster. Hits hard and covers a wide area.
+- **Meteor Shower** — three additional stars fall per cast
+- **Burning Impact** — each impact leaves a burning patch of ground
+- **Stellar Wrath** — stars hit much harder and fall over a wider radius
+
 ### 💜 Arcane Trail
 Leaves a trail of damaging arcane spheres at your feet as you move. Rewards aggressive positioning.
 - **Volatile Residue** — spheres appear more often, cover a wider area

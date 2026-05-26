@@ -1058,6 +1058,101 @@ const WeaponSystem = {
       return true;
     }
 
+    // Wings: fires bolts perpendicular to enemy direction (sideways from both sides)
+    if (s.targeting === 'wings') {
+      let aimAngle;
+      if (!Input.autoAim) {
+        const mw = Input.mouseWorld();
+        aimAngle = Math.atan2(mw.y - player.y, mw.x - player.x);
+      } else {
+        if (alive.length === 0) return false;
+        let closest = null, closestSq = Infinity;
+        for (const e of alive) {
+          const dx = e.x - player.x, dy = e.y - player.y;
+          const sq = dx * dx + dy * dy;
+          if (sq < closestSq) { closestSq = sq; closest = e; }
+        }
+        aimAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
+      }
+      const leftBase  = aimAngle + Math.PI / 2;
+      const rightBase = aimAngle - Math.PI / 2;
+      const n = s.projectileCount || 3;
+      for (let t = 0; t < n; t++) {
+        const spread = (t - (n - 1) / 2) * s.spreadAngle;
+        this.spawnProjectile(player, leftBase  + spread, wi, s, null);
+        this.spawnProjectile(player, rightBase + spread, wi, s, null);
+      }
+      return true;
+    }
+
+    // Orbit: one or more blades circling the player
+    if (s.targeting === 'orbit') {
+      const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+      const count = s.projectileCount || 1;
+      const icon  = wConfig.icon;
+      for (let i = 0; i < count; i++) {
+        const startAngle = (Math.PI * 2 / count) * i;
+        const speed = i % 2 === 0 ? (wConfig.orbitSpeed || 0.12) : -(wConfig.orbitSpeed || 0.12);
+        Projectiles.push({
+          id: mkId(),
+          x: player.x + Math.cos(startAngle) * s.range,
+          y: player.y + Math.sin(startAngle) * s.range,
+          vx: 0, vy: 0,
+          damage: s.damage, armorPen: s.armorPenetration,
+          pierce: 99, pierceLeft: 99, bounce: 0, bounceLeft: 0, bounceCount: 0,
+          range: s.range, traveledSq: 0,
+          chainCount: 0, chainRange: 0,
+          areaRadius: s.areaRadius, areaDamageMultiplier: s.areaDamageMultiplier,
+          pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+          statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          hitIds: new Set(), dead: false, icon,
+          splitProjectiles: 0, splitDamageMultiplier: 0,
+          damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+          groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
+          isMeteor: false, acceleration: 1, isBox: false,
+          isOrbit: true,
+          orbitAngle: startAngle,
+          orbitRadius: s.range,
+          orbitSpeed: speed,
+          lifetimer: wConfig.orbitDuration || 5.0,
+          hitRefreshTimer: 0.5,
+          targetEnemy: null, targetX: player.x, targetY: player.y,
+        });
+      }
+      return true;
+    }
+
+    // Starfall: rain mini-meteors at random locations within range
+    if (s.targeting === 'starfall') {
+      const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
+      const count = s.projectileCount || 6;
+      for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const r   = (0.25 + Math.random() * 0.75) * s.range;
+        const tx  = clamp(player.x + Math.cos(ang) * r, 0, CONFIG.WORLD_W);
+        const ty  = clamp(player.y + Math.sin(ang) * r, 0, CONFIG.WORLD_H);
+        const ba  = Math.atan2(ty - player.y, tx - player.x);
+        Projectiles.push({
+          id: mkId(), x: player.x, y: player.y,
+          vx: Math.cos(ba) * s.projectileSpeed, vy: Math.sin(ba) * s.projectileSpeed,
+          damage: s.damage, armorPen: s.armorPenetration,
+          pierce: s.pierce, pierceLeft: s.pierce, bounce: 0, bounceLeft: 0, bounceCount: 0,
+          range: r * 3, traveledSq: 0,
+          chainCount: 0, chainRange: 0,
+          areaRadius: s.areaRadius, areaDamageMultiplier: s.areaDamageMultiplier,
+          pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+          statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          hitIds: new Set(), dead: false, icon: wConfig.icon,
+          splitProjectiles: 0, splitDamageMultiplier: 0,
+          damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+          groundEffect: s.groundEffect || null, followupMeteors: 0, followupDamageMultiplier: 0,
+          isMeteor: true, acceleration: 1, isOrbit: false, isBox: false,
+          targetEnemy: null, targetX: tx, targetY: ty,
+        });
+      }
+      return true;
+    }
+
     // Pool: hurls a vial to a random location within range
     if (s.targeting === 'pool') {
       if (s.groundEffect) {
@@ -1278,6 +1373,14 @@ function updateProjectiles(dt, enemies) {
       else if (p.boxWall === 1) { p.x = Player.x + bs;     p.y = Player.y + t * bs; }
       else if (p.boxWall === 2) { p.x = Player.x - t * bs; p.y = Player.y + bs; }
       else                      { p.x = Player.x - bs;     p.y = Player.y - t * bs; }
+    } else if (p.isOrbit) {
+      p.lifetimer -= dt;
+      if (p.lifetimer <= 0) { p.dead = true; continue; }
+      p.hitRefreshTimer -= dt;
+      if (p.hitRefreshTimer <= 0) { p.hitIds.clear(); p.hitRefreshTimer = 0.5; }
+      p.orbitAngle += p.orbitSpeed;
+      p.x = Player.x + Math.cos(p.orbitAngle) * p.orbitRadius;
+      p.y = Player.y + Math.sin(p.orbitAngle) * p.orbitRadius;
     } else {
       if (p.acceleration > 1) { p.vx *= p.acceleration; p.vy *= p.acceleration; }
       p.x += p.vx;
@@ -1881,6 +1984,22 @@ const Renderer = {
         ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(220,245,255,0.95)';
         ctx.fill();
+      } else if (p.isOrbit) {
+        const tx = -Math.sin(p.orbitAngle);
+        const ty =  Math.cos(p.orbitAngle);
+        const len = 28;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(p.x - tx * len / 2, p.y - ty * len / 2);
+        ctx.lineTo(p.x + tx * len / 2, p.y + ty * len / 2);
+        ctx.strokeStyle = 'rgba(180,230,255,0.9)';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = '#88ccff';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
       } else if (p.isPulse) {
         const fade = 1 - (p.pulseRadius / p.range);
         ctx.save();
