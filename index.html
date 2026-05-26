@@ -743,6 +743,10 @@ const Player = {
   flashTimer: 0,
   iFrameTimer: 0,    // invincibility frames after taking damage
   contactTimers: {}, // tracks contact damage per enemy
+  blockChance: 0,    // 0–1 probability of negating any hit
+  shieldActive: false,
+  shieldTimer: 0,    // counts down to next shield activation
+  shieldCooldown: 0, // 0 = no Monkey Paw
 
   init(charConfig) {
     this.charConfig = charConfig;
@@ -763,6 +767,10 @@ const Player = {
     this.glowPulse = 0;
     this.iFrameTimer = 0;
     this.contactTimers = {};
+    this.blockChance = 0;
+    this.shieldActive = false;
+    this.shieldTimer = 0;
+    this.shieldCooldown = 0;
     this.facing = 'down';
     const startWeapon = CONFIG.weapons.find(w => w.id === charConfig.startingWeapon);
     this.weapons = [this.makeWeaponInstance(startWeapon)];
@@ -888,6 +896,13 @@ const Player = {
     if (!wi) return;
     wi.appliedUpgrades.push(upgradeId);
     this.recomputeWeapon(wi);
+    // Orbit weapons: kill existing blades and fire immediately so new count takes effect now
+    if (wi.computedStats.targeting === 'orbit') {
+      for (const p of Projectiles) {
+        if (p.isOrbit && p.weaponId === weaponId) p.dead = true;
+      }
+      wi.cooldownRemaining = 0;
+    }
   },
 
   update(dt, enemies) {
@@ -912,6 +927,15 @@ const Player = {
     if (this.flashTimer > 0) this.flashTimer -= dt;
     if (this.iFrameTimer > 0) this.iFrameTimer -= dt;
 
+    // Monkey Paw shield recharge
+    if (this.shieldCooldown > 0 && !this.shieldActive) {
+      this.shieldTimer -= dt;
+      if (this.shieldTimer <= 0) {
+        this.shieldActive = true;
+        Particles.emit(this.x, this.y, '#ffd700', 16, 5);
+      }
+    }
+
     // Contact damage
     for (const e of enemies) {
       if (e.dead) continue;
@@ -923,11 +947,20 @@ const Player = {
         if (this.contactTimers[key] >= CONFIG.CONTACT_DAMAGE_INTERVAL) {
           this.contactTimers[key] = 0;
           if (this.iFrameTimer <= 0) {
-            const dmg = Math.max(1, e.strength - this.armor);
-            this.health -= dmg;
-            this.flashTimer = 0.15;
-            Particles.emit(this.x, this.y, '#ff4136', 6, 3);
-            if (this.health <= 0) Game.gameOver();
+            if (this.shieldActive) {
+              this.shieldActive = false;
+              this.shieldTimer = this.shieldCooldown;
+              Particles.emit(this.x, this.y, '#ffd700', 20, 6);
+            } else if (this.blockChance > 0 && Math.random() < this.blockChance) {
+              Particles.emit(this.x, this.y, '#ffd700', 10, 4);
+              this.iFrameTimer = 0.15;
+            } else {
+              const dmg = Math.max(1, e.strength - this.armor);
+              this.health -= dmg;
+              this.flashTimer = 0.15;
+              Particles.emit(this.x, this.y, '#ff4136', 6, 3);
+              if (this.health <= 0) Game.gameOver();
+            }
           }
         }
       } else {
@@ -972,6 +1005,31 @@ const Player = {
     ctx.arc(this.x, this.y, rimR, 0, Math.PI * 2);
     ctx.fillStyle = rim;
     ctx.fill();
+
+    // Monkey Paw shield ring
+    if (this.shieldActive) {
+      const sp = Math.sin(this.glowPulse * 3) * 0.5 + 0.5;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 10 + sp * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,215,0,${0.7 + sp * 0.3})`;
+      ctx.lineWidth = 4;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = '#ffd700';
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    } else if (this.shieldCooldown > 0) {
+      // Dim arc showing recharge progress
+      const progress = 1 - (this.shieldTimer / this.shieldCooldown);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 10, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,215,0,0.25)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if (SpriteSheet.ready) {
       const spr = SPRITES[this.charConfig.id][this.facing];
@@ -1734,12 +1792,21 @@ function updateEnemies(dt) {
     if (dist(p.x, p.y, Player.x, Player.y) < Player.radius + 8) {
       p.dead = true;
       if (Player.iFrameTimer <= 0) {
-        const dmg = Math.max(1, p.damage - Player.armor);
-        Player.health -= dmg;
-        Player.flashTimer = 0.15;
-        Player.iFrameTimer = 0.3;
-        Particles.emit(Player.x, Player.y, '#ff4136', 6, 3);
-        if (Player.health <= 0) Game.gameOver();
+        if (Player.shieldActive) {
+          Player.shieldActive = false;
+          Player.shieldTimer = Player.shieldCooldown;
+          Particles.emit(Player.x, Player.y, '#ffd700', 20, 6);
+        } else if (Player.blockChance > 0 && Math.random() < Player.blockChance) {
+          Particles.emit(Player.x, Player.y, '#ffd700', 10, 4);
+          Player.iFrameTimer = 0.15;
+        } else {
+          const dmg = Math.max(1, p.damage - Player.armor);
+          Player.health -= dmg;
+          Player.flashTimer = 0.15;
+          Player.iFrameTimer = 0.3;
+          Particles.emit(Player.x, Player.y, '#ff4136', 6, 3);
+          if (Player.health <= 0) Game.gameOver();
+        }
       }
     }
   }

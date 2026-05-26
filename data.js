@@ -526,5 +526,6 @@ const PASSIVES = [
   { id: 'armor_up',  name: 'Stone Skin',     icon: '🛡️', description: '+1 armor.',                          apply: p => { p.armor += 1; } },
   { id: 'heal',      name: 'Mending Sigil',  icon: '✨', description: 'Restore 35% of max HP.',             apply: p => { p.health = Math.min(p.health + p.maxHealth * 0.35, p.maxHealth); } },
   { id: 'cd_global', name: 'Arcane Tempo',   icon: '⏳', description: 'All spell cooldowns −12%.',          apply: p => { p.globalCDMultiplier = (p.globalCDMultiplier || 1) * 0.88; } },
-  { id: 'range_up',  name: 'Far Sight',      icon: '🔭', description: '+25% range on all spells.',          apply: p => { p.globalRangeMultiplier = (p.globalRangeMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } }
+  { id: 'range_up',  name: 'Far Sight',      icon: '🔭', description: '+25% range on all spells.',          apply: p => { p.globalRangeMultiplier = (p.globalRangeMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
+  { id: 'monkey_paw', name: 'Shaolin Monkey Paw', icon: '🐾', description: '25% chance to block any hit. Also grants a full shield every 20s that absorbs one hit completely.', apply: p => { p.blockChance = Math.min(0.75, (p.blockChance || 0) + 0.25); if (!p.shieldCooldown) { p.shieldCooldown = 20; p.shieldTimer = 20; } } }
 ];

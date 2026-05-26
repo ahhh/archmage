@@ -161,6 +161,7 @@ These appear alongside spell upgrades on the level-up screen.
 | ✨ Mending Sigil | Restore 35% of max HP |
 | ⏳ Arcane Tempo | All spell cooldowns −12% |
 | 🔭 Far Sight | +25% range on all spells |
+| 🐾 Shaolin Monkey Paw | 25% chance to block any hit. Grants a full damage-absorbing shield every 20s |
 
 ---
 
