@@ -497,7 +497,7 @@ const CONFIG = {
       upgrades: [
         { id: 'true_north',      name: 'True North',      icon: '🌐', description: 'Beam range increases dramatically.',                       changes: { rangeMultiplier: 2.0 } },
         { id: 'crimson_bearing', name: 'Crimson Bearing', icon: '🩸', description: 'Beam lifesteals — heals 30% of all damage dealt.',          changes: { lifesteal: 0.3 } },
-        { id: 'cowards_curse',   name: "Coward's Curse",  icon: '🏳️', description: "Moving away fires a weaker backward blast instead.",       changes: { cowardsCurse: true } }
+        { id: 'reckoning_volley', name: 'Reckoning Volley', icon: '🌟', description: "Three beams erupt simultaneously in a forward fan, each at 70% power. Together they blanket an entire zone.", changes: { jakesVolley: true } }
       ]
     },
     {
@@ -849,7 +849,7 @@ const CONFIG = {
       armorPenetration: 0,
       pierce: 0,
       bounce: 0,
-      range: 280,
+      range: 430,
       areaRadius: 0,
       areaDamageMultiplier: 0,
       targeting: 'sauce',
@@ -886,6 +886,88 @@ const CONFIG = {
         { id: 'phantom_strike', name: 'Phantom Strike', icon: '👻', description: 'Two additional phantom slashes follow each strike, dealing 70% damage.',        changes: { projectileCount: 2, splitProjectiles: 1, splitDamageMultiplier: 0.7 } },
         { id: 'blood_price',    name: 'Blood Price',    icon: '🩸', description: 'Each slash lifesteals — heals 25% of all cutting damage dealt.',               changes: { lifesteal: 0.25 } },
         { id: 'final_form',     name: 'Final Form',     icon: '⚡', description: 'Slashes deal nearly double damage and shred through any armor.',               changes: { damageMultiplier: 1.9, armorPenetration: 8 } }
+      ]
+    },
+    {
+      id: 'ward_shell',
+      name: 'Ward Shell',
+      icon: '🫧',
+      description: 'Conjures a tiny arcane shell that clings right around you. Destroys incoming projectiles on contact and violently repels any enemy that touches it.',
+      cooldown: 3.5,
+      damage: 18,
+      projectileSpeed: 0,
+      projectileCount: 0,
+      spreadAngle: 0,
+      armorPenetration: 2,
+      pierce: 0,
+      bounce: 0,
+      range: 88,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'shell',
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: null,
+      shellDuration: 2.3,
+      upgrades: [
+        { id: 'fortified_shell', name: 'Fortified Shell', icon: '🛡️', description: 'Shell damage doubled and lasts 1.5 seconds longer.',               changes: { damageMultiplier: 2.0, shellDurationBonus: 1.5 } },
+        { id: 'spiked_shell',    name: 'Spiked Shell',    icon: '🔺', description: 'Enemies repelled by the shell are slowed for 1.5 seconds.',         changes: { statusEffect: { type: 'slow', amount: 0.4, duration: 1.5 } } },
+        { id: 'resonant_ward',   name: 'Resonant Ward',   icon: '✨', description: 'Shell activates 40% more often and grows 30% larger.',              changes: { cooldownMultiplier: 0.6, rangeMultiplier: 1.3 } }
+      ]
+    },
+    {
+      id: 'arcane_spikes',
+      name: 'Arcane Spikes',
+      icon: '🔺',
+      description: 'Plants 3 small arcane spike traps at distant positions. Any enemy that walks through one takes damage — small, static, and easy to miss in the chaos.',
+      cooldown: 5.5,
+      damage: 42,
+      projectileSpeed: 0,
+      projectileCount: 0,
+      spreadAngle: 0,
+      armorPenetration: 3,
+      pierce: 0,
+      bounce: 0,
+      range: 340,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      targeting: 'spikes',
+      chainCount: 0,
+      chainRange: 0,
+      statusEffect: { type: 'slow', amount: 0.3, duration: 1.2 },
+      spikeCount: 3,
+      spikeRadius: 26,
+      spikeDuration: 8.0,
+      upgrades: [
+        { id: 'more_spikes',    name: 'More Spikes',    icon: '⬆️', description: 'Plants 3 additional spikes per cast.',                              changes: { spikeCount: 3 } },
+        { id: 'venomous_tips',  name: 'Venomous Tips',  icon: '☠️', description: 'Spikes now poison enemies for 3 seconds instead of slowing.',       changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } },
+        { id: 'iron_spikes',    name: 'Iron Spikes',    icon: '⚙️', description: 'Spike damage doubled and armor penetration greatly increased.',      changes: { damageMultiplier: 2.0, armorPenetration: 6 } }
+      ]
+    },
+    {
+      id: 'hammer_toss',
+      name: 'Hammer Toss',
+      icon: '🔨',
+      description: 'Hurls a massive war hammer that crashes into the nearest enemy with a shockwave, then ricochets to the next closest target. Slow, heavy, and devastating.',
+      cooldown: 2.5,
+      damage: 82,
+      projectileSpeed: 5.5,
+      projectileCount: 1,
+      spreadAngle: 0,
+      armorPenetration: 5,
+      pierce: 0,
+      bounce: 0,
+      range: 680,
+      areaRadius: 55,
+      areaDamageMultiplier: 0.5,
+      targeting: 'highestThreat',
+      chainCount: 2,
+      chainRange: 220,
+      statusEffect: { type: 'stun', duration: 0.65 },
+      upgrades: [
+        { id: 'shockwave_slam', name: 'Shockwave Slam', icon: '💥', description: 'Impact shockwave grows 60% wider, stunning all nearby foes.',           changes: { areaRadius: 40 } },
+        { id: 'ricochet_fury',  name: 'Ricochet Fury',  icon: '🔁', description: 'Hammer ricochets to 3 more enemies and fires 20% faster.',             changes: { chainCount: 3, cooldownMultiplier: 0.8 } },
+        { id: 'mjolnir',        name: 'Mjolnir',        icon: '⚡', description: 'Damage nearly doubled and armor shredding greatly increased.',          changes: { damageMultiplier: 1.9, armorPenetration: 7 } }
       ]
     }
   ],
@@ -1253,6 +1335,55 @@ const CONFIG = {
       weaponBoosts: [
         { weaponId: 'afro_samurai_blade', cooldownMultiplier: 0.6, spreadAngle: 0.12, damageMultiplier: 1.6 },
         { weaponId: 'phase_blade',        damageMultiplier: 3.0, rangeMultiplier: 3.0 }
+      ]
+    },
+
+    // ─── WARD SHELL / ARCANE SPIKES COMBOS ──────────────────────
+    {
+      id: 'thornwall', name: 'Thornwall', icon: '🌵',
+      requires: ['ward_shell', 'arcane_spikes'],
+      description: "Shell and spikes form a layered defense. Shell radius grows 40%, spikes deal 80% more damage and two extra spikes are planted each cast.",
+      weaponBoosts: [
+        { weaponId: 'ward_shell',     damageMultiplier: 1.5, rangeMultiplier: 1.4 },
+        { weaponId: 'arcane_spikes',  damageMultiplier: 1.8, spikeCount: 2 }
+      ]
+    },
+    {
+      id: 'battering_fortress', name: 'Battering Fortress', icon: '🏰',
+      requires: ['ward_shell', 'hammer_toss'],
+      description: "The shell launches repelled enemies straight into the hammer's path. Shell contact damage doubles. Hammer chains to 3 more targets and hits 70% harder.",
+      weaponBoosts: [
+        { weaponId: 'ward_shell',   damageMultiplier: 2.0 },
+        { weaponId: 'hammer_toss',  damageMultiplier: 1.7, chainCount: 3 }
+      ]
+    },
+    {
+      id: 'blade_trap', name: 'Blade Trap', icon: '🗡️',
+      requires: ['arcane_spikes', 'afro_samurai_blade'],
+      description: "Enemies slowed by spikes meet the returning blade at their worst moment. Blade deals double damage and pierces 3 extra enemies. Spikes shred armor.",
+      weaponBoosts: [
+        { weaponId: 'arcane_spikes',      damageMultiplier: 1.6, armorPenetration: 6 },
+        { weaponId: 'afro_samurai_blade', damageMultiplier: 2.0, pierce: 3 }
+      ]
+    },
+
+    // ─── HAMMER TOSS COMBOS ─────────────────────────────────────
+    {
+      id: 'executioners_cadence', name: "Executioner's Cadence", icon: '🪓',
+      requires: ['hammer_toss', 'afro_samurai_blade'],
+      description: "The Hammer stuns. The Blade finishes. Final Blade deals double damage and pierces 3 extra enemies. Hammer shockwave grows wider and stuns longer.",
+      weaponBoosts: [
+        { weaponId: 'hammer_toss',        damageMultiplier: 1.7, areaRadius: 40 },
+        { weaponId: 'afro_samurai_blade', damageMultiplier: 2.0, pierce: 3 }
+      ]
+    },
+    {
+      id: 'iron_whirlwind', name: 'Iron Whirlwind', icon: '🌪️',
+      requires: ['hammer_toss', 'phase_blade'],
+      description: "Steel meets steel. Phase Blade orbit radius doubles at 2.5× damage. The Hammer ricochets to 3 more targets and hits 60% harder.",
+      weaponBoosts: [
+        { weaponId: 'hammer_toss',  damageMultiplier: 1.6, chainCount: 3 },
+        { weaponId: 'phase_blade',  damageMultiplier: 2.5, rangeMultiplier: 2.0 }
       ]
     }
   ]

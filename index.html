@@ -884,7 +884,7 @@ const Player = {
       runeBlastSpeed: wConfig.runeBlastSpeed || 5.5,
       runeBlastPierce: wConfig.runeBlastPierce || 0,
       lifesteal: wConfig.lifesteal || 0,
-      cowardsCurse: wConfig.cowardsCurse || false,
+      jakesVolley: wConfig.jakesVolley || false,
       isChrono: wConfig.isChrono || false,
       chronoDelay: wConfig.chronoDelay || 2.0,
       chronoBaseDamage: wConfig.chronoBaseDamage || 12,
@@ -903,6 +903,10 @@ const Player = {
       riftCount: wConfig.riftCount || 2,
       riftDuration: wConfig.riftDuration || 8.0,
       riftChain: wConfig.riftChain || false,
+      shellDuration: wConfig.shellDuration || 2.3,
+      spikeCount: wConfig.spikeCount || 3,
+      spikeRadius: wConfig.spikeRadius || 26,
+      spikeDuration: wConfig.spikeDuration || 8.0,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -945,7 +949,7 @@ const Player = {
       if (c.runeBlastRangeMultiplier != null) s.runeBlastRange *= c.runeBlastRangeMultiplier;
       if (c.runeBlastPierce != null) s.runeBlastPierce += c.runeBlastPierce;
       if (c.lifesteal != null) s.lifesteal = (s.lifesteal || 0) + c.lifesteal;
-      if (c.cowardsCurse) s.cowardsCurse = true;
+      if (c.jakesVolley) s.jakesVolley = true;
       if (c.chronoMultiplierBonus != null) s.chronoMultiplierBonus += c.chronoMultiplierBonus;
       if (c.chronoChain) s.chronoChain = true;
       if (c.harpThird) s.harpThird = true;
@@ -956,6 +960,8 @@ const Player = {
       if (c.mirrorExplosion) s.mirrorExplosion = true;
       if (c.riftCount != null) s.riftCount += c.riftCount;
       if (c.riftChain) s.riftChain = true;
+      if (c.shellDurationBonus != null) s.shellDuration += c.shellDurationBonus;
+      if (c.spikeCount != null) s.spikeCount += c.spikeCount;
       if (c.damageOverride != null) s.damage = c.damageOverride;
       if (c.runeBlastDamage != null) s.runeBlastDamage = c.runeBlastDamage;
     }
@@ -1004,6 +1010,8 @@ const Player = {
         if (c.mirrorPower != null)        s.mirrorPower = c.mirrorPower;
         if (c.riftCount != null)          s.riftCount += c.riftCount;
         if (c.riftChain)                  s.riftChain = true;
+        if (c.shellDurationBonus != null) s.shellDuration += c.shellDurationBonus;
+        if (c.spikeCount != null)         s.spikeCount += c.spikeCount;
       }
     }
     // Global range multiplier from passive
@@ -1013,6 +1021,17 @@ const Player = {
       const b = this.charConfig.bonus;
       if (b.fireDamageMultiplier && (wConfig.id === 'firebolt' || wConfig.id === 'meteor_sigil')) {
         s.damage = Math.round(s.damage * b.fireDamageMultiplier);
+      }
+    }
+    // Mark weapon as combo-empowered if any active combo boosts it
+    s.empowered = false;
+    if (this.unlockedCombos) {
+      for (const comboId of this.unlockedCombos) {
+        const combo = CONFIG.combos?.find(c => c.id === comboId);
+        if (combo?.weaponBoosts?.some(b => b.weaponId === wConfig.id)) {
+          s.empowered = true;
+          break;
+        }
       }
     }
     return s;
@@ -1269,20 +1288,28 @@ function fireJakesBeam(player, dir, s, powerMult) {
       const dmg = Math.round(s.damage * powerMult);
       applyDamage(e, dmg, s.armorPenetration, s.statusEffect, 0);
       totalDmg += dmg;
-      Particles.emit(e.x, e.y, powerMult < 1 ? '#ff9900' : '#ffee44', 8, 3);
+      Particles.emit(e.x, e.y, s.empowered ? '#ff44ff' : (powerMult < 1 ? '#ff9900' : '#ffee44'), 8, 3);
     }
   }
   if (s.lifesteal > 0 && totalDmg > 0) {
     player.health = Math.min(player.maxHealth, player.health + Math.round(totalDmg * s.lifesteal));
   }
-  const color = powerMult < 1 ? '#ff7700' : '#ffe066';
+  const color = s.empowered ? '#ff88ff' : (powerMult < 1 ? '#ff7700' : '#ffe066');
+  const width = s.empowered ? 18 : (powerMult < 1 ? 6 : 10);
   Beams.push({
     x1: player.x, y1: player.y,
     x2: player.x + dir.x * s.range,
     y2: player.y + dir.y * s.range,
-    life: 0.35, maxLife: 0.35,
-    color, width: powerMult < 1 ? 6 : 10,
+    life: 0.45, maxLife: 0.45,
+    color, width, empowered: s.empowered || false,
   });
+  // Empowered: burst of particles at the far endpoint
+  if (s.empowered) {
+    const ex = player.x + dir.x * s.range;
+    const ey = player.y + dir.y * s.range;
+    Particles.emit(ex, ey, '#ff44ff', 20, 6);
+    Particles.emit(ex, ey, '#ffaaff', 10, 4);
+  }
 }
 
 // ── CHRONO NEEDLES ────────────────────────────────────────────
@@ -1539,6 +1566,75 @@ function _detonateRift(r, enemies) {
   }
 }
 
+// ── WARD SHELLS ───────────────────────────────────────────────
+
+let WardShells = [];
+
+function updateWardShells(dt, enemies) {
+  for (const sh of WardShells) {
+    if (sh.dead) continue;
+    sh.x = Player.x;
+    sh.y = Player.y;
+    sh.timer -= dt;
+    if (sh.timer <= 0) { sh.dead = true; continue; }
+
+    // Destroy enemy projectiles inside the shell
+    for (const p of Projectiles) {
+      if (p.dead || !p.isEnemyProjectile) continue;
+      if (dist(sh.x, sh.y, p.x, p.y) < sh.radius) {
+        p.dead = true;
+        Particles.emit(p.x, p.y, '#66bbff', 5, 2);
+      }
+    }
+
+    // Hit-refresh so enemies can be re-hit while in the shell
+    sh.hitRefreshTimer -= dt;
+    if (sh.hitRefreshTimer <= 0) { sh.hitIds.clear(); sh.hitRefreshTimer = 0.45; }
+
+    // Damage and repel enemies that touch the shell
+    for (const e of enemies) {
+      if (e.dead || sh.hitIds.has(e.id)) continue;
+      const d = dist(sh.x, sh.y, e.x, e.y);
+      if (d < sh.radius + e.radius) {
+        sh.hitIds.add(e.id);
+        applyDamage(e, sh.damage, sh.armorPen, sh.statusEffect, 0);
+        Particles.emit(e.x, e.y, '#66bbff', 6, 2.5);
+        // Push outward
+        const dx = e.x - sh.x, dy = e.y - sh.y;
+        const len = Math.hypot(dx, dy) || 1;
+        e.x = clamp(sh.x + (dx / len) * (sh.radius + e.radius + 8), e.radius, CONFIG.WORLD_W - e.radius);
+        e.y = clamp(sh.y + (dy / len) * (sh.radius + e.radius + 8), e.radius, CONFIG.WORLD_H - e.radius);
+      }
+    }
+  }
+  WardShells = WardShells.filter(sh => !sh.dead);
+}
+
+// ── ARCANE SPIKES ─────────────────────────────────────────────
+
+let Spikes = [];
+
+function updateSpikes(dt, enemies) {
+  for (const sp of Spikes) {
+    if (sp.dead) continue;
+    sp.timer -= dt;
+    if (sp.timer <= 0) { sp.dead = true; continue; }
+
+    sp.hitRefreshTimer -= dt;
+    if (sp.hitRefreshTimer <= 0) { sp.hitIds.clear(); sp.hitRefreshTimer = 0.5; }
+
+    for (const e of enemies) {
+      if (e.dead || sp.hitIds.has(e.id)) continue;
+      if (dist(sp.x, sp.y, e.x, e.y) < sp.radius + e.radius) {
+        sp.hitIds.add(e.id);
+        applyDamage(e, sp.damage, sp.armorPen, sp.statusEffect, 0);
+        Particles.emit(sp.x, sp.y, '#ff5533', 6, 3);
+      }
+    }
+  }
+  Spikes = Spikes.filter(sp => !sp.dead);
+}
+
 // ── WEAPON SYSTEM ─────────────────────────────────────────────
 
 const WeaponSystem = {
@@ -1548,7 +1644,7 @@ const WeaponSystem = {
 
     // Save echo template for Mirror Glyph (from any projectile-firing weapon)
     if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
-        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce'].includes(s.targeting)) {
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes'].includes(s.targeting)) {
       MirrorEchoTemplate = {
         projectileSpeed: s.projectileSpeed,
         damage: s.damage,
@@ -1751,10 +1847,15 @@ const WeaponSystem = {
         ? (player.moveDx * dir.x + player.moveDy * dir.y) / movLen
         : 0;
       if (dot > 0.25) {
-        fireJakesBeam(player, dir, s, 1.0);
-        return true;
-      } else if (s.cowardsCurse && dot < -0.25) {
-        fireJakesBeam(player, { x: -dir.x, y: -dir.y }, s, 0.4);
+        if (s.jakesVolley) {
+          const spread = 0.32; // ~18 degrees each side
+          const rotate = (d, a) => ({ x: d.x * Math.cos(a) - d.y * Math.sin(a), y: d.x * Math.sin(a) + d.y * Math.cos(a) });
+          fireJakesBeam(player, rotate(dir, -spread), s, 0.70);
+          fireJakesBeam(player, dir, s, 0.70);
+          fireJakesBeam(player, rotate(dir, +spread), s, 0.70);
+        } else {
+          fireJakesBeam(player, dir, s, 1.0);
+        }
         return true;
       }
       return false;
@@ -1906,6 +2007,47 @@ const WeaponSystem = {
       return true;
     }
 
+    // Ward Shell: spawn a close-range protective shell centered on the player
+    if (s.targeting === 'shell') {
+      WardShells.push({
+        x: player.x, y: player.y,
+        radius: s.range,
+        timer: s.shellDuration, maxTimer: s.shellDuration,
+        damage: s.damage, armorPen: s.armorPenetration,
+        statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+        empowered: s.empowered || false,
+        hitIds: new Set(),
+        hitRefreshTimer: 0,
+        dead: false,
+      });
+      Particles.emit(player.x, player.y, '#44aaff', 14, 3);
+      return true;
+    }
+
+    // Arcane Spikes: plant static spike traps at far range
+    if (s.targeting === 'spikes') {
+      const count = s.spikeCount || 3;
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = s.range * (0.7 + Math.random() * 0.5);
+        const sx = clamp(player.x + Math.cos(angle) * r, 30, CONFIG.WORLD_W - 30);
+        const sy = clamp(player.y + Math.sin(angle) * r, 30, CONFIG.WORLD_H - 30);
+        Spikes.push({
+          x: sx, y: sy,
+          radius: s.spikeRadius || 26,
+          timer: s.spikeDuration, maxTimer: s.spikeDuration,
+          damage: s.damage, armorPen: s.armorPenetration,
+          statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          empowered: s.empowered || false,
+          hitIds: new Set(),
+          hitRefreshTimer: 0,
+          dead: false,
+        });
+        Particles.emit(sx, sy, '#ff5533', 8, 3);
+      }
+      return true;
+    }
+
     // Rift: places triggered arcane crack traps on the ground nearby
     if (s.targeting === 'rift') {
       const count = s.riftCount || 2;
@@ -2039,6 +2181,8 @@ const WeaponSystem = {
       isViceroyMissile: wi.weaponId === 'viceroy_missile',
       isBlackSauce: wi.weaponId === 'stax_black_sauce',
       isSlash: wi.weaponId === 'afro_samurai_blade',
+      isHammer: wi.weaponId === 'hammer_toss',
+      empowered: s.empowered || false,
       pierceHitCount: 0,
       wobblePhase: Math.random() * Math.PI * 2,
       acceleration: s.projectileAcceleration || 1,
@@ -2990,6 +3134,92 @@ const Renderer = {
     }
     ctx.restore();
 
+    // Arcane Spikes (ground layer, before enemies)
+    ctx.save();
+    for (const sp of Spikes) {
+      if (sp.dead) continue;
+      const fade = Math.min(1, sp.timer / sp.maxTimer);
+      const pulse = Math.sin(Date.now() * 0.005 + sp.x * 0.07) * 0.2 + 0.8;
+      const empowered = sp.empowered || false;
+      ctx.save();
+      ctx.translate(sp.x, sp.y);
+      if (empowered) {
+        // Electric outer ring
+        ctx.beginPath();
+        ctx.arc(0, 0, sp.radius * 1.4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,220,50,${0.45 * fade * pulse})`;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 18; ctx.shadowColor = '#ffdd00';
+        ctx.stroke(); ctx.shadowBlur = 0;
+      }
+      ctx.shadowBlur = empowered ? 26 : 14;
+      ctx.shadowColor = empowered ? '#ffaa00' : '#ff4422';
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
+        const tip = sp.radius * (empowered ? 1.1 : 0.9);
+        const base = sp.radius * 0.38;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * tip, Math.sin(a) * tip);
+        ctx.lineTo(Math.cos(a + 0.5) * base, Math.sin(a + 0.5) * base);
+        ctx.lineTo(Math.cos(a - 0.5) * base, Math.sin(a - 0.5) * base);
+        ctx.closePath();
+        ctx.fillStyle = empowered ? `rgba(255,180,0,${0.92 * fade * pulse})` : `rgba(210,55,35,${0.85 * fade * pulse})`;
+        ctx.fill();
+        ctx.strokeStyle = empowered ? `rgba(255,255,100,${0.8 * fade})` : `rgba(255,140,80,${0.6 * fade})`;
+        ctx.lineWidth = empowered ? 2.5 : 1.5;
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+    ctx.restore();
+
+    // Ward Shells (drawn around player position)
+    ctx.save();
+    for (const sh of WardShells) {
+      if (sh.dead) continue;
+      const fade = Math.min(1, sh.timer / sh.maxTimer);
+      const pulse = Math.sin(Date.now() * 0.008) * 0.18 + 0.82;
+      const empowered = sh.empowered || false;
+      ctx.save();
+      ctx.translate(sh.x, sh.y);
+      if (empowered) {
+        // Rainbow outer corona — rotates over time
+        const rot = Date.now() * 0.002;
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 - Math.PI / 6 + rot;
+          const hue = (i * 60 + Date.now() * 0.1) % 360;
+          const r = sh.radius * (pulse + 0.12);
+          const nx = Math.cos(a) * r, ny = Math.sin(a) * r;
+          ctx.beginPath();
+          ctx.arc(nx, ny, 7, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${hue},100%,65%,${0.7 * fade})`;
+          ctx.shadowBlur = 16; ctx.shadowColor = `hsl(${hue},100%,60%)`;
+          ctx.fill(); ctx.shadowBlur = 0;
+        }
+      }
+      ctx.shadowBlur = empowered ? 35 : 20;
+      ctx.shadowColor = empowered ? '#ffffff' : '#33aaff';
+      // Hexagonal shell border
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
+        const r = sh.radius * pulse;
+        if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+        else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = empowered ? `rgba(200,255,255,${0.9 * fade})` : `rgba(80,180,255,${0.75 * fade})`;
+      ctx.lineWidth = empowered ? 5 : 3.5;
+      ctx.stroke();
+      // Inner fill glow
+      ctx.fillStyle = empowered ? `rgba(100,220,255,${0.12 * fade})` : `rgba(40,120,255,${0.06 * fade})`;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+    ctx.restore();
+
     // Enemies
     ctx.font = '24px serif';
     ctx.textAlign = 'center';
@@ -3106,16 +3336,27 @@ const Renderer = {
           // Solid: glowing blade line
           const tx = -Math.sin(p.orbitAngle);
           const ty =  Math.cos(p.orbitAngle);
-          const len = p.isPhasing ? 22 : 28;
+          const len = p.isPhasing ? 22 : (p.empowered ? 42 : 28);
           ctx.save();
+          if (p.empowered) {
+            // Double-ring aura around the blade
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(100,200,255,0.3)';
+            ctx.lineWidth = 8;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00aaff';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
           ctx.beginPath();
           ctx.moveTo(p.x - tx * len / 2, p.y - ty * len / 2);
           ctx.lineTo(p.x + tx * len / 2, p.y + ty * len / 2);
-          ctx.strokeStyle = p.isPhasing ? 'rgba(200,160,255,0.95)' : 'rgba(180,230,255,0.9)';
-          ctx.lineWidth = p.isPhasing ? 6 : 5;
+          ctx.strokeStyle = p.empowered ? 'rgba(80,220,255,0.98)' : (p.isPhasing ? 'rgba(200,160,255,0.95)' : 'rgba(180,230,255,0.9)');
+          ctx.lineWidth = p.empowered ? 8 : (p.isPhasing ? 6 : 5);
           ctx.lineCap = 'round';
-          ctx.shadowBlur = 16;
-          ctx.shadowColor = p.isPhasing ? '#cc88ff' : '#88ccff';
+          ctx.shadowBlur = p.empowered ? 30 : 16;
+          ctx.shadowColor = p.empowered ? '#00ddff' : (p.isPhasing ? '#cc88ff' : '#88ccff');
           ctx.stroke();
           ctx.shadowBlur = 0;
           ctx.restore();
@@ -3138,21 +3379,32 @@ const Renderer = {
         ctx.restore();
       } else if (p.isSlash) {
         const angle = Math.atan2(p.vy, p.vx);
-        const slashLen = 56;
+        const slashLen = p.empowered ? 72 : 56;
         const returning = p.returning;
-        // Outbound: gold/white. Returning: crimson.
-        const glowColor  = returning ? '#ff2200' : '#fffbe0';
-        const outerColor = returning ? `rgba(255,60,20,0.55)` : `rgba(255,230,120,0.5)`;
-        const coreColor  = returning ? `rgba(255,120,80,0.95)` : `rgba(255,255,240,0.95)`;
-        const dotColor   = returning ? `rgba(255,80,40,0.9)` : `rgba(255,255,200,0.8)`;
+        // Outbound: gold/white. Returning: crimson. Empowered: violet/white.
+        const glowColor  = p.empowered ? '#cc44ff' : (returning ? '#ff2200' : '#fffbe0');
+        const outerColor = p.empowered ? `rgba(180,60,255,0.65)` : (returning ? `rgba(255,60,20,0.55)` : `rgba(255,230,120,0.5)`);
+        const coreColor  = p.empowered ? `rgba(255,200,255,0.98)` : (returning ? `rgba(255,120,80,0.95)` : `rgba(255,255,240,0.95)`);
+        const dotColor   = p.empowered ? `rgba(220,100,255,0.95)` : (returning ? `rgba(255,80,40,0.9)` : `rgba(255,255,200,0.8)`);
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(angle);
+        if (p.empowered) {
+          // Ghost afterimage behind the main slash
+          ctx.strokeStyle = 'rgba(160,0,255,0.25)';
+          ctx.lineWidth = 22;
+          ctx.lineCap = 'round';
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(-slashLen * 0.6, -5);
+          ctx.lineTo(slashLen * 0.6, 5);
+          ctx.stroke();
+        }
         // Outer glow sweep
-        ctx.shadowBlur = 26;
+        ctx.shadowBlur = p.empowered ? 40 : 26;
         ctx.shadowColor = glowColor;
         ctx.strokeStyle = outerColor;
-        ctx.lineWidth = 14;
+        ctx.lineWidth = p.empowered ? 20 : 14;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(-slashLen * 0.5, -3);
@@ -3161,56 +3413,136 @@ const Renderer = {
         // Bright core
         ctx.shadowBlur = 0;
         ctx.strokeStyle = coreColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = p.empowered ? 5 : 3;
         ctx.beginPath();
         ctx.moveTo(-slashLen * 0.5, -3);
         ctx.lineTo(slashLen * 0.5, 3);
         ctx.stroke();
         // Leading edge flash
         ctx.fillStyle = dotColor;
+        ctx.shadowBlur = p.empowered ? 18 : 0;
+        ctx.shadowColor = glowColor;
         ctx.beginPath();
-        ctx.arc(slashLen * 0.5, 3, 4, 0, Math.PI * 2);
+        ctx.arc(slashLen * 0.5, 3, p.empowered ? 7 : 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       } else if (p.isMagmaOrb) {
         // Large pulsing magma fireball
         const pulse = Math.sin(Date.now() * 0.006 + p.x) * 0.3 + 0.7;
+        const sz = p.empowered ? 1.5 : 1;
         ctx.save();
+        if (p.empowered) {
+          // Outer superheated corona
+          ctx.beginPath(); ctx.arc(p.x, p.y, 58 * pulse, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,50,0,${0.18 * pulse})`;
+          ctx.shadowBlur = 40; ctx.shadowColor = '#ff2200';
+          ctx.fill(); ctx.shadowBlur = 0;
+        }
         // Outer heat shimmer
-        ctx.beginPath(); ctx.arc(p.x, p.y, 32, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(p.x, p.y, 32 * sz, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255,100,20,${0.22 * pulse})`;
         ctx.fill();
         // Mid glow
-        ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(p.x, p.y, 22 * sz, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255,60,0,${0.45 * pulse})`;
         ctx.fill();
         // Core
-        ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,200,50,0.8)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 13 * sz, 0, Math.PI * 2);
+        ctx.fillStyle = p.empowered ? 'rgba(255,255,100,0.95)' : 'rgba(255,200,50,0.8)';
         ctx.fill();
-        ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.filter = 'brightness(1.8)';
+        ctx.font = `${p.empowered ? 36 : 28}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.filter = p.empowered ? 'brightness(2.5) saturate(2)' : 'brightness(1.8)';
         ctx.fillText('🌋', p.x, p.y);
         ctx.filter = 'none';
+        ctx.restore();
+      } else if (p.isHammer) {
+        const rot = (Date.now() * 0.009) % (Math.PI * 2);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        if (p.empowered) {
+          // Fire aura rings spinning around the hammer
+          const t = Date.now() * 0.006;
+          for (let fi = 0; fi < 3; fi++) {
+            const fa = t + (fi / 3) * Math.PI * 2;
+            const fr = 28;
+            ctx.beginPath();
+            ctx.arc(Math.cos(fa) * fr * 0.4, Math.sin(fa) * fr * 0.4, 5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,${100 + fi * 50},0,0.85)`;
+            ctx.shadowBlur = 14;
+            ctx.shadowColor = '#ff6600';
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+        }
+        ctx.rotate(rot);
+        // Outer impact glow
+        ctx.shadowBlur = p.empowered ? 40 : 22;
+        ctx.shadowColor = p.empowered ? '#ff4400' : '#ff8800';
+        // Handle
+        ctx.strokeStyle = p.empowered ? 'rgba(220,80,0,0.95)' : 'rgba(160,100,30,0.95)';
+        ctx.lineWidth = p.empowered ? 7 : 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(0, 14);
+        ctx.stroke();
+        // Head
+        ctx.fillStyle = p.empowered ? 'rgba(255,160,40,0.98)' : 'rgba(190,190,210,0.95)';
+        ctx.shadowBlur = p.empowered ? 30 : 18;
+        ctx.shadowColor = p.empowered ? '#ff2200' : '#dd6600';
+        ctx.fillRect(p.empowered ? -18 : -15, -26, p.empowered ? 36 : 30, p.empowered ? 14 : 11);
+        // Bright highlight on head top
+        ctx.fillStyle = p.empowered ? 'rgba(255,220,100,0.7)' : 'rgba(255,255,255,0.45)';
+        ctx.fillRect(p.empowered ? -18 : -15, -26, p.empowered ? 36 : 30, 3);
+        ctx.shadowBlur = 0;
         ctx.restore();
       } else {
         // Bone spear: grows larger with each pierce hit
         const boneScale = p.isBoneSpear ? 1 + (p.pierceHitCount || 0) * 0.4 : 1;
-        const glowR = 13 * boneScale;
-        const fontSize = Math.round(22 * boneScale);
-        const glowColor = p.isShadowBolt   ? 'rgba(160,80,220,0.35)'
-                        : p.isWhirl        ? 'rgba(120,200,255,0.3)'
-                        : p.isViceroyMissile ? 'rgba(255,100,180,0.4)'
-                        : p.isBlackSauce   ? 'rgba(40,0,60,0.55)'
+        const empScale = p.empowered ? 1.35 : 1;
+        const glowR = 13 * boneScale * empScale;
+        const fontSize = Math.round(22 * boneScale * empScale);
+        const glowColor = p.isShadowBolt     ? (p.empowered ? 'rgba(200,0,255,0.55)' : 'rgba(160,80,220,0.35)')
+                        : p.isWhirl          ? (p.empowered ? 'rgba(0,200,255,0.5)'  : 'rgba(120,200,255,0.3)')
+                        : p.isViceroyMissile ? (p.empowered ? 'rgba(255,50,220,0.6)' : 'rgba(255,100,180,0.4)')
+                        : p.isBlackSauce     ? (p.empowered ? 'rgba(80,0,120,0.75)'  : 'rgba(40,0,60,0.55)')
+                        : p.empowered        ? 'rgba(255,220,80,0.5)'
                         : 'rgba(180,255,200,0.28)';
+        if (p.empowered) {
+          // Outer empowered ring
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, glowR * 1.7, 0, Math.PI * 2);
+          ctx.fillStyle = glowColor.replace(/[\d.]+\)$/, '0.18)');
+          ctx.shadowBlur = 22;
+          ctx.shadowColor = '#ffdd44';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
         ctx.beginPath();
         ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
         ctx.fillStyle = glowColor;
         ctx.fill();
         ctx.font = `${fontSize}px serif`;
-        ctx.filter = 'brightness(2)';
+        ctx.filter = p.empowered ? 'brightness(3.5) saturate(1.5)' : 'brightness(2)';
         ctx.fillText(p.icon, p.x, p.y);
         ctx.filter = 'none';
+      }
+
+      // Universal empowered spark ring — orbiting gold sparks for all empowered projectiles
+      if (p.empowered && !p.isPulse && !p.isBox) {
+        const t = Date.now() * 0.0045;
+        ctx.save();
+        for (let si = 0; si < 4; si++) {
+          const sa = t * 2.8 + (si / 4) * Math.PI * 2;
+          const sr = 20 + Math.sin(t * 3.5 + si * 1.4) * 5;
+          ctx.beginPath();
+          ctx.arc(p.x + Math.cos(sa) * sr, p.y + Math.sin(sa) * sr, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,220,60,${0.75 + Math.sin(t * 5 + si) * 0.25})`;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#ffdd22';
+          ctx.fill();
+        }
+        ctx.restore();
       }
     }
 
@@ -3266,17 +3598,31 @@ const Renderer = {
       const alpha = b.life / b.maxLife;
       ctx.save();
       ctx.lineCap = 'round';
-      ctx.shadowBlur = 28;
-      ctx.shadowColor = b.color;
-      ctx.strokeStyle = b.color;
-      ctx.lineWidth = b.width * alpha;
-      ctx.globalAlpha = alpha * 0.85;
-      ctx.beginPath();
-      ctx.moveTo(b.x1, b.y1);
-      ctx.lineTo(b.x2, b.y2);
-      ctx.stroke();
-      // Bright white core
+      if (b.empowered) {
+        // Outer violet aura
+        ctx.shadowBlur = 50;
+        ctx.shadowColor = '#cc00ff';
+        ctx.strokeStyle = `rgba(200,0,255,${alpha * 0.45})`;
+        ctx.lineWidth = b.width * alpha * 2.2;
+        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+        // Mid magenta
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#ff44ff';
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = b.width * alpha;
+        ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+      } else {
+        ctx.shadowBlur = 28;
+        ctx.shadowColor = b.color;
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = b.width * alpha;
+        ctx.globalAlpha = alpha * 0.85;
+        ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+      }
+      // Bright white core (always)
       ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
       ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.9})`;
       ctx.lineWidth = 2 * alpha;
       ctx.beginPath();
@@ -3780,6 +4126,8 @@ const Game = {
     Grimoires = [];
     Mirrors = [];
     Rifts = [];
+    WardShells = [];
+    Spikes = [];
     MirrorEchoTemplate = null;
     Particles.list = [];
     GroundEffects.list = [];
@@ -3825,6 +4173,8 @@ const Game = {
       updateGrimoires(dt, Enemies);
       updateMirrors(dt, Enemies);
       updateRifts(dt, Enemies);
+      updateWardShells(dt, Enemies);
+      updateSpikes(dt, Enemies);
       GroundEffects.update(dt, Enemies);
       Particles.update(dt);
 
@@ -3878,6 +4228,8 @@ const Game = {
     Grimoires = [];
     Mirrors = [];
     Rifts = [];
+    WardShells = [];
+    Spikes = [];
     this.waveDuration = this.waveDurationFor(this.wave);
     this.waveTimer = this.waveDuration;
     this.wavePhase = 'playing';
