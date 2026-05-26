@@ -805,6 +805,8 @@ const Player = {
       groundEffect: wConfig.groundEffect ? { ...wConfig.groundEffect } : null,
       areaDamageMultiplier: 0.5,
       knockback: wConfig.knockback || 0,
+      spreadAngle: wConfig.spreadAngle || 0.18,
+      projectileAcceleration: wConfig.projectileAcceleration || 1,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -835,6 +837,8 @@ const Player = {
       if (c.groundEffect != null) s.groundEffect = { ...c.groundEffect };
       if (c.rangeMultiplier != null) s.range *= c.rangeMultiplier;
       if (c.knockbackMultiplier != null) s.knockback *= c.knockbackMultiplier;
+      if (c.spreadAngle != null) s.spreadAngle += c.spreadAngle;
+      if (c.projectileAccelerationMultiplier != null) s.projectileAcceleration = 1 + (s.projectileAcceleration - 1) * c.projectileAccelerationMultiplier;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1078,7 +1082,7 @@ const WeaponSystem = {
       }
       const baseAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
       for (let t = 0; t < s.projectileCount; t++) {
-        const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * 0.18 : 0;
+        const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * s.spreadAngle : 0;
         this.spawnProjectile(player, baseAngle + spread, wi, s, closest);
       }
       return true;
@@ -1089,7 +1093,7 @@ const WeaponSystem = {
       const mw = Input.mouseWorld();
       const angle = Math.atan2(mw.y - player.y, mw.x - player.x);
       for (let t = 0; t < s.projectileCount; t++) {
-        const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * 0.18 : 0;
+        const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * s.spreadAngle : 0;
         this.spawnProjectile(player, angle + spread, wi, s, null);
       }
       return true;
@@ -1109,7 +1113,7 @@ const WeaponSystem = {
 
     const baseAngle = Math.atan2(closest.y - py, closest.x - px);
     for (let t = 0; t < s.projectileCount; t++) {
-      const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * 0.18 : 0;
+      const spread = s.projectileCount > 1 ? (t - (s.projectileCount - 1) / 2) * s.spreadAngle : 0;
       this.spawnProjectile(player, baseAngle + spread, wi, s, closest);
     }
     return true;
@@ -1151,47 +1155,10 @@ const WeaponSystem = {
       followupMeteors: s.followupMeteors || 0,
       followupDamageMultiplier: s.followupDamageMultiplier || 0,
       isMeteor: wi.weaponId === 'meteor_sigil',
-      isSpiral: false,
+      acceleration: s.projectileAcceleration || 1,
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
-    });
-  },
-
-  spawnSpiralProjectile(player, startAngle, wi, s) {
-    const wConfig = CONFIG.weapons.find(w => w.id === wi.weaponId);
-    Projectiles.push({
-      id: mkId(),
-      x: player.x, y: player.y,
-      vx: 0, vy: 0,
-      damage: s.damage,
-      armorPen: s.armorPenetration,
-      pierce: s.pierce, pierceLeft: s.pierce,
-      bounce: 0, bounceLeft: 0, bounceCount: 0,
-      range: s.range,
-      traveledSq: 0,
-      chainCount: 0, chainRange: 0,
-      areaRadius: s.areaRadius,
-      areaDamageMultiplier: s.areaDamageMultiplier,
-      pullRadius: 0, pullStrength: 0,
-      weaponId: wi.weaponId,
-      statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
-      hitIds: new Set(),
-      dead: false,
-      icon: wConfig.icon,
-      splitProjectiles: 0, splitDamageMultiplier: 0,
-      damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
-      groundEffect: s.groundEffect || null,
-      followupMeteors: 0, followupDamageMultiplier: 0,
-      isMeteor: false,
-      isSpiral: true,
-      spawnX: player.x, spawnY: player.y,
-      spiralAngle: startAngle,
-      spiralRadius: 8,
-      spiralStartRadius: 8,
-      spiralRadialSpeed: s.projectileSpeed,
-      spiralAngularSpeed: wConfig.spiralAngularSpeed || 0.07,
-      targetEnemy: null, targetX: player.x, targetY: player.y,
     });
   },
 
@@ -1311,15 +1278,8 @@ function updateProjectiles(dt, enemies) {
       else if (p.boxWall === 1) { p.x = Player.x + bs;     p.y = Player.y + t * bs; }
       else if (p.boxWall === 2) { p.x = Player.x - t * bs; p.y = Player.y + bs; }
       else                      { p.x = Player.x - bs;     p.y = Player.y - t * bs; }
-    } else if (p.isSpiral) {
-      p.spiralAngle += p.spiralAngularSpeed;
-      p.spiralRadius += p.spiralRadialSpeed;
-      p.x = Player.x + Math.cos(p.spiralAngle) * p.spiralRadius;
-      p.y = Player.y + Math.sin(p.spiralAngle) * p.spiralRadius;
-      if (p.spiralRadius > p.range || p.x < 0 || p.x > CONFIG.WORLD_W || p.y < 0 || p.y > CONFIG.WORLD_H) {
-        p.dead = true; continue;
-      }
     } else {
+      if (p.acceleration > 1) { p.vx *= p.acceleration; p.vy *= p.acceleration; }
       p.x += p.vx;
       p.y += p.vy;
       p.traveledSq += Math.hypot(p.vx, p.vy);
@@ -1937,43 +1897,6 @@ const Renderer = {
         ctx.lineWidth = 3;
         ctx.stroke();
         ctx.restore();
-      } else if (p.isSpiral) {
-        // Draw the full spiral arm as a glowing arc from start radius to tip
-        const angPerR = p.spiralAngularSpeed / p.spiralRadialSpeed;
-        const startR = p.spiralStartRadius || 8;
-        const startAngle = p.spiralAngle - (p.spiralRadius - startR) * angPerR;
-        const steps = 48;
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        // Outer glow
-        ctx.beginPath();
-        for (let si = 0; si <= steps; si++) {
-          const r = startR + (p.spiralRadius - startR) * (si / steps);
-          const a = startAngle + (r - startR) * angPerR;
-          if (si === 0) ctx.moveTo(Player.x + Math.cos(a) * r, Player.y + Math.sin(a) * r);
-          else          ctx.lineTo(Player.x + Math.cos(a) * r, Player.y + Math.sin(a) * r);
-        }
-        ctx.strokeStyle = 'rgba(200,100,255,0.3)';
-        ctx.lineWidth = 12;
-        ctx.stroke();
-        // Inner bright line
-        ctx.beginPath();
-        for (let si = 0; si <= steps; si++) {
-          const r = startR + (p.spiralRadius - startR) * (si / steps);
-          const a = startAngle + (r - startR) * angPerR;
-          if (si === 0) ctx.moveTo(Player.x + Math.cos(a) * r, Player.y + Math.sin(a) * r);
-          else          ctx.lineTo(Player.x + Math.cos(a) * r, Player.y + Math.sin(a) * r);
-        }
-        ctx.strokeStyle = 'rgba(230,160,255,0.95)';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.restore();
-        // Bright tip
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,200,255,0.95)';
-        ctx.fill();
       } else {
         // Glow behind projectile
         ctx.beginPath();
