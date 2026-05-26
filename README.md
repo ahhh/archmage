@@ -165,6 +165,12 @@ A flying spellbook orbits loosely and absorbs incoming enemy projectiles. After 
 - **Forbidden Chapter** — blast poisons every enemy hit
 - **Library Swarm** — summons a second smaller book that orbits alongside
 
+### 🪞 Mirror Glyph
+A floating mirror orbits you and echoes your last spell at 55% power — firing from its own position rather than yours. Positioning your mirror becomes a second form of aim.
+- **Twin Reflection** — summons two mirrors
+- **Perfect Echo** — reflected spells deal 85% power instead of 55%
+- **Shattered Mirror** — mirror explodes when it expires, dealing 50 damage nearby
+
 ### 🌀 Phantom Gyre
 Three phantom orbs orbit the caster, cycling between solid and ethereal states every 1.6 seconds. Only the solid orbs deal damage — position yourself so enemies walk through them at the right moment.
 - **Spectral Surge** — solid orbs hit 60% harder

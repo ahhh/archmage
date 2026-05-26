@@ -729,6 +729,33 @@ const CONFIG = {
         { id: 'forbidden_chapter',name: 'Forbidden Chapter', icon: '☠️', description: 'Blast poisons every enemy hit.',                          changes: { statusEffect: { type: 'poison', amount: 8, duration: 3.0 } } },
         { id: 'library_swarm',    name: 'Library Swarm',    icon: '📕', description: 'Summons a second smaller book that orbits alongside.',    changes: { projectileCount: 1 } }
       ]
+    },
+    {
+      id: 'mirror_glyph',
+      name: 'Mirror Glyph',
+      icon: '🪞',
+      description: 'A floating mirror orbits you and echoes your last spell at 55% power from its own position — positioning your mirror becomes a second form of aim.',
+      cooldown: 1.2,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 115,
+      targeting: 'mirror',
+      mirrorCount: 1,
+      mirrorPower: 0.55,
+      mirrorExplosion: false,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      areaDamageMultiplier: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'twin_reflection',  name: 'Twin Reflection',  icon: '🔀', description: 'Summons two mirrors.',                                        changes: { mirrorCount: 1 } },
+        { id: 'perfect_echo',     name: 'Perfect Echo',     icon: '✨', description: 'Reflected spells deal 85% power instead of 55%.',             changes: { mirrorPower: 0.85 } },
+        { id: 'shattered_mirror', name: 'Shattered Mirror', icon: '💥', description: 'Mirror explodes when it expires, dealing 50 damage nearby.', changes: { mirrorExplosion: true } }
+      ]
     }
   ],
 

@@ -847,6 +847,10 @@ const Player = {
       grimoireCharges: wConfig.grimoireCharges || 0,
       grimoireMaxCharges: wConfig.grimoireMaxCharges || 5,
       grimoireFeedOnKill: false,
+      boxReverse: false,
+      mirrorCount: wConfig.mirrorCount || 1,
+      mirrorPower: wConfig.mirrorPower || 0.55,
+      mirrorExplosion: wConfig.mirrorExplosion || false,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -895,6 +899,9 @@ const Player = {
       if (c.harpThird) s.harpThird = true;
       if (c.harpPulse) s.harpPulse = true;
       if (c.grimoireFeedOnKill) s.grimoireFeedOnKill = true;
+      if (c.mirrorCount != null) s.mirrorCount += c.mirrorCount;
+      if (c.mirrorPower != null) s.mirrorPower = c.mirrorPower;
+      if (c.mirrorExplosion) s.mirrorExplosion = true;
     }
     // Global range multiplier from passive
     s.range *= (this.globalRangeMultiplier || 1);
@@ -1296,12 +1303,124 @@ function updateGrimoires(dt, enemies, s) {
   Grimoires = Grimoires.filter(g => !g.dead);
 }
 
+// ── MIRROR GLYPHS ─────────────────────────────────────────────
+
+let Mirrors = [];
+let MirrorEchoTemplate = null; // { projectileSpeed, damage, armorPen, pierce, statusEffect, acceleration }
+
+function updateMirrors(dt, enemies) {
+  for (const m of Mirrors) {
+    if (m.dead) continue;
+    m.angle += m.orbitSpeed;
+    m.x = Player.x + Math.cos(m.angle) * m.orbitRadius;
+    m.y = Player.y + Math.sin(m.angle) * m.orbitRadius;
+
+    m.cooldownRemaining -= dt;
+    if (m.cooldownRemaining <= 0 && MirrorEchoTemplate) {
+      const alive = enemies.filter(e => !e.dead);
+      if (alive.length > 0) {
+        m.cooldownRemaining = m.cooldown;
+        const tpl = MirrorEchoTemplate;
+        let closest = null, closestSq = Infinity;
+        for (const e of alive) {
+          const dx = e.x - m.x, dy = e.y - m.y;
+          const sq = dx * dx + dy * dy;
+          if (sq < closestSq) { closestSq = sq; closest = e; }
+        }
+        const angle = Math.atan2(closest.y - m.y, closest.x - m.x);
+        const spd = tpl.projectileSpeed || 7;
+        const dmg = Math.round(tpl.damage * m.power);
+        Particles.emit(m.x, m.y, '#aaddff', 8, 3);
+        Projectiles.push({
+          id: mkId(),
+          x: m.x, y: m.y,
+          vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+          damage: dmg, armorPen: tpl.armorPen || 0,
+          pierce: tpl.pierce || 0, pierceLeft: tpl.pierce || 0,
+          bounce: 0, bounceLeft: 0, bounceCount: 0,
+          range: tpl.range || 600, traveledSq: 0,
+          chainCount: 0, chainRange: 0,
+          areaRadius: 0, areaDamageMultiplier: 0,
+          pullRadius: 0, pullStrength: 0,
+          weaponId: 'mirror_glyph',
+          statusEffect: tpl.statusEffect ? { ...tpl.statusEffect } : null,
+          hitIds: new Set(), dead: false,
+          icon: '🪞',
+          splitProjectiles: 0, splitDamageMultiplier: 0,
+          damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+          groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
+          isMeteor: false, isSpiral: false,
+          isOrbit: false, isBox: false, isWhirl: false,
+          isShadowBolt: false, isMagicMissile: false, isBoneSpear: false, pierceHitCount: 0,
+          wobblePhase: 0, acceleration: tpl.acceleration || 1,
+          runeBlastCount: 0, runeBlastDamage: 0,
+          isChrono: false, chronoDelay: 0, chronoBaseDamage: 0, chronoMultiplierBonus: 0, chronoChain: false,
+          targetEnemy: closest, targetX: closest.x, targetY: closest.y,
+          boxReverse: false,
+        });
+      }
+    }
+  }
+  Mirrors = Mirrors.filter(m => {
+    if (m.dead) { _killMirror(m); return false; }
+    return true;
+  });
+}
+
+function _killMirror(m) {
+  if (m.explosion) {
+    for (const e of Enemies) {
+      if (!e.dead && dist(m.x, m.y, e.x, e.y) < 70 + e.radius) {
+        applyDamage(e, 50, 2, null, 0);
+      }
+    }
+    Particles.emit(m.x, m.y, '#aaddff', 28, 7);
+  } else {
+    Particles.emit(m.x, m.y, '#aaddff', 12, 3);
+  }
+}
+
 // ── WEAPON SYSTEM ─────────────────────────────────────────────
 
 const WeaponSystem = {
   fire(wi, player, enemies) {
     const s = wi.computedStats;
     const alive = enemies.filter(e => !e.dead);
+
+    // Save echo template for Mirror Glyph (from any projectile-firing weapon)
+    if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova'].includes(s.targeting)) {
+      MirrorEchoTemplate = {
+        projectileSpeed: s.projectileSpeed,
+        damage: s.damage,
+        armorPen: s.armorPenetration,
+        pierce: s.pierce,
+        range: s.range,
+        statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+        acceleration: s.projectileAcceleration || 1,
+      };
+    }
+
+    // Mirror: spawns orbiting mirror(s) that echo the last projectile fired
+    if (s.targeting === 'mirror') {
+      for (const m of Mirrors) { if (m.weaponId === wi.weaponId) { m.dead = true; } }
+      const count = s.mirrorCount || 1;
+      for (let i = 0; i < count; i++) {
+        Mirrors.push({
+          x: player.x, y: player.y,
+          angle: (Math.PI * 2 / count) * i,
+          orbitRadius: s.range,
+          orbitSpeed: 0.042 + i * 0.015,
+          cooldown: s.cooldown || 1.2,
+          cooldownRemaining: 0.3,
+          power: s.mirrorPower,
+          explosion: s.mirrorExplosion,
+          weaponId: wi.weaponId,
+          dead: false,
+        });
+      }
+      return true;
+    }
 
     // Radial: always fires a ring in all directions regardless of aim mode
     if (s.targeting === 'radial') {
@@ -1313,8 +1432,9 @@ const WeaponSystem = {
       return true;
     }
 
-    // Box: 4 walls sweep simultaneously around the player
+    // Box: 4 walls sweep simultaneously around the player (direction alternates each cast)
     if (s.targeting === 'box') {
+      s.boxReverse = !s.boxReverse;
       for (let i = 0; i < 4; i++) {
         this.spawnBoxProjectile(player, i, s.range, wi, s);
       }
@@ -1758,6 +1878,7 @@ const WeaponSystem = {
       boxSize: bs,
       boxProgress: 0,
       boxSpeed: s.projectileSpeed / totalDist,
+      boxReverse: s.boxReverse || false,
       targetEnemy: null, targetX: player.x, targetY: player.y,
     });
   }
@@ -1878,13 +1999,14 @@ function updateProjectiles(dt, enemies) {
         }
         p.dead = true; continue;
       }
-      // Map progress (0→1) to position along each wall
+      // Map progress (0→1) to position along each wall; direction alternates each cast
       const t = p.boxProgress * 2 - 1; // -1 to +1
+      const rt = p.boxReverse ? -t : t;
       const bs = p.boxSize;
-      if      (p.boxWall === 0) { p.x = Player.x + t * bs; p.y = Player.y - bs; }
-      else if (p.boxWall === 1) { p.x = Player.x + bs;     p.y = Player.y + t * bs; }
-      else if (p.boxWall === 2) { p.x = Player.x - t * bs; p.y = Player.y + bs; }
-      else                      { p.x = Player.x - bs;     p.y = Player.y - t * bs; }
+      if      (p.boxWall === 0) { p.x = Player.x + rt * bs; p.y = Player.y - bs; }
+      else if (p.boxWall === 1) { p.x = Player.x - bs;      p.y = Player.y + rt * bs; }
+      else if (p.boxWall === 2) { p.x = Player.x + rt * bs; p.y = Player.y + bs; }
+      else                      { p.x = Player.x + bs;      p.y = Player.y + rt * bs; }
     } else if (p.isOrbit) {
       p.lifetimer -= dt;
       if (p.lifetimer <= 0) { p.dead = true; continue; }
@@ -2588,11 +2710,18 @@ const Renderer = {
       } else if (p.isBox) {
         // Draw traced wall segment (start corner → current position)
         const bs = p.boxSize;
-        let sx, sy; // start corner of this wall
-        if      (p.boxWall === 0) { sx = Player.x - bs; sy = Player.y - bs; }
-        else if (p.boxWall === 1) { sx = Player.x + bs; sy = Player.y - bs; }
-        else if (p.boxWall === 2) { sx = Player.x + bs; sy = Player.y + bs; }
-        else                      { sx = Player.x - bs; sy = Player.y + bs; }
+        let sx, sy; // start corner of this wall (flips with boxReverse)
+        if (p.boxReverse) {
+          if      (p.boxWall === 0) { sx = Player.x + bs; sy = Player.y - bs; }
+          else if (p.boxWall === 1) { sx = Player.x - bs; sy = Player.y + bs; }
+          else if (p.boxWall === 2) { sx = Player.x + bs; sy = Player.y + bs; }
+          else                      { sx = Player.x + bs; sy = Player.y + bs; }
+        } else {
+          if      (p.boxWall === 0) { sx = Player.x - bs; sy = Player.y - bs; }
+          else if (p.boxWall === 1) { sx = Player.x - bs; sy = Player.y - bs; }
+          else if (p.boxWall === 2) { sx = Player.x - bs; sy = Player.y + bs; }
+          else                      { sx = Player.x + bs; sy = Player.y - bs; }
+        }
         ctx.save();
         ctx.lineCap = 'round';
         // Outer glow
@@ -2800,6 +2929,30 @@ const Renderer = {
       ctx.shadowBlur = 0;
       ctx.font = '22px serif';
       ctx.fillText('📖', g.x, g.y);
+      ctx.restore();
+    }
+
+    // Mirror Glyphs
+    for (const m of Mirrors) {
+      if (m.dead) continue;
+      ctx.save();
+      // Outer shimmer ring
+      ctx.beginPath(); ctx.arc(m.x, m.y, 15, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(150,220,255,0.5)'; ctx.lineWidth = 2;
+      ctx.shadowBlur = 12; ctx.shadowColor = '#aaddff'; ctx.stroke();
+      // Gleam line (mirror face)
+      ctx.shadowBlur = 0;
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(m.angle + Math.PI / 2);
+      const gleam = Math.sin(Date.now() * 0.004) * 0.4 + 0.6;
+      ctx.globalAlpha = gleam;
+      ctx.strokeStyle = '#ddeeff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(0, 11); ctx.stroke();
+      ctx.restore();
+      ctx.font = '16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.globalAlpha = 0.85;
+      ctx.fillText('🪞', m.x, m.y);
       ctx.restore();
     }
 
@@ -3197,6 +3350,8 @@ const Game = {
     ChronoMarks = [];
     HarpBeams = [];
     Grimoires = [];
+    Mirrors = [];
+    MirrorEchoTemplate = null;
     Particles.list = [];
     GroundEffects.list = [];
 
@@ -3239,6 +3394,7 @@ const Game = {
       updateChronoMarks(dt, Enemies);
       updateHarpBeams(dt, Enemies);
       updateGrimoires(dt, Enemies);
+      updateMirrors(dt, Enemies);
       GroundEffects.update(dt, Enemies);
       Particles.update(dt);
 
@@ -3290,6 +3446,7 @@ const Game = {
     ChronoMarks = [];
     HarpBeams = [];
     Grimoires = [];
+    Mirrors = [];
     this.waveDuration = this.waveDurationFor(this.wave);
     this.waveTimer = this.waveDuration;
     this.wavePhase = 'playing';
