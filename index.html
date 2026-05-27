@@ -2627,7 +2627,7 @@ const WeaponSystem = {
         groundEffect: s.groundEffect || null,
         followupMeteors: 0, followupDamageMultiplier: 0,
         isMeteor: false, isShadowBolt: false, isMagicMissile: false, isBoneSpear: false,
-        isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false,
+        isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false, isBoltgunShell: false,
         empowered: s.empowered || false,
         pierceHitCount: 0, wobblePhase: 0,
         acceleration: 1, isOrbit: false, isBox: false, isWhirl: false, curveRate: 0, returning: false,
@@ -2683,7 +2683,7 @@ const WeaponSystem = {
           damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
           groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
           isMeteor: false, isShadowBolt: false, isMagicMissile: false, isBoneSpear: false,
-          isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false,
+          isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false, isBoltgunShell: false,
           empowered: s.empowered || false,
           pierceHitCount: 0, wobblePhase: Math.random() * Math.PI * 2,
           acceleration: 1, isOrbit: false, isBox: false, isWhirl: false, curveRate: 0, returning: false,
@@ -2859,6 +2859,7 @@ const WeaponSystem = {
       isBlackSauce: wi.weaponId === 'stax_black_sauce',
       isSlash: wi.weaponId === 'afro_samurai_blade',
       isHammer: wi.weaponId === 'hammer_toss',
+      isBoltgunShell: wi.weaponId === 'boltgunz',
       empowered: s.empowered || false,
       pierceHitCount: 0,
       wobblePhase: Math.random() * Math.PI * 2,
@@ -4446,6 +4447,40 @@ const Renderer = {
         ctx.filter = emp ? 'brightness(2.5)' : 'brightness(1.6)';
         ctx.fillText(p.icon, 0, 0);
         ctx.filter = 'none';
+        ctx.restore();
+      } else if (p.isBoltgunShell) {
+        // Infernal artillery shell — chunky, directional, trailing fire
+        const ang = Math.atan2(p.vy, p.vx);
+        const emp = p.empowered;
+        const sz = emp ? 1.4 : 1;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(ang);
+        // Outer blast glow
+        ctx.beginPath(); ctx.arc(0, 0, 18 * sz, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? 'rgba(255,80,0,0.28)' : 'rgba(255,60,0,0.18)';
+        ctx.fill();
+        if (emp) { ctx.shadowBlur = 32; ctx.shadowColor = '#ff1100'; }
+        else      { ctx.shadowBlur = 18; ctx.shadowColor = '#ff4422'; }
+        // Shell body (elongated ellipse)
+        ctx.fillStyle = emp ? '#ff8800' : '#cc3300';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 12 * sz, 5 * sz, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Nose cone (bright forward tip)
+        ctx.beginPath(); ctx.arc(10 * sz, 0, 4 * sz, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? '#ffffff' : '#ff7744';
+        ctx.shadowBlur = 22; ctx.shadowColor = emp ? '#ffcc00' : '#ff5500';
+        ctx.fill();
+        // Exhaust trail (behind the shell)
+        ctx.beginPath(); ctx.arc(-13 * sz, 0, 3.5 * sz, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,140,40,0.5)';
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ff8800';
+        ctx.fill();
+        ctx.beginPath(); ctx.arc(-18 * sz, 0, 2 * sz, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,80,20,0.3)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
         ctx.restore();
       } else {
         // Bone spear: grows larger with each pierce hit
