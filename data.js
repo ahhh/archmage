@@ -707,6 +707,112 @@ const CONFIG = {
       ]
     },
     {
+      id: 'void_stride',
+      name: 'Void Stride',
+      icon: '💠',
+      description: 'Launches the mage into a burst of speed while arcane blades sweep both sides. Deals damage to anything caught in the sweep.',
+      cooldown: 2.2,
+      damage: 28,
+      projectileSpeed: 9,
+      armorPenetration: 2,
+      pierce: 1,
+      bounce: 0,
+      range: 200,
+      targeting: 'dash',
+      spreadAngle: 0.28,
+      projectileCount: 2,
+      dashSpeedBoost: 4.5,
+      dashDuration: 0.35,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'wider_sweep', name: 'Wider Sweep', icon: '↔️', description: 'Three blades sweep each side instead of two. Damage up 30%.', changes: { projectileCount: 1, damageMultiplier: 1.3 } },
+        { id: 'afterimage',  name: 'Afterimage',  icon: '👻', description: 'Blades slow every enemy they cut through.',                   changes: { statusEffect: { type: 'slow', amount: 0.4, duration: 1.0 } } },
+        { id: 'surge_step',  name: 'Surge Step',  icon: '⚡', description: 'Speed boost lasts twice as long. Blades deal 50% more damage.', changes: { dashDurationMult: 2.0, damageMultiplier: 1.5 } }
+      ]
+    },
+    {
+      id: 'astral_triad',
+      name: 'Astral Triad',
+      icon: '⚛️',
+      description: 'Three arcane orbs orbit the caster, each with two smaller satellites circling it. A gravitational nightmare for anything that gets close.',
+      cooldown: 8.0,
+      damage: 22,
+      projectileSpeed: 0,
+      armorPenetration: 1,
+      pierce: 99,
+      bounce: 0,
+      range: 110,
+      targeting: 'triad',
+      triadDuration: 8.0,
+      triadPrimaryRadius: 85,
+      triadSubRadius: 28,
+      triadPrimarySpeed: 0.048,
+      triadSubSpeed: 0.17,
+      triadCount: 3,
+      subDamage: 11,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'wider_orbit',    name: 'Wider Orbit',    icon: '🌌', description: 'Primary orbs orbit 40% further from the caster.',                              changes: { triadPrimaryRadiusMult: 1.4 } },
+        { id: 'fourth_body',    name: 'Fourth Body',    icon: '✦',  description: 'A fourth primary orb joins the formation.',                                    changes: { triadCount: 1 } },
+        { id: 'resonant_field', name: 'Resonant Field', icon: '💫', description: 'All orbs deal 70% more damage and slow every enemy they pass through.',        changes: { damageMultiplier: 1.7, statusEffect: { type: 'slow', amount: 0.35, duration: 1.2 } } }
+      ]
+    },
+    {
+      id: 'entropy_catalyst',
+      name: 'Entropy Catalyst',
+      icon: '⚗️',
+      description: 'Seizes a fallen enemy\'s residual energy and detonates them. The blast deals 35% of that enemy\'s max HP to all nearby foes.',
+      cooldown: 3.5,
+      damage: 0,
+      projectileSpeed: 8,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 320,
+      targeting: 'corpseblast',
+      corpseBlastPercent: 0.35,
+      corpseBlastRadius: 110,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 110,
+      areaDamageMultiplier: 1,
+      statusEffect: null,
+      upgrades: [
+        { id: 'critical_mass',  name: 'Critical Mass',  icon: '💥', description: 'Explosion deals 55% of max HP instead of 35%.',                                changes: { corpseBlastPercentBonus: 0.20 } },
+        { id: 'chain_reaction', name: 'Chain Reaction', icon: '🔗', description: 'Killing a corpse-blasted enemy can trigger secondary explosions on nearby foes.', changes: { corpseChain: true } },
+        { id: 'lingering_void', name: 'Lingering Void', icon: '🌑', description: 'The explosion leaves an arcane void zone that deals damage for 3 seconds.',    changes: { groundEffect: { type: 'arcane', duration: 3.0, dps: 14 } } }
+      ]
+    },
+    {
+      id: 'arcane_recall',
+      name: 'Arcane Recall',
+      icon: '🪃',
+      description: 'A crackling bolt materializes at max range and hurtles back toward the caster, piercing through every enemy it passes.',
+      cooldown: 1.6,
+      damage: 24,
+      projectileSpeed: 10,
+      armorPenetration: 1,
+      pierce: 3,
+      bounce: 0,
+      range: 380,
+      targeting: 'recall',
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'full_pierce',   name: 'Full Pierce',   icon: '➡️', description: 'Recall bolt pierces every enemy — no limit.',                    changes: { pierce: 96 } },
+        { id: 'double_recall', name: 'Double Recall', icon: '↩️', description: 'Fires two recall bolts simultaneously from slightly offset angles.', changes: { projectileCount: 1 } },
+        { id: 'thunderhead',   name: 'Thunderhead',   icon: '⚡', description: 'Each hit chains lightning to 3 nearby enemies.',                  changes: { chainCount: 3, chainRange: 150 } }
+      ]
+    },
+    {
       id: 'hungry_grimoire',
       name: 'Hungry Grimoire',
       icon: '📖',
@@ -1792,6 +1898,53 @@ const CONFIG = {
         { weaponId: 'ouroboros_vine',    pierce: 3, damageMultiplier: 1.4 },
         { weaponId: 'frizzos_hourglass', chronoChain: true, chronoMultiplierBonus: 0.25 }
       ]
+    },
+
+    // ─── ARCANE CYCLE (NEW WEAPONS) ─────────────────────────────
+    {
+      id: 'resonant_surge', name: 'Resonant Surge', icon: '🎼',
+      requires: ['leyline_harp', 'void_stride'],
+      description: 'Harp beams vibrate every enemy they slice through. Void Stride blades arc through vibrating enemies at double speed. Harp deals 80% more damage. Stride blades pierce 2 extra enemies.',
+      weaponBoosts: [
+        { weaponId: 'leyline_harp',  damageMultiplier: 1.8, statusEffect: { type: 'slow', amount: 0.3, duration: 1.2 } },
+        { weaponId: 'void_stride',   pierce: 2, projectileSpeedMultiplier: 2.0, damageMultiplier: 1.4 }
+      ]
+    },
+    {
+      id: 'orbital_onslaught', name: 'Orbital Onslaught', icon: '🌀',
+      requires: ['void_stride', 'astral_triad'],
+      description: 'Dashing through the orbital field energizes the triad — each dash fires extra orbs outward. Astral Triad deals 80% more damage. Void Stride grants a longer speed boost.',
+      weaponBoosts: [
+        { weaponId: 'void_stride',   damageMultiplier: 1.5, dashDurationMult: 2.0 },
+        { weaponId: 'astral_triad',  damageMultiplier: 1.8, triadCount: 1 }
+      ]
+    },
+    {
+      id: 'gravity_collapse', name: 'Gravity Collapse', icon: '⚫',
+      requires: ['astral_triad', 'entropy_catalyst'],
+      description: 'Triad orbs pull nearby dead enemies toward the caster, making them easier targets. Entropy Catalyst detonates at 60% max HP. Triad orbs deal 60% more damage.',
+      weaponBoosts: [
+        { weaponId: 'astral_triad',      damageMultiplier: 1.6, statusEffect: { type: 'slow', amount: 0.45, duration: 1.5 } },
+        { weaponId: 'entropy_catalyst',  corpseBlastPercentBonus: 0.25, groundEffect: { type: 'arcane', duration: 2.5, dps: 10 } }
+      ]
+    },
+    {
+      id: 'dead_star', name: 'Dead Star', icon: '💫',
+      requires: ['entropy_catalyst', 'arcane_recall'],
+      description: 'Recall bolts are drawn toward recent explosion sites. Entropy Catalyst blasts at 50% max HP and leaves a void zone. Arcane Recall fires 40% faster and pierces all enemies.',
+      weaponBoosts: [
+        { weaponId: 'entropy_catalyst', corpseBlastPercentBonus: 0.15, groundEffect: { type: 'arcane', duration: 3.5, dps: 12 } },
+        { weaponId: 'arcane_recall',    pierce: 96, cooldownMultiplier: 0.6 }
+      ]
+    },
+    {
+      id: 'homing_cascade', name: 'Homing Cascade', icon: '🌠',
+      requires: ['arcane_recall', 'magic_missiles'],
+      description: 'Each Recall bolt that reaches the caster fragments into a magic missile burst. Magic Missiles fires 50% faster and deals 80% more damage. Arcane Recall gains 3 extra pierce.',
+      weaponBoosts: [
+        { weaponId: 'arcane_recall',   pierce: 3, damageMultiplier: 1.5 },
+        { weaponId: 'magic_missiles',  cooldownMultiplier: 0.65, damageMultiplier: 1.8 }
+      ]
     }
   ],
 
@@ -1802,7 +1955,7 @@ const CONFIG = {
     ice:       { name: 'Ice Cycle',       icon: '❄️', color: '#66ddff', weapons: ['frost_shard','void_lance','fault_lines','force_pulse','chrono_needle','phantom_gyre'] },
     lightning: { name: 'Lightning Cycle', icon: '⚡', color: '#ffee44', weapons: ['spark_chain','rune_burst','arcane_orb','arcane_cube','phase_blade','thunder_clap'] },
     death:     { name: 'Death Cycle',     icon: '💀', color: '#cc66ff', weapons: ['shadow_bolt','bone_spear','phantom_double','hungry_grimoire','plague_pool','soul_whirl'] },
-    arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp'] },
+    arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp','void_stride','astral_triad','entropy_catalyst','arcane_recall'] },
     demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce','alexs_hax'] },
     blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss','spaghettis_blade'] },
     life:      { name: 'Life Cycle',      icon: '🌿', color: '#66ff99', weapons: ['lotus_rift','scarab_halo','pollen_nova','frizzos_hourglass','molting_mirror','brood_husk','crescent_moon','ouroboros_vine'] }

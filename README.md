@@ -437,13 +437,18 @@ Weapons are grouped into eight **Cycles**. Each weapon within a cycle participat
 | 💜 **Venom Vortex** | Soul Whirl + Shadow Bolt | Shadow Bolt deals triple damage and arcs like Soul Whirl. Soul Whirl bolts spiral more tightly and pierce. |
 
 ### ✨ Arcane Cycle
-*Magic Missiles → Mirror Glyph → Dazzling Lights → Leyline Harp → (back to Magic Missiles)*
+*Magic Missiles → Mirror Glyph → Dazzling Lights → Leyline Harp → Void Stride → Astral Triad → Entropy Catalyst → Arcane Recall → (back to Magic Missiles)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | ✨ **Missile Storm** | Magic Missiles + Mirror Glyph | Mirror echoes full barrages at near-full power. Magic Missiles gains 5 extra missiles and fires 50% faster. |
 | 🪞 **Hall of Mirrors** | Mirror Glyph + Dazzling Lights | Two extra mirrors orbit you. Dazzling Lights deals 2.5× damage and pierces every enemy. |
 | 🎵 **Prismatic Strings** | Dazzling Lights + Leyline Harp | Dazzling Lights stuns every enemy hit. Leyline Harp beams stun and pulse extra damage every second. |
 | 🎶 **Harmonic Barrage** | Leyline Harp + Magic Missiles | Leyline Harp adds a third beam and pulses every second. Magic Missiles deals double damage at 50% more speed. |
+| 🎼 **Resonant Surge** | Leyline Harp + Void Stride | Harp beams vibrate enemies — Void Stride slashes arc through vibrating enemies at double speed. Harp deals 80% more damage. Stride blades pierce 2 extra. |
+| 🌀 **Orbital Onslaught** | Void Stride + Astral Triad | Dashing through the triad energizes it — Astral Triad gains a 4th orb and deals 80% more damage. Void Stride grants a longer speed boost. |
+| ⚫ **Gravity Collapse** | Astral Triad + Entropy Catalyst | Triad orbs slow and weaken nearby enemies, setting up perfect corpse blasts. Entropy detonates at 60% max HP and leaves a void zone. |
+| 💫 **Dead Star** | Entropy Catalyst + Arcane Recall | Recall bolts magnetize to recent explosion sites. Entropy blasts at 50% max HP with a void zone. Arcane Recall pierces all enemies and fires 40% faster. |
+| 🌠 **Homing Cascade** | Arcane Recall + Magic Missiles | Each Recall bolt that reaches the caster fragments into a missile burst. Magic Missiles fires 50% faster and deals 80% more damage. |
 
 ### 😈 Demon Cycle
 *Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → Alex's Hax → (back to Jake's Lament)*

@@ -1029,6 +1029,8 @@ const Player = {
     this.cycleBonus = { fire:0, ice:0, lightning:0, death:0, arcane:0, demon:0, blade:0, life:0 };
     this.cycleLifeMaxHPApplied = 0;
     this.cycleDemonArmorApplied = 0;
+    this.speedBoostTimer = 0;
+    this.speedBoostMult = 1;
     this.passivesApplied = [];
     this.flashTimer = 0;
     this.glowPulse = 0;
@@ -1128,12 +1130,24 @@ const Player = {
       chargesUp: wConfig.chargesUp || false,
       chargeRate: wConfig.chargeRate || 0,
       returnsToPlayer: wConfig.returnsToPlayer || false,
+      dashSpeedBoost: wConfig.dashSpeedBoost || 4.5,
+      dashDuration: wConfig.dashDuration || 0.35,
+      triadDuration: wConfig.triadDuration || 8.0,
+      triadPrimaryRadius: wConfig.triadPrimaryRadius || 85,
+      triadSubRadius: wConfig.triadSubRadius || 28,
+      triadPrimarySpeed: wConfig.triadPrimarySpeed || 0.048,
+      triadSubSpeed: wConfig.triadSubSpeed || 0.17,
+      triadCount: wConfig.triadCount || 3,
+      subDamage: wConfig.subDamage || 0,
+      corpseBlastPercent: wConfig.corpseBlastPercent || 0.35,
+      corpseBlastRadius: wConfig.corpseBlastRadius || 110,
+      corpseChain: wConfig.corpseChain || false,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
       if (!upg) continue;
       const c = upg.changes;
-      if (c.damageMultiplier) s.damage = Math.round(s.damage * c.damageMultiplier);
+      if (c.damageMultiplier) { s.damage = Math.round(s.damage * c.damageMultiplier); if (s.subDamage > 0) s.subDamage = Math.round(s.subDamage * c.damageMultiplier); }
       if (c.projectileSpeedMultiplier) s.projectileSpeed *= c.projectileSpeedMultiplier;
       if (c.cooldownMultiplier) s.cooldown *= c.cooldownMultiplier;
       if (c.areaRadiusMultiplier) s.areaRadius *= c.areaRadiusMultiplier;
@@ -1188,6 +1202,11 @@ const Player = {
       if (c.riftDuration != null)  s.riftDuration += c.riftDuration;
       if (c.healOnExpire != null)  s.healOnExpire += c.healOnExpire;
       if (c.chargeRate != null)    s.chargeRate = c.chargeRate;
+      if (c.dashDurationMult != null)        s.dashDuration *= c.dashDurationMult;
+      if (c.triadPrimaryRadiusMult != null)  s.triadPrimaryRadius *= c.triadPrimaryRadiusMult;
+      if (c.triadCount != null)              s.triadCount += c.triadCount;
+      if (c.corpseBlastPercentBonus != null) s.corpseBlastPercent += c.corpseBlastPercentBonus;
+      if (c.corpseChain)                     s.corpseChain = true;
     }
     // Apply active combo boosts (same change format as upgrades)
     if (this.unlockedCombos) {
@@ -1197,7 +1216,7 @@ const Player = {
         const boost = combo.weaponBoosts?.find(b => b.weaponId === wConfig.id);
         if (!boost) continue;
         const c = boost;
-        if (c.damageMultiplier)           s.damage = Math.round(s.damage * c.damageMultiplier);
+        if (c.damageMultiplier)           { s.damage = Math.round(s.damage * c.damageMultiplier); if (s.subDamage > 0) s.subDamage = Math.round(s.subDamage * c.damageMultiplier); }
         if (c.damageOverride != null)     s.damage = c.damageOverride;
         if (c.projectileSpeedMultiplier)  s.projectileSpeed *= c.projectileSpeedMultiplier;
         if (c.cooldownMultiplier)         s.cooldown *= c.cooldownMultiplier;
@@ -1237,14 +1256,21 @@ const Player = {
         if (c.shellDurationBonus != null) s.shellDuration += c.shellDurationBonus;
         if (c.spikeCount != null)         s.spikeCount += c.spikeCount;
         if (c.riftDuration != null)       s.riftDuration += c.riftDuration;
-        if (c.healOnExpire != null)       s.healOnExpire += c.healOnExpire;
-        if (c.chargeRate != null)         s.chargeRate = c.chargeRate;
+        if (c.healOnExpire != null)            s.healOnExpire += c.healOnExpire;
+        if (c.chargeRate != null)              s.chargeRate = c.chargeRate;
+        if (c.dashDurationMult != null)        s.dashDuration *= c.dashDurationMult;
+        if (c.triadPrimaryRadiusMult != null)  s.triadPrimaryRadius *= c.triadPrimaryRadiusMult;
+        if (c.triadCount != null)              s.triadCount += c.triadCount;
+        if (c.corpseBlastPercentBonus != null) s.corpseBlastPercent += c.corpseBlastPercentBonus;
+        if (c.corpseChain)                     s.corpseChain = true;
       }
     }
     // ── Global passive multipliers ────────────────────────────
     s.range *= (this.globalRangeMultiplier || 1);
-    if ((this.globalDamageMultiplier || 1) !== 1)
+    if ((this.globalDamageMultiplier || 1) !== 1) {
       s.damage = Math.round(s.damage * this.globalDamageMultiplier);
+      if (s.subDamage > 0) s.subDamage = Math.round(s.subDamage * this.globalDamageMultiplier);
+    }
     if ((this.globalProjectileSpeedMultiplier || 1) !== 1 && s.projectileSpeed > 0)
       s.projectileSpeed *= this.globalProjectileSpeedMultiplier;
     if ((this.globalAreaMultiplier || 1) !== 1 && s.areaRadius > 0)
@@ -1395,8 +1421,14 @@ const Player = {
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
     this.moveDx = dx;
     this.moveDy = dy;
-    this.x = clamp(this.x + dx * this.speed, this.radius, CONFIG.WORLD_W - this.radius);
-    this.y = clamp(this.y + dy * this.speed, this.radius, CONFIG.WORLD_H - this.radius);
+    let effectiveSpeed = this.speed;
+    if (this.speedBoostTimer > 0) {
+      this.speedBoostTimer -= dt;
+      effectiveSpeed *= this.speedBoostMult;
+      if (this.speedBoostTimer <= 0) { this.speedBoostTimer = 0; this.speedBoostMult = 1; }
+    }
+    this.x = clamp(this.x + dx * effectiveSpeed, this.radius, CONFIG.WORLD_W - this.radius);
+    this.y = clamp(this.y + dy * effectiveSpeed, this.radius, CONFIG.WORLD_H - this.radius);
     // Update Jake's Lament compass direction every frame
     if (this.weapons.some(w => w.weaponId === 'jakes_lament')) {
       this.jakesDir = findDenseDirection(this, enemies);
@@ -1978,6 +2010,44 @@ function updateSpikes(dt, enemies) {
   Spikes = Spikes.filter(sp => !sp.dead);
 }
 
+function updateTriadOrbs(dt, enemies) {
+  for (let i = TriadOrbs.length - 1; i >= 0; i--) {
+    const t = TriadOrbs[i];
+    t.timer -= dt;
+    if (t.timer <= 0) { TriadOrbs.splice(i, 1); continue; }
+    for (const orb of t.orbs) {
+      orb.angle += t.primarySpeed;
+      const px = Player.x + Math.cos(orb.angle) * t.primaryRadius;
+      const py = Player.y + Math.sin(orb.angle) * t.primaryRadius;
+      orb.hitRefreshTimer -= dt;
+      if (orb.hitRefreshTimer <= 0) { orb.hitIds.clear(); orb.hitRefreshTimer = 0.5; }
+      for (const e of enemies) {
+        if (e.dead || orb.hitIds.has(e.id)) continue;
+        if (dist(px, py, e.x, e.y) < e.radius + 12) {
+          orb.hitIds.add(e.id);
+          applyDamage(e, t.damage, t.armorPen, t.statusEffect, 0);
+          Particles.emit(px, py, t.empowered ? '#ffdd88' : '#44ffbb', 6, 3);
+        }
+      }
+      for (const sub of orb.subs) {
+        sub.angle += t.subSpeed;
+        const sx = px + Math.cos(sub.angle) * t.subRadius;
+        const sy = py + Math.sin(sub.angle) * t.subRadius;
+        sub.hitRefreshTimer -= dt;
+        if (sub.hitRefreshTimer <= 0) { sub.hitIds.clear(); sub.hitRefreshTimer = 0.5; }
+        for (const e of enemies) {
+          if (e.dead || sub.hitIds.has(e.id)) continue;
+          if (dist(sx, sy, e.x, e.y) < e.radius + 7) {
+            sub.hitIds.add(e.id);
+            applyDamage(e, t.subDamage, t.armorPen, t.statusEffect, 0);
+            Particles.emit(sx, sy, t.empowered ? '#ffaa44' : '#88ffdd', 3, 2);
+          }
+        }
+      }
+    }
+  }
+}
+
 // ── WEAPON SYSTEM ─────────────────────────────────────────────
 
 const WeaponSystem = {
@@ -1987,7 +2057,7 @@ const WeaponSystem = {
 
     // Save echo template for Mirror Glyph (from any projectile-firing weapon)
     if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
-        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest', 'hackcircle'].includes(s.targeting)) {
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest', 'hackcircle', 'triad', 'corpseblast'].includes(s.targeting)) {
       MirrorEchoTemplate = {
         projectileSpeed: s.projectileSpeed,
         damage: s.damage,
@@ -2443,6 +2513,182 @@ const WeaponSystem = {
       return true;
     }
 
+    // Void Stride: speed burst + side blade sweep perpendicular to movement/aim direction
+    if (s.targeting === 'dash') {
+      let aimAngle;
+      const mLen = Math.hypot(player.moveDx, player.moveDy);
+      if (mLen > 0.01) {
+        aimAngle = Math.atan2(player.moveDy, player.moveDx);
+      } else if (!Input.autoAim) {
+        const mw = Input.mouseWorld();
+        aimAngle = Math.atan2(mw.y - player.y, mw.x - player.x);
+      } else if (alive.length > 0) {
+        let closest = null, closestSq = Infinity;
+        for (const e of alive) {
+          const sq = (e.x - player.x) ** 2 + (e.y - player.y) ** 2;
+          if (sq < closestSq) { closestSq = sq; closest = e; }
+        }
+        aimAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
+      } else {
+        aimAngle = 0;
+      }
+      // Apply speed boost
+      Player.speedBoostTimer = s.dashDuration;
+      Player.speedBoostMult  = s.dashSpeedBoost;
+      // Spawn blade projectiles sweeping left and right of movement direction
+      const count = s.projectileCount || 2;
+      for (let t = 0; t < count; t++) {
+        const spread = (t - (count - 1) / 2) * (s.spreadAngle || 0.28);
+        this.spawnProjectile(player, aimAngle + Math.PI / 2 + spread, wi, s, null);
+        this.spawnProjectile(player, aimAngle - Math.PI / 2 + spread, wi, s, null);
+      }
+      Particles.emit(player.x, player.y, s.empowered ? '#ffdd88' : '#44ffbb', s.empowered ? 24 : 16, 5);
+      return true;
+    }
+
+    // Astral Triad: three primary orbs each with two sub-orbs, all orbiting the player
+    if (s.targeting === 'triad') {
+      for (let i = TriadOrbs.length - 1; i >= 0; i--) {
+        if (TriadOrbs[i].weaponId === wi.weaponId) TriadOrbs.splice(i, 1);
+      }
+      const count = s.triadCount || 3;
+      const orbs = [];
+      for (let i = 0; i < count; i++) {
+        orbs.push({
+          angle: (Math.PI * 2 / count) * i,
+          subs: [
+            { angle: 0,       hitIds: new Set(), hitRefreshTimer: 0.5 },
+            { angle: Math.PI, hitIds: new Set(), hitRefreshTimer: 0.5 },
+          ],
+          hitIds: new Set(),
+          hitRefreshTimer: 0.5,
+        });
+      }
+      TriadOrbs.push({
+        weaponId: wi.weaponId,
+        damage: s.damage,
+        subDamage: s.subDamage || Math.round(s.damage * 0.5),
+        armorPen: s.armorPenetration,
+        statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+        primaryRadius: s.triadPrimaryRadius,
+        subRadius: s.triadSubRadius,
+        primarySpeed: s.triadPrimarySpeed,
+        subSpeed: s.triadSubSpeed,
+        orbs,
+        timer: s.triadDuration,
+        empowered: s.empowered || false,
+      });
+      Particles.emit(player.x, player.y, s.empowered ? '#ffdd88' : '#44ffbb', 20, 6);
+      return true;
+    }
+
+    // Entropy Catalyst: launch nearest fresh corpse as an explosive projectile
+    if (s.targeting === 'corpseblast') {
+      let corpse = null, closestSq = Infinity;
+      for (const e of enemies) {
+        if (!e.dead || !(e.deathTimer > 0)) continue;
+        const sq = (e.x - player.x) ** 2 + (e.y - player.y) ** 2;
+        if (sq < closestSq) { closestSq = sq; corpse = e; }
+      }
+      if (!corpse) return false;
+      let target = null, targetSq = Infinity;
+      for (const e of alive) {
+        const sq = (e.x - corpse.x) ** 2 + (e.y - corpse.y) ** 2;
+        if (sq < targetSq) { targetSq = sq; target = e; }
+      }
+      const tx = target ? target.x : (player.x + (Math.random() - 0.5) * 200);
+      const ty = target ? target.y : (player.y + (Math.random() - 0.5) * 200);
+      const angle = Math.atan2(ty - corpse.y, tx - corpse.x);
+      corpse.deathTimer = 0; // consume the corpse
+      const blastDmg = Math.round(corpse.maxHp * s.corpseBlastPercent);
+      Projectiles.push({
+        id: mkId(),
+        x: corpse.x, y: corpse.y,
+        vx: Math.cos(angle) * s.projectileSpeed, vy: Math.sin(angle) * s.projectileSpeed,
+        damage: blastDmg, armorPen: s.armorPenetration,
+        pierce: 0, pierceLeft: 0, bounce: 0, bounceLeft: 0, bounceCount: 0,
+        range: s.range, traveledSq: 0,
+        chainCount: 0, chainRange: 0,
+        areaRadius: s.corpseBlastRadius, areaDamageMultiplier: 1,
+        pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+        statusEffect: null, hitIds: new Set(), dead: false,
+        icon: corpse.icon,
+        splitProjectiles: 0, splitDamageMultiplier: 0,
+        damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+        groundEffect: s.groundEffect || null,
+        followupMeteors: 0, followupDamageMultiplier: 0,
+        isMeteor: false, isShadowBolt: false, isMagicMissile: false, isBoneSpear: false,
+        isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false,
+        empowered: s.empowered || false,
+        pierceHitCount: 0, wobblePhase: 0,
+        acceleration: 1, isOrbit: false, isBox: false, isWhirl: false, curveRate: 0, returning: false,
+        runeBlastCount: 0, runeBlastDamage: 0, runeBlastRange: 300, runeBlastSpeed: 5.5, runeBlastPierce: 0,
+        isChrono: false, chronoDelay: 0, chronoBaseDamage: 0, chronoMultiplierBonus: 0, chronoChain: false,
+        lifesteal: 0, targetEnemy: target, targetX: tx, targetY: ty,
+        isCorpse: true, isDashBlade: false, isRecall: false,
+        corpseBlastRadius: s.corpseBlastRadius,
+        corpseChain: s.corpseChain || false,
+      });
+      Particles.emit(corpse.x, corpse.y, s.empowered ? '#ffaa00' : '#44ffbb', 12, 4);
+      return true;
+    }
+
+    // Arcane Recall: spawn bolt at max range, fires TOWARD the player
+    if (s.targeting === 'recall') {
+      let aimAngle;
+      if (!Input.autoAim) {
+        const mw = Input.mouseWorld();
+        aimAngle = Math.atan2(mw.y - player.y, mw.x - player.x);
+      } else if (alive.length > 0) {
+        let closest = null, closestSq = Infinity;
+        for (const e of alive) {
+          const sq = (e.x - player.x) ** 2 + (e.y - player.y) ** 2;
+          if (sq < closestSq) { closestSq = sq; closest = e; }
+        }
+        aimAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
+      } else {
+        aimAngle = Math.random() * Math.PI * 2;
+      }
+      const count = s.projectileCount || 1;
+      for (let t = 0; t < count; t++) {
+        const spread = count > 1 ? (t - (count - 1) / 2) * 0.35 : 0;
+        const ang = aimAngle + spread;
+        const startX = player.x + Math.cos(ang) * s.range;
+        const startY = player.y + Math.sin(ang) * s.range;
+        const returnAng = ang + Math.PI;
+        Projectiles.push({
+          id: mkId(),
+          x: startX, y: startY,
+          vx: Math.cos(returnAng) * s.projectileSpeed, vy: Math.sin(returnAng) * s.projectileSpeed,
+          damage: s.damage, armorPen: s.armorPenetration,
+          pierce: s.pierce, pierceLeft: s.pierce,
+          bounce: 0, bounceLeft: 0, bounceCount: 0,
+          range: s.range + 60, traveledSq: 0,
+          chainCount: s.chainCount || 0, chainRange: s.chainRange || 0,
+          areaRadius: s.areaRadius || 0, areaDamageMultiplier: s.areaDamageMultiplier || 0,
+          pullRadius: 0, pullStrength: 0, weaponId: wi.weaponId,
+          statusEffect: s.statusEffect ? { ...s.statusEffect } : null,
+          hitIds: new Set(), dead: false,
+          icon: CONFIG.weapons.find(w => w.id === wi.weaponId).icon,
+          splitProjectiles: 0, splitDamageMultiplier: 0,
+          damagePerBounce: 1, finalHitDamageMultiplier: 1, finalHitStun: 0,
+          groundEffect: null, followupMeteors: 0, followupDamageMultiplier: 0,
+          isMeteor: false, isShadowBolt: false, isMagicMissile: false, isBoneSpear: false,
+          isMagmaOrb: false, isViceroyMissile: false, isBlackSauce: false, isSlash: false, isHammer: false,
+          empowered: s.empowered || false,
+          pierceHitCount: 0, wobblePhase: Math.random() * Math.PI * 2,
+          acceleration: 1, isOrbit: false, isBox: false, isWhirl: false, curveRate: 0, returning: false,
+          runeBlastCount: s.runeBlastCount || 0, runeBlastDamage: s.runeBlastDamage || 0,
+          runeBlastRange: s.runeBlastRange || 300, runeBlastSpeed: s.runeBlastSpeed || 5.5, runeBlastPierce: 0,
+          isChrono: false, chronoDelay: 0, chronoBaseDamage: 0, chronoMultiplierBonus: 0, chronoChain: false,
+          lifesteal: 0, targetEnemy: null, targetX: player.x, targetY: player.y,
+          isRecall: true, isDashBlade: false, isCorpse: false,
+        });
+        Particles.emit(startX, startY, s.empowered ? '#ffdd88' : '#44ffbb', 12, 4);
+      }
+      return true;
+    }
+
     // Sauce: sprays in the direction the player is moving (or forward if stationary)
     if (s.targeting === 'sauce') {
       const mLen = Math.hypot(player.moveDx, player.moveDy) || 1;
@@ -2590,6 +2836,7 @@ const WeaponSystem = {
       targetEnemy: target,
       targetX: target ? target.x : player.x,
       targetY: target ? target.y : player.y,
+      isRecall: false, isDashBlade: wi.weaponId === 'void_stride', isCorpse: false,
     });
   },
 
@@ -2639,6 +2886,7 @@ const WeaponSystem = {
 // ── PROJECTILES ───────────────────────────────────────────────
 
 let Projectiles = [];
+let TriadOrbs = []; // { weaponId, damage, subDamage, armorPen, statusEffect, primaryRadius, subRadius, primarySpeed, subSpeed, triadCount, orbs, timer, empowered }
 
 // ── DECOYS ────────────────────────────────────────────────────
 
@@ -2851,6 +3099,11 @@ function updateProjectiles(dt, enemies) {
       p.x += p.vx;
       p.y += p.vy;
       p.traveledSq += Math.hypot(p.vx, p.vy);
+
+      // Arcane Recall: die when it reaches the caster
+      if (p.isRecall && dist(p.x, p.y, Player.x, Player.y) < 22) {
+        p.dead = true; continue;
+      }
 
       // World bounds / bounce
       let bounced = false;
@@ -3100,6 +3353,7 @@ function applyStatusEffect(enemy, effect) {
 function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true;
+  enemy.deathTimer = 3.0;
   Player.kills++;
   Player.addXp(Math.round(enemy.xp * (1 + Game.wave * 0.05) + enemy.maxHp * 0.04));
   if (Player.killHeal > 0) {
@@ -3160,7 +3414,10 @@ function spawnEnemy(configId, waveNum) {
 
 function updateEnemies(dt) {
   for (const e of Enemies) {
-    if (e.dead) continue;
+    if (e.dead) {
+      if (e.deathTimer > 0) e.deathTimer -= dt;
+      continue;
+    }
 
     // Status effects
     for (let i = e.statusEffects.length - 1; i >= 0; i--) {
@@ -4064,6 +4321,88 @@ const Renderer = {
         ctx.fillRect(p.empowered ? -18 : -15, -26, p.empowered ? 36 : 30, 3);
         ctx.shadowBlur = 0;
         ctx.restore();
+      } else if (p.isDashBlade) {
+        // Arcane blade slash sweeping perpendicular
+        const angle = Math.atan2(p.vy, p.vx);
+        const emp = p.empowered;
+        const slashLen = emp ? 60 : 46;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.shadowBlur = emp ? 36 : 20;
+        ctx.shadowColor = emp ? '#ffdd88' : '#44ffbb';
+        ctx.strokeStyle = emp ? 'rgba(255,230,100,0.55)' : 'rgba(68,255,187,0.45)';
+        ctx.lineWidth = emp ? 18 : 12;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-slashLen * 0.5, -2);
+        ctx.lineTo(slashLen * 0.5, 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = emp ? 'rgba(255,255,200,0.95)' : 'rgba(180,255,240,0.92)';
+        ctx.lineWidth = emp ? 5 : 3;
+        ctx.beginPath();
+        ctx.moveTo(-slashLen * 0.5, -2);
+        ctx.lineTo(slashLen * 0.5, 2);
+        ctx.stroke();
+        ctx.fillStyle = emp ? 'rgba(255,240,150,0.9)' : 'rgba(150,255,220,0.85)';
+        ctx.beginPath();
+        ctx.arc(slashLen * 0.5, 2, emp ? 6 : 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (p.isRecall) {
+        // Arcane bolt flying toward the caster — draw as trailing teal streak
+        const angle = Math.atan2(p.vy, p.vx);
+        const emp = p.empowered;
+        const len = emp ? 52 : 38;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.shadowBlur = emp ? 32 : 18;
+        ctx.shadowColor = emp ? '#ffdd88' : '#44ffbb';
+        ctx.strokeStyle = emp ? 'rgba(255,220,80,0.5)' : 'rgba(68,255,187,0.4)';
+        ctx.lineWidth = emp ? 16 : 11;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(len, 0); // trail behind (toward spawn point = forward in velocity direction)
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = emp ? 'rgba(255,255,180,0.95)' : 'rgba(160,255,230,0.9)';
+        ctx.lineWidth = emp ? 5 : 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(len, 0);
+        ctx.stroke();
+        ctx.fillStyle = emp ? 'rgba(255,240,120,0.9)' : 'rgba(100,255,200,0.9)';
+        ctx.shadowBlur = emp ? 16 : 10;
+        ctx.shadowColor = emp ? '#ffdd44' : '#44ffbb';
+        ctx.beginPath();
+        ctx.arc(0, 0, emp ? 7 : 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (p.isCorpse) {
+        // Dead enemy flying as projectile — spinning with glow aura
+        const rot = (Date.now() * 0.012) % (Math.PI * 2);
+        const emp = p.empowered;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        // Arcane explosion aura
+        ctx.beginPath();
+        ctx.arc(0, 0, emp ? 26 : 20, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? 'rgba(255,150,0,0.18)' : 'rgba(68,255,187,0.15)';
+        ctx.shadowBlur = emp ? 28 : 18;
+        ctx.shadowColor = emp ? '#ffaa00' : '#44ffbb';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.rotate(rot);
+        ctx.font = '20px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.filter = emp ? 'brightness(2.5)' : 'brightness(1.6)';
+        ctx.fillText(p.icon, 0, 0);
+        ctx.filter = 'none';
+        ctx.restore();
       } else {
         // Bone spear: grows larger with each pierce hit
         const boneScale = p.isBoneSpear ? 1 + (p.pierceHitCount || 0) * 0.4 : 1;
@@ -4113,6 +4452,64 @@ const Renderer = {
         ctx.restore();
       }
     }
+
+    // Astral Triad orbs
+    ctx.save();
+    for (const t of TriadOrbs) {
+      const emp = t.empowered;
+      const pulse = Math.sin(Date.now() * 0.004) * 0.3 + 0.7;
+      const primaryColor = emp ? '#ffdd88' : '#44ffbb';
+      const subColor     = emp ? '#ffaa44' : '#88ffdd';
+      for (const orb of t.orbs) {
+        const px = Player.x + Math.cos(orb.angle) * t.primaryRadius;
+        const py = Player.y + Math.sin(orb.angle) * t.primaryRadius;
+        // Faint tether from player to primary
+        ctx.beginPath();
+        ctx.moveTo(Player.x, Player.y);
+        ctx.lineTo(px, py);
+        ctx.strokeStyle = `rgba(68,255,187,${0.1 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Primary orb glow
+        ctx.beginPath();
+        ctx.arc(px, py, emp ? 18 : 14, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? `rgba(255,210,100,${0.2 * pulse})` : `rgba(68,255,187,${0.2 * pulse})`;
+        ctx.shadowBlur = emp ? 24 : 14;
+        ctx.shadowColor = primaryColor;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Primary orb core
+        ctx.beginPath();
+        ctx.arc(px, py, emp ? 8 : 6, 0, Math.PI * 2);
+        ctx.fillStyle = emp ? 'rgba(255,240,180,0.95)' : 'rgba(180,255,230,0.95)';
+        ctx.fill();
+        for (const sub of orb.subs) {
+          const sx = px + Math.cos(sub.angle) * t.subRadius;
+          const sy = py + Math.sin(sub.angle) * t.subRadius;
+          // Tether from primary to sub
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(sx, sy);
+          ctx.strokeStyle = `rgba(68,255,187,${0.18 * pulse})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          // Sub orb glow
+          ctx.beginPath();
+          ctx.arc(sx, sy, emp ? 9 : 7, 0, Math.PI * 2);
+          ctx.fillStyle = emp ? `rgba(255,180,80,${0.2 * pulse})` : `rgba(68,255,187,${0.18 * pulse})`;
+          ctx.shadowBlur = emp ? 14 : 10;
+          ctx.shadowColor = subColor;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // Sub orb core
+          ctx.beginPath();
+          ctx.arc(sx, sy, emp ? 4 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = emp ? 'rgba(255,230,150,0.95)' : 'rgba(200,255,240,0.95)';
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
 
     // Weapon range rings
     if (Game.phase === 'playing') {
@@ -4729,6 +5126,7 @@ const Game = {
     Rifts = [];
     WardShells = [];
     Spikes = [];
+    TriadOrbs = [];
     MirrorEchoTemplate = null;
     Particles.list = [];
     GroundEffects.list = [];
@@ -4776,6 +5174,7 @@ const Game = {
       updateRifts(dt, Enemies);
       updateWardShells(dt, Enemies);
       updateSpikes(dt, Enemies);
+      updateTriadOrbs(dt, Enemies);
       GroundEffects.update(dt, Enemies);
       Particles.update(dt);
 
