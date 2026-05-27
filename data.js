@@ -792,7 +792,7 @@ const CONFIG = {
     {
       id: 'arcane_recall',
       name: 'Arcane Recall',
-      icon: '🪃',
+      icon: '🔄',
       description: 'A crackling bolt materializes at max range and hurtles back toward the caster, piercing through every enemy it passes.',
       cooldown: 1.6,
       damage: 23,
@@ -841,7 +841,7 @@ const CONFIG = {
     {
       id: 'mirror_glyph',
       name: 'Mirror Glyph',
-      icon: '🪞',
+      icon: '🔮',
       description: 'A floating mirror orbits you and echoes your last spell at 55% power from its own position — positioning your mirror becomes a second form of aim.',
       cooldown: 1.2,
       damage: 0,
@@ -1019,7 +1019,7 @@ const CONFIG = {
       areaRadius: 0,
       statusEffect: null,
       upgrades: [
-        { id: 'mass_grave',     name: 'Mass Grave',     icon: '🪦', description: 'Detonates up to 4 additional corpses per cast.',              changes: { gravebombMaxCount: 4 } },
+        { id: 'mass_grave',     name: 'Mass Grave',     icon: '⚰️', description: 'Detonates up to 4 additional corpses per cast.',              changes: { gravebombMaxCount: 4 } },
         { id: 'infernal_yield', name: 'Infernal Yield', icon: '💥', description: 'Each explosion deals 40% of max HP instead of 25%.',          changes: { gravebombPercentBonus: 0.15 } },
         { id: 'corpse_rot',     name: 'Corpse Rot',     icon: '☠️', description: 'Survivors of each blast are briefly poisoned.',                changes: { statusEffect: { type: 'poison', amount: 10, duration: 2.5 } } }
       ]
@@ -1079,7 +1079,7 @@ const CONFIG = {
     {
       id: 'ward_shell',
       name: 'Battle Shell',
-      icon: '🫧',
+      icon: '🛡️',
       description: 'Conjures a hardened combat shell right around you. Destroys incoming projectiles on contact and violently repels any enemy that touches it.',
       cooldown: 3.5,
       damage: 17,
@@ -1192,7 +1192,7 @@ const CONFIG = {
     {
       id: 'lotus_rift',
       name: 'Lotus Rift',
-      icon: '🪷',
+      icon: '🌺',
       description: 'Opens a blooming lotus-shaped rift under a distant enemy. Each petal that unfolds damages nearby enemies. When the final petal opens, the lotus collapses into a healing mote that drifts back to you.',
       cooldown: 6.0,
       damage: 19,
@@ -1222,7 +1222,7 @@ const CONFIG = {
     {
       id: 'scarab_halo',
       name: 'Scarab Halo',
-      icon: '🪲',
+      icon: '🐞',
       description: 'Summons three golden scarabs that orbit the player. Each scarab charges up while avoiding enemies — the longer it goes without striking, the more damage it deals on impact.',
       cooldown: 8.0,
       damage: 13,
@@ -1246,7 +1246,7 @@ const CONFIG = {
       upgrades: [
         { id: 'wider_halo',     name: 'Wider Halo',     icon: '⭕', description: 'Scarabs orbit at a 50% greater radius.',                 changes: { rangeMultiplier: 1.5 } },
         { id: 'patient_swarm',  name: 'Patient Swarm',  icon: '⏳', description: 'Scarabs charge up significantly faster while orbiting.', changes: { chargeRate: 0.22 } },
-        { id: 'carapace_swarm', name: 'Carapace Swarm', icon: '🪲', description: 'Summons 2 additional scarabs.',                          changes: { projectileCount: 2 } }
+        { id: 'carapace_swarm', name: 'Carapace Swarm', icon: '🐞', description: 'Summons 2 additional scarabs.',                          changes: { projectileCount: 2 } }
       ]
     },
     {
@@ -1307,7 +1307,7 @@ const CONFIG = {
     {
       id: 'molting_mirror',
       name: 'Molting Mirror',
-      icon: '🪞',
+      icon: '🔮',
       description: 'A living mirror slides slowly back and forth behind the player. It periodically echoes your last fired spell from its current position at reduced power.',
       cooldown: 1.2,
       damage: 0,
@@ -1423,7 +1423,7 @@ const CONFIG = {
     { id: 'kobold',      name: 'Kobold',               icon: '🦎', health:  15, speed: 2.80, armor: 0, strength:  4, xp:   4, radius: 11, waveMin:  3, spawnWeight:  7, abilities: ['fast'] },
     { id: 'orc',         name: 'Orc Brute',            icon: '🪓', health:  41, speed: 1.60, armor: 2, strength:  9, xp:   8, radius: 16, waveMin:  5, spawnWeight:  5, abilities: ['armored'] },
     { id: 'ghoul',       name: 'Ghoul',                icon: '🧟', health:  35, speed: 2.20, armor: 1, strength:  7, xp:   8, radius: 15, waveMin:  7, spawnWeight:  5, abilities: ['poison'] },
-    { id: 'troll',       name: 'Troll',                icon: '🧌', health: 107, speed: 1.20, armor: 3, strength: 14, xp:  18, radius: 22, waveMin: 10, spawnWeight:  3, abilities: ['regeneration', 'miniboss'] },
+    { id: 'troll',       name: 'Troll',                icon: '👹', health: 107, speed: 1.20, armor: 3, strength: 14, xp:  18, radius: 22, waveMin: 10, spawnWeight:  3, abilities: ['regeneration', 'miniboss'] },
     { id: 'beholderkin', name: 'Beholderkin',          icon: '👁️', health:  78, speed: 1.40, armor: 2, strength: 10, xp:  20, radius: 20, waveMin: 14, spawnWeight:  2, abilities: ['ranged'] },
     { id: 'dragon_boss', name: 'Ancient Red Dragon',   icon: '🐉', health: 1035, speed: 1.35, armor: 6, strength: 24, xp: 200, radius: 42, waveMin: 20, spawnWeight:  0, abilities: ['boss', 'fireBreath', 'charge'] }
   ],
@@ -1639,7 +1639,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'bone_puppet', name: 'Bone Puppet', icon: '🪆',
+      id: 'bone_puppet', name: 'Bone Puppet', icon: '🎎',
       requires: ['bone_spear', 'phantom_double'],
       description: 'Phantom Double gains 150 HP, lasts 5 extra seconds, and explodes on death. Bone Spear pierces 5 additional enemies.',
       weaponBoosts: [
@@ -1695,7 +1695,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'hall_of_mirrors', name: 'Hall of Mirrors', icon: '🪞',
+      id: 'hall_of_mirrors', name: 'Hall of Mirrors', icon: '🔮',
       requires: ['mirror_glyph', 'dazzling_lights'],
       description: 'Two extra mirrors orbit you, echoing spells. Dazzling Lights deals 2.5× damage and pierces every enemy it hits.',
       weaponBoosts: [
@@ -1771,7 +1771,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'hex_burial', name: 'Hex Burial', icon: '🪦',
+      id: 'hex_burial', name: 'Hex Burial', icon: '⚰️',
       requires: ['alexs_hax', 'gravebomb'],
       description: "When Hax circles burn an enemy to death, Gravebomb instantly detonates the corpse in place. Gravebomb deals 45% of max HP per explosion. Hax fires 40% faster.",
       weaponBoosts: [
@@ -1808,7 +1808,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'corpse_cannonade', name: 'Corpse Cannonade', icon: '🪦',
+      id: 'corpse_cannonade', name: 'Corpse Cannonade', icon: '⚰️',
       requires: ['boltgunz', 'gravebomb'],
       description: "Direct kills from shells instantly trigger a Gravebomb detonation on the corpse. Gravebomb blast radius and damage percent both increase. Boltgunz gains armor penetration.",
       weaponBoosts: [
@@ -1917,7 +1917,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'golden_bloom', name: 'Golden Bloom', icon: '🪷',
+      id: 'golden_bloom', name: 'Golden Bloom', icon: '🌺',
       requires: ['lotus_rift', 'scarab_halo'],
       description: 'Scarabs that pass over Lotus Rifts become empowered. Lotus Rift releases scarabs outward when it collapses.',
       weaponBoosts: [
@@ -1926,7 +1926,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'swarm_season', name: 'Swarm Season', icon: '🪲',
+      id: 'swarm_season', name: 'Swarm Season', icon: '🐞',
       requires: ['scarab_halo', 'pollen_nova'],
       description: 'Pollen doubles the scarab charge rate for 5 seconds. Scarabs release mini pollen bursts when they strike.',
       weaponBoosts: [
@@ -1953,7 +1953,7 @@ const CONFIG = {
       ]
     },
     {
-      id: 'false_hatchling', name: 'False Hatchling', icon: '🪞',
+      id: 'false_hatchling', name: 'False Hatchling', icon: '🔮',
       requires: ['molting_mirror', 'brood_husk'],
       description: 'Molting Mirror echoes Brood Husk explosions from its current position. Brood Husks last longer and hit harder.',
       weaponBoosts: [
@@ -2089,7 +2089,7 @@ const PASSIVES = [
   { id: 'ground_effect_up', name: 'Scorched Covenant', icon: '🔥', description: '+25% ground effect duration and damage.',
     condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.groundEffect || wi.appliedUpgrades.some(uid => wc.upgrades?.some(u => u.id === uid && u.changes?.groundEffect))); }),
     apply: p => { p.globalGroundEffectDurationMultiplier = (p.globalGroundEffectDurationMultiplier || 1) * 1.25; p.globalGroundEffectDamageMultiplier = (p.globalGroundEffectDamageMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
-  { id: 'mirror_power_up', name: 'Silvered Echo',      icon: '🪞', description: '+20% mirror echo power.',
+  { id: 'mirror_power_up', name: 'Silvered Echo',      icon: '🔮', description: '+20% mirror echo power.',
     condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.targeting === 'mirror'; }),
     apply: p => { p.globalMirrorPowerBonus = (p.globalMirrorPowerBonus || 0) + 0.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'decoy_mastery',  name: 'False Idol',          icon: '👤', description: '+50 decoy HP and +3 seconds decoy duration.',
@@ -2107,7 +2107,7 @@ const PASSIVES = [
   { id: 'duration_up',        name: 'Lingering Hex',    icon: '🕯️', description: '+25% duration for applicable weapon effects.',
     condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.groundEffect || wc.orbitDuration || wc.targeting === 'triad' || ['pool','trail','pulse','decoy'].includes(wc.targeting)); }),
     apply: p => { p.globalDurationMultiplier = (p.globalDurationMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
-  { id: 'pierce_up',          name: 'Needle Threader',  icon: '🪡', description: '+1 pierce for applicable projectiles.',
+  { id: 'pierce_up',          name: 'Needle Threader',  icon: '🎯', description: '+1 pierce for applicable projectiles.',
     condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && !['gravebomb','decoy','orbit','triad'].includes(wc.targeting); }),
     apply: p => { p.globalPierceBonus = (p.globalPierceBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'chain_up',           name: 'Storm Link',       icon: '🔗', description: '+1 chain for applicable weapons.',
@@ -2115,7 +2115,7 @@ const PASSIVES = [
     apply: p => { p.globalChainBonus = (p.globalChainBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'armor_pierce_up',    name: 'Void Needle',      icon: '🕳️', description: '+2 armor penetration on applicable weapons.',
     apply: p => { p.globalArmorPenetrationBonus = (p.globalArmorPenetrationBonus || 0) + 2; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
-  { id: 'pull_force_up',      name: 'Gravity Knot',     icon: '🪢', description: 'Pull effects gain +35% pull strength.',
+  { id: 'pull_force_up',      name: 'Gravity Knot',     icon: '🧲', description: 'Pull effects gain +35% pull strength.',
     condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.targeting === 'jakes'; }),
     apply: p => { p.globalPullStrengthMultiplier = (p.globalPullStrengthMultiplier || 1) * 1.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'status_duration_up', name: 'Hex Resin',        icon: '🧪', description: '+20% duration for stun, poison, slow, and other status effects.',
