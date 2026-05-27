@@ -146,6 +146,16 @@ body::after {
 
 /* ── CHARACTER SELECT ────────────────────── */
 #screen-charselect { flex-direction: column; gap: 32px; }
+#screen-charselect::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('assets/images/Choose_Your_Fighter.png') center center / cover no-repeat;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+#screen-charselect > * { position: relative; z-index: 1; }
 .charselect-title {
   font-family: 'VT323', monospace;
   font-size: 32px;
@@ -412,6 +422,23 @@ body::after {
   border-bottom: 1px solid var(--border);
 }
 .stat-val { color: var(--g1); }
+
+/* ── VICTORY BACKDROPS ───────────────────── */
+#screen-victory::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+#screen-victory[data-character="ember_adept"]::before  { background-image: url('assets/images/ember_victory.png'); }
+#screen-victory[data-character="frost_seer"]::before   { background-image: url('assets/images/frost_victory.png'); }
+#screen-victory[data-character="storm_caller"]::before { background-image: url('assets/images/storm_victory.png'); }
+#screen-victory > * { position: relative; z-index: 1; }
 
 /* ── SPEED BAR ───────────────────────────── */
 #speed-bar {
@@ -838,7 +865,7 @@ const SpriteSheet = {
   load() {
     this.img.onload  = () => { this.ready = true; };
     this.img.onerror = () => { /* falls back to emoji silently */ };
-    this.img.src = 'sprites.png';
+    this.img.src = 'assets/images/sprites.png';
   }
 };
 
@@ -4994,10 +5021,10 @@ const Music = {
   _lossFadeId: null,
 
   init() {
-    this.audio = new Audio('Archmage_Loop.mp3');
+    this.audio = new Audio('assets/music/Archmage_Loop.mp3');
     this.audio.loop = true;
     this.audio.volume = 0.55;
-    this.lossAudio = new Audio('Archmage_Loss.mp3');
+    this.lossAudio = new Audio('assets/music/Archmage_Loss.mp3');
     this.lossAudio.loop = true;
     this.lossAudio.volume = 0;
   },
@@ -5476,7 +5503,9 @@ const Game = {
       document.getElementById('touch-controls').classList.remove('tc-visible');
       const stats = document.getElementById('victory-stats');
       stats.innerHTML = buildStatsHTML();
-      document.getElementById('screen-victory').classList.remove('hidden');
+      const victoryScreen = document.getElementById('screen-victory');
+      victoryScreen.dataset.character = Game.selectedChar ? Game.selectedChar.id : '';
+      victoryScreen.classList.remove('hidden');
     }, 2500);
   },
 
