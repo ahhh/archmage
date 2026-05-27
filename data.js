@@ -999,6 +999,32 @@ const CONFIG = {
       ]
     },
     {
+      id: 'gravebomb',
+      name: 'Gravebomb',
+      icon: '💣',
+      description: 'Rapidly detonates all fresh corpses in range, triggering explosions that each deal a percentage of that enemy\'s maximum HP to everything nearby.',
+      cooldown: 0.9,
+      damage: 0,
+      projectileSpeed: 0,
+      armorPenetration: 0,
+      pierce: 0,
+      bounce: 0,
+      range: 350,
+      targeting: 'gravebomb',
+      gravebombPercent: 0.25,
+      gravebombRadius: 100,
+      gravebombMaxCount: 5,
+      chainCount: 0,
+      chainRange: 0,
+      areaRadius: 0,
+      statusEffect: null,
+      upgrades: [
+        { id: 'mass_grave',     name: 'Mass Grave',     icon: '🪦', description: 'Detonates up to 4 additional corpses per cast.',              changes: { gravebombMaxCount: 4 } },
+        { id: 'infernal_yield', name: 'Infernal Yield', icon: '💥', description: 'Each explosion deals 40% of max HP instead of 25%.',          changes: { gravebombPercentBonus: 0.15 } },
+        { id: 'corpse_rot',     name: 'Corpse Rot',     icon: '☠️', description: 'Survivors of each blast are briefly poisoned.',                changes: { statusEffect: { type: 'poison', amount: 10, duration: 2.5 } } }
+      ]
+    },
+    {
       id: 'afro_samurai_blade',
       name: "Afro Samurai's Final Blade",
       icon: '🗡️',
@@ -1719,6 +1745,24 @@ const CONFIG = {
       ]
     },
     {
+      id: 'hex_burial', name: 'Hex Burial', icon: '🪦',
+      requires: ['alexs_hax', 'gravebomb'],
+      description: "When Hax circles burn an enemy to death, Gravebomb instantly detonates the corpse in place. Gravebomb deals 45% of max HP per explosion. Hax fires 40% faster.",
+      weaponBoosts: [
+        { weaponId: 'alexs_hax',  cooldownMultiplier: 0.6, groundEffect: { type: 'burn', duration: 5.0, dps: 22 } },
+        { weaponId: 'gravebomb',  gravebombPercentBonus: 0.20, gravebombRadius: 20 }
+      ]
+    },
+    {
+      id: 'death_toll', name: 'Death Toll', icon: '🔔',
+      requires: ['gravebomb', 'jakes_lament'],
+      description: "Each kill from Jake's beam triggers a small Gravebomb explosion at that target. Gravebomb blast radius grows 50% and deals 45% of max HP. Jake's beam deals double damage.",
+      weaponBoosts: [
+        { weaponId: 'gravebomb',   gravebombPercentBonus: 0.20, gravebombRadius: 50 },
+        { weaponId: 'jakes_lament', damageMultiplier: 2.0 }
+      ]
+    },
+    {
       id: 'sauce_ring', name: 'Sauce Ring', icon: '🖤',
       requires: ['alexs_hax', 'stax_black_sauce'],
       description: "Black Sauce pools that soak an enemy trigger a cursed hax circle at that spot. Alex's Hax summons 2 more circles per cast and fires 30% faster. Sauce deals 70% more damage.",
@@ -1956,7 +2000,7 @@ const CONFIG = {
     lightning: { name: 'Lightning Cycle', icon: '⚡', color: '#ffee44', weapons: ['spark_chain','rune_burst','arcane_orb','arcane_cube','phase_blade','thunder_clap'] },
     death:     { name: 'Death Cycle',     icon: '💀', color: '#cc66ff', weapons: ['shadow_bolt','bone_spear','phantom_double','hungry_grimoire','plague_pool','soul_whirl'] },
     arcane:    { name: 'Arcane Cycle',    icon: '✨', color: '#44ffbb', weapons: ['magic_missiles','mirror_glyph','dazzling_lights','leyline_harp','void_stride','astral_triad','entropy_catalyst','arcane_recall'] },
-    demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce','alexs_hax'] },
+    demon:     { name: 'Demon Cycle',     icon: '😈', color: '#ff4466', weapons: ['jakes_lament','babbage_blast','viceroy_missile','stax_black_sauce','alexs_hax','gravebomb'] },
     blade:     { name: 'Blade Cycle',     icon: '⚔️', color: '#cccccc', weapons: ['afro_samurai_blade','ward_shell','arcane_spikes','hammer_toss','spaghettis_blade'] },
     life:      { name: 'Life Cycle',      icon: '🌿', color: '#66ff99', weapons: ['lotus_rift','scarab_halo','pollen_nova','frizzos_hourglass','molting_mirror','brood_husk','crescent_moon','ouroboros_vine'] }
   }
@@ -1977,24 +2021,34 @@ const PASSIVES = [
 
   // ── Weapon-type passives ──────────────────────────────────
   { id: 'multicast_up',   name: 'Echo Prism',         icon: '🔷', description: '+1 projectile for applicable multi-shot weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && !['orbit','triad','gravebomb','decoy','mirror'].includes(wc.targeting); }),
     apply: p => { p.globalProjectileCountBonus = (p.globalProjectileCountBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'radial_up',      name: 'Star Compass',        icon: '🧭', description: '+2 radial shots for applicable nova and radial weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && ['radial','nova'].includes(wc.targeting); }),
     apply: p => { p.globalRadialCountBonus = (p.globalRadialCountBonus || 0) + 2; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'split_up',       name: 'Fracture Lens',       icon: '💎', description: 'Splitting projectiles create +1 extra split.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.splitProjectiles > 0 || wi.appliedUpgrades.some(uid => wc.upgrades?.some(u => u.id === uid && u.changes?.splitProjectiles))); }),
     apply: p => { p.globalSplitProjectilesBonus = (p.globalSplitProjectilesBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'orbit_speed_up', name: 'Gyre Engine',         icon: '🌀', description: '+30% orbit speed for orbiting weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && ['orbit','triad'].includes(wc.targeting); }),
     apply: p => { p.globalOrbitSpeedMultiplier = (p.globalOrbitSpeedMultiplier || 1) * 1.30; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'curve_up',       name: 'Crescent Geometry',   icon: '🌙', description: '+35% curve rate for arcing and spiral projectiles.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.curveRate > 0 || wc.targeting === 'whirl'); }),
     apply: p => { p.globalCurveRateMultiplier = (p.globalCurveRateMultiplier || 1) * 1.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'chrono_up',      name: 'Time Interest',       icon: '⏳', description: 'Chrono detonations gain +35% bonus scaling.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.isChrono; }),
     apply: p => { p.globalChronoMultiplierBonus = (p.globalChronoMultiplierBonus || 0) + 0.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'rift_up',        name: 'Crackling Fault',     icon: '💠', description: '+1 rift, spike, or trap for applicable ground weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && ['rift','spikes'].includes(wc.targeting); }),
     apply: p => { p.globalTrapCountBonus = (p.globalTrapCountBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'ground_effect_up', name: 'Scorched Covenant', icon: '🔥', description: '+25% ground effect duration and damage.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.groundEffect || wi.appliedUpgrades.some(uid => wc.upgrades?.some(u => u.id === uid && u.changes?.groundEffect))); }),
     apply: p => { p.globalGroundEffectDurationMultiplier = (p.globalGroundEffectDurationMultiplier || 1) * 1.25; p.globalGroundEffectDamageMultiplier = (p.globalGroundEffectDamageMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'mirror_power_up', name: 'Silvered Echo',      icon: '🪞', description: '+20% mirror echo power.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.targeting === 'mirror'; }),
     apply: p => { p.globalMirrorPowerBonus = (p.globalMirrorPowerBonus || 0) + 0.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'decoy_mastery',  name: 'False Idol',          icon: '👤', description: '+50 decoy HP and +3 seconds decoy duration.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.targeting === 'decoy'; }),
     apply: p => { p.globalDecoyHpBonus = (p.globalDecoyHpBonus || 0) + 50; p.globalDecoyDurationBonus = (p.globalDecoyDurationBonus || 0) + 3.0; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
 
   // ── General stat passives ─────────────────────────────────
@@ -2003,19 +2057,26 @@ const PASSIVES = [
   { id: 'projectile_speed_up',name: 'Wind Etching',     icon: '🍃', description: '+20% projectile speed.',
     apply: p => { p.globalProjectileSpeedMultiplier = (p.globalProjectileSpeedMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'area_up',            name: 'Titan Glyph',      icon: '🌐', description: '+20% area size for applicable weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.areaRadius > 0 || ['gravebomb','corpseblast'].includes(wc.targeting)); }),
     apply: p => { p.globalAreaMultiplier = (p.globalAreaMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'duration_up',        name: 'Lingering Hex',    icon: '🕯️', description: '+25% duration for applicable weapon effects.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.groundEffect || wc.orbitDuration || wc.targeting === 'triad' || ['pool','trail','pulse','decoy'].includes(wc.targeting)); }),
     apply: p => { p.globalDurationMultiplier = (p.globalDurationMultiplier || 1) * 1.25; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'pierce_up',          name: 'Needle Threader',  icon: '🪡', description: '+1 pierce for applicable projectiles.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && !['gravebomb','decoy','orbit','triad'].includes(wc.targeting); }),
     apply: p => { p.globalPierceBonus = (p.globalPierceBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'chain_up',           name: 'Storm Link',       icon: '🔗', description: '+1 chain for applicable weapons.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.chainCount > 0; }),
     apply: p => { p.globalChainBonus = (p.globalChainBonus || 0) + 1; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'armor_pierce_up',    name: 'Void Needle',      icon: '🕳️', description: '+2 armor penetration on applicable weapons.',
     apply: p => { p.globalArmorPenetrationBonus = (p.globalArmorPenetrationBonus || 0) + 2; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'pull_force_up',      name: 'Gravity Knot',     icon: '🪢', description: 'Pull effects gain +35% pull strength.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.targeting === 'jakes'; }),
     apply: p => { p.globalPullStrengthMultiplier = (p.globalPullStrengthMultiplier || 1) * 1.35; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'status_duration_up', name: 'Hex Resin',        icon: '🧪', description: '+20% duration for stun, poison, slow, and other status effects.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && (wc.statusEffect || wc.groundEffect || wi.appliedUpgrades.some(uid => wc.upgrades?.some(u => u.id === uid && (u.changes?.statusEffect || u.changes?.groundEffect)))); }),
     apply: p => { p.globalStatusDurationMultiplier = (p.globalStatusDurationMultiplier || 1) * 1.20; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
   { id: 'knockback_up',       name: 'Thunder Palm',     icon: '✋', description: '+30% knockback force.',
+    condition: p => p.weapons.some(wi => { const wc = CONFIG.weapons.find(w => w.id === wi.weaponId); return wc && wc.knockback > 0; }),
     apply: p => { p.globalKnockbackMultiplier = (p.globalKnockbackMultiplier || 1) * 1.30; for (const wi of p.weapons) p.recomputeWeapon(wi); } },
 ];

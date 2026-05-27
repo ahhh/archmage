@@ -451,7 +451,7 @@ Weapons are grouped into eight **Cycles**. Each weapon within a cycle participat
 | 🌠 **Homing Cascade** | Arcane Recall + Magic Missiles | Each Recall bolt that reaches the caster fragments into a missile burst. Magic Missiles fires 50% faster and deals 80% more damage. |
 
 ### 😈 Demon Cycle
-*Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → Alex's Hax → (back to Jake's Lament)*
+*Jake's Lament → Babbage Blast → Viceroy's Cringe Missile → Stax's Black Sauce → Alex's Hax → Gravebomb → (back to Jake's Lament)*
 | Synergy | Weapons | Effect |
 |---|---|---|
 | 🧭 **Bombastic Bearing** | Jake's Lament + Babbage Blast | Jake's beam extends 50% further with 15% lifesteal. Babbage Blast detonates twice as many runes at double damage. |
@@ -460,6 +460,8 @@ Weapons are grouped into eight **Cycles**. Each weapon within a cycle participat
 | 💨 **Trail Blazer** | Stax's Black Sauce + Jake's Lament | Black Sauce fires 5× faster. Jake's beam extends further and lifesteals 20% of all damage dealt. |
 | 🔥 **Hex Protocol** | Alex's Hax + Jake's Lament | Jake's beam brands enemies — Alex's Hax targets branded enemies first and circles burn twice as hot. Jake's beam extends 40% further with 15% lifesteal. |
 | 🖤 **Sauce Ring** | Alex's Hax + Stax's Black Sauce | Black Sauce pools trigger hax circles wherever they soak an enemy. Alex's Hax summons 2 more circles per cast and fires 30% faster. Sauce deals 70% more damage. |
+| 🪦 **Hex Burial** | Alex's Hax + Gravebomb | When Hax circles burn an enemy to death, Gravebomb instantly detonates the corpse. Gravebomb deals 45% of max HP per blast. Hax fires 40% faster. |
+| 🔔 **Death Toll** | Gravebomb + Jake's Lament | Each of Jake's beam kills triggers a Gravebomb explosion at that target. Gravebomb blast radius grows 50% and deals 45% of max HP. Jake's beam deals double damage. |
 
 ### ⚔️ Blade Cycle
 *Afro Samurai's Final Blade → Spaghetti's Blade → Hammer Toss → Battle Shell → Field Caltrops → (back to Final Blade)*

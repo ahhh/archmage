@@ -1142,6 +1142,9 @@ const Player = {
       corpseBlastPercent: wConfig.corpseBlastPercent || 0.35,
       corpseBlastRadius: wConfig.corpseBlastRadius || 110,
       corpseChain: wConfig.corpseChain || false,
+      gravebombPercent: wConfig.gravebombPercent || 0.25,
+      gravebombRadius: wConfig.gravebombRadius || 100,
+      gravebombMaxCount: wConfig.gravebombMaxCount || 5,
     };
     for (const uid of appliedUpgrades) {
       const upg = wConfig.upgrades.find(u => u.id === uid);
@@ -1207,6 +1210,9 @@ const Player = {
       if (c.triadCount != null)              s.triadCount += c.triadCount;
       if (c.corpseBlastPercentBonus != null) s.corpseBlastPercent += c.corpseBlastPercentBonus;
       if (c.corpseChain)                     s.corpseChain = true;
+      if (c.gravebombPercentBonus != null)   s.gravebombPercent += c.gravebombPercentBonus;
+      if (c.gravebombMaxCount != null)       s.gravebombMaxCount += c.gravebombMaxCount;
+      if (c.gravebombRadius != null)         s.gravebombRadius += c.gravebombRadius;
     }
     // Apply active combo boosts (same change format as upgrades)
     if (this.unlockedCombos) {
@@ -1263,6 +1269,9 @@ const Player = {
         if (c.triadCount != null)              s.triadCount += c.triadCount;
         if (c.corpseBlastPercentBonus != null) s.corpseBlastPercent += c.corpseBlastPercentBonus;
         if (c.corpseChain)                     s.corpseChain = true;
+        if (c.gravebombPercentBonus != null)   s.gravebombPercent += c.gravebombPercentBonus;
+        if (c.gravebombMaxCount != null)       s.gravebombMaxCount += c.gravebombMaxCount;
+        if (c.gravebombRadius != null)         s.gravebombRadius += c.gravebombRadius;
       }
     }
     // ── Global passive multipliers ────────────────────────────
@@ -2057,7 +2066,7 @@ const WeaponSystem = {
 
     // Save echo template for Mirror Glyph (from any projectile-firing weapon)
     if (wi.weaponId !== 'mirror_glyph' && s.projectileSpeed > 0 &&
-        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest', 'hackcircle', 'triad', 'corpseblast'].includes(s.targeting)) {
+        !['orbit', 'box', 'trail', 'pulse', 'grimoire', 'harp', 'mirror', 'decoy', 'nova', 'rift', 'sauce', 'shell', 'spikes', 'furthest', 'hackcircle', 'triad', 'corpseblast', 'gravebomb'].includes(s.targeting)) {
       MirrorEchoTemplate = {
         projectileSpeed: s.projectileSpeed,
         damage: s.damage,
@@ -2685,6 +2694,40 @@ const WeaponSystem = {
           isRecall: true, isDashBlade: false, isCorpse: false,
         });
         Particles.emit(startX, startY, s.empowered ? '#ffdd88' : '#44ffbb', 12, 4);
+      }
+      return true;
+    }
+
+    // Gravebomb: instantly detonate all fresh corpses in range
+    if (s.targeting === 'gravebomb') {
+      const candidates = enemies
+        .filter(e => e.dead && e.deathTimer > 0 && dist(e.x, e.y, player.x, player.y) <= s.range)
+        .sort((a, b) => dist(a.x, a.y, player.x, player.y) - dist(b.x, b.y, player.x, player.y))
+        .slice(0, s.gravebombMaxCount);
+      if (candidates.length === 0) return false;
+      const blastR = s.gravebombRadius;
+      for (const corpse of candidates) {
+        corpse.deathTimer = 0;
+        const blastDmg = Math.round(corpse.maxHp * s.gravebombPercent);
+        for (const e of alive) {
+          if (dist(e.x, e.y, corpse.x, corpse.y) < blastR + e.radius) {
+            applyDamage(e, blastDmg, s.armorPenetration, s.statusEffect, 0);
+          }
+        }
+        if (s.groundEffect) {
+          GroundEffects.add(corpse.x, corpse.y, blastR, s.groundEffect.type, s.groundEffect.duration, s.groundEffect.dps);
+        }
+        const emp = s.empowered;
+        Particles.emit(corpse.x, corpse.y, emp ? '#ff8833' : '#cc2200', emp ? 32 : 20, emp ? 10 : 7);
+        Particles.emit(corpse.x, corpse.y, '#ffaa44', emp ? 18 : 10, emp ? 7 : 5);
+        for (let i = 0; i < 10; i++) {
+          const a = (i / 10) * Math.PI * 2;
+          Particles.emit(
+            corpse.x + Math.cos(a) * blastR * 0.65,
+            corpse.y + Math.sin(a) * blastR * 0.65,
+            emp ? '#ff5500' : '#ff2200', 2, 3
+          );
+        }
       }
       return true;
     }
@@ -3826,6 +3869,7 @@ const LevelSystem = {
     // Passives
     for (const p of PASSIVES) {
       if (!Player.passivesApplied.includes(p.id)) {
+        if (p.condition && !p.condition(Player)) continue;
         const candidate = { type: 'passive', passiveId: p.id, label: p.name, icon: p.icon, desc: p.description, sub: 'Passive' };
         if (!banned.has(getBanId(candidate))) choices.push(candidate);
       }
