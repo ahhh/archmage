@@ -3480,6 +3480,8 @@ function spawnEnemy(configId, waveNum) {
     chargeVx: 0, chargeVy: 0, chargeActive: false, chargeRemaining: 0,
     regenTimer: 0,
     rangedTimer: rnd(2, 4),
+    volleyTimer: rnd(2, 4),
+    beamTimer: rnd(1.5, 3.5),
   });
 }
 
@@ -3570,6 +3572,87 @@ function updateEnemies(dt) {
       }
     }
 
+    // Volley attack (hexcaster fires lazy 3-shot spread)
+    if (e.abilities.includes('volley')) {
+      e.volleyTimer -= dt;
+      if (e.volleyTimer <= 0) {
+        e.volleyTimer = rnd(2.5, 4.0);
+        const vDecoy = getDecoyTarget();
+        const vtx = vDecoy ? vDecoy.x : Player.x;
+        const vty = vDecoy ? vDecoy.y : Player.y;
+        const dx = vtx - e.x, dy = vty - e.y;
+        const baseAngle = Math.atan2(dy, dx) + rnd(-0.3, 0.3);
+        const fanOffset = 0.28;
+        const spd = 4;
+        for (let shot = -1; shot <= 1; shot++) {
+          const angle = baseAngle + shot * fanOffset;
+          Projectiles.push({
+            id: mkId(), x: e.x, y: e.y,
+            vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+            damage: e.strength, armorPen: 1, pierce: 0, pierceLeft: 0,
+            bounce: 0, bounceLeft: 0, bounceCount: 0, range: 480, traveledSq: 0,
+            chainCount: 0, chainRange: 0, areaRadius: 0, areaDamageMultiplier: 0,
+            pullRadius: 0, pullStrength: 0, weaponId: 'enemy_volley',
+            statusEffect: null, hitIds: new Set([e.id]), dead: false, icon: '🔮',
+            splitProjectiles: 0, splitDamageMultiplier: 0, damagePerBounce: 1,
+            finalHitDamageMultiplier: 1, finalHitStun: 0, groundEffect: null,
+            followupMeteors: 0, followupDamageMultiplier: 0,
+            isMeteor: false, isEnemyProjectile: true,
+            targetX: Player.x, targetY: Player.y
+          });
+        }
+      }
+    }
+
+    // Sigil beam (oathbreaker paladin - short-range Jake's Lament variant)
+    if (e.abilities.includes('beam')) {
+      e.beamTimer -= dt;
+      if (e.beamTimer <= 0) {
+        e.beamTimer = rnd(2.5, 4.0);
+        const bDecoy = getDecoyTarget();
+        const btx = bDecoy ? bDecoy.x : Player.x;
+        const bty = bDecoy ? bDecoy.y : Player.y;
+        const bdx = btx - e.x, bdy = bty - e.y;
+        const blen = Math.hypot(bdx, bdy) || 1;
+        const bdir = { x: bdx / blen, y: bdy / blen };
+        const beamRange = 220;
+        const beamWidth = 18;
+        // Sigil burst at origin
+        Particles.emit(e.x, e.y, '#cc44ff', 10, 4);
+        Particles.emit(e.x, e.y, '#ffaaff', 6, 3);
+        if (bDecoy) {
+          bDecoy.hp -= e.strength;
+          bDecoy.flashTimer = 0.15;
+          if (bDecoy.hp <= 0) _killDecoy(bDecoy);
+        } else if (distToRay(Player.x, Player.y, e.x, e.y, bdir.x, bdir.y, beamRange) < beamWidth + Player.radius) {
+          if (Player.iFrameTimer <= 0) {
+            if (Player.shieldActive) {
+              Player.shieldActive = false;
+              Player.shieldTimer = Player.shieldCooldown;
+              Particles.emit(Player.x, Player.y, '#ffd700', 20, 6);
+            } else if (Player.blockChance > 0 && Math.random() < Player.blockChance) {
+              Particles.emit(Player.x, Player.y, '#ffd700', 10, 4);
+              Player.iFrameTimer = 0.15;
+            } else {
+              const dmg = Math.max(1, e.strength - Player.armor);
+              Player.health -= dmg;
+              Player.flashTimer = 0.15;
+              Player.iFrameTimer = 0.3;
+              Particles.emit(Player.x, Player.y, '#cc44ff', 8, 3);
+              if (Player.health <= 0) Game.gameOver();
+            }
+          }
+        }
+        Beams.push({
+          x1: e.x, y1: e.y,
+          x2: e.x + bdir.x * beamRange,
+          y2: e.y + bdir.y * beamRange,
+          life: 0.35, maxLife: 0.35,
+          color: '#cc44ff', width: 8, empowered: false,
+        });
+      }
+    }
+
     // Fire breath (dragon) - aimed cone
     if (e.abilities.includes('fireBreath')) {
       e.fireBreathTimer -= dt;
@@ -3608,8 +3691,16 @@ function updateEnemies(dt) {
       const ty = decoyTarget ? decoyTarget.y : Player.y;
       const dx = tx - e.x, dy = ty - e.y;
       const len = Math.hypot(dx, dy) || 1;
-      e.x += (dx / len) * e.speed * slowMult;
-      e.y += (dy / len) * e.speed * slowMult;
+      // Ranged enemies hold their ground once inside preferred firing range (unless chasing a decoy)
+      const preferredDist = e.abilities.includes('volley') ? 250
+                          : e.abilities.includes('beam')   ? 170
+                          : 0;
+      if (!decoyTarget && preferredDist > 0 && len < preferredDist) {
+        // stand and shoot — no movement
+      } else {
+        e.x += (dx / len) * e.speed * slowMult;
+        e.y += (dy / len) * e.speed * slowMult;
+      }
     }
   }
 

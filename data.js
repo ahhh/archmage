@@ -1424,6 +1424,8 @@ const CONFIG = {
     { id: 'orc',         name: 'Orc Brute',            icon: '🪓', health:  41, speed: 1.60, armor: 2, strength:  9, xp:   8, radius: 16, waveMin:  5, spawnWeight:  5, abilities: ['armored'] },
     { id: 'ghoul',       name: 'Ghoul',                icon: '🧟', health:  35, speed: 2.20, armor: 1, strength:  7, xp:   8, radius: 15, waveMin:  7, spawnWeight:  5, abilities: ['poison'] },
     { id: 'troll',       name: 'Troll',                icon: '👹', health: 107, speed: 1.20, armor: 3, strength: 14, xp:  18, radius: 22, waveMin: 10, spawnWeight:  3, abilities: ['regeneration', 'miniboss'] },
+    { id: 'hexcaster',   name: 'Hexcaster',            icon: '🧙', health:  55, speed: 1.00, armor: 2, strength:  8, xp:  14, radius: 17, waveMin: 10, spawnWeight:  4, abilities: ['volley'] },
+    { id: 'oathbreaker',  name: 'Oathbreaker',          icon: '⚜️', health:  78, speed: 0.85, armor: 3, strength: 13, xp:  16, radius: 16, waveMin: 13, spawnWeight:  3, abilities: ['beam'] },
     { id: 'beholderkin', name: 'Beholderkin',          icon: '👁️', health:  78, speed: 1.40, armor: 2, strength: 10, xp:  20, radius: 20, waveMin: 14, spawnWeight:  2, abilities: ['ranged'] },
     { id: 'dragon_boss', name: 'Ancient Red Dragon',   icon: '🐉', health: 1035, speed: 1.35, armor: 6, strength: 24, xp: 200, radius: 42, waveMin: 20, spawnWeight:  0, abilities: ['boss', 'fireBreath', 'charge'] }
   ],
